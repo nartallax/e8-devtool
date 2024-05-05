@@ -1,21 +1,21 @@
-import {PromanProject, makePromanProject} from "data/proman_project"
-import {PromanConfig} from "server/proman_config"
+import {Project, makeBlankProject} from "data/project"
+import {Config} from "server/config"
 import {promises as Fs} from "fs"
 import {isEnoent} from "common/is_enoent"
 import * as Tempy from "tempy"
 import * as Path from "path"
-import {promanProjectToResourcePack} from "data/project_to_resourcepack/project_to_resourcepack"
-import {promanProjectToTypescript} from "data/project_to_ts"
+import {projectToResourcePack} from "data/project_to_resourcepack/project_to_resourcepack"
+import {projectToTypescript} from "data/project_to_ts"
 import {log} from "common/log"
 import {encodeResourcePack} from "@nartallax/e8"
 
-export const getPromanActions = (config: PromanConfig) => {
-	const getProject = async(): Promise<PromanProject> => {
+export const getActions = (config: Config) => {
+	const getProject = async(): Promise<Project> => {
 		return JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
 	}
 
-	const getProjectOrCreate = async(): Promise<PromanProject> => {
-		let project: PromanProject
+	const getProjectOrCreate = async(): Promise<Project> => {
+		let project: Project
 		try {
 			project = await getProject()
 		} catch(e){
@@ -23,7 +23,7 @@ export const getPromanActions = (config: PromanConfig) => {
 				throw e
 			}
 
-			project = makePromanProject()
+			project = makeBlankProject()
 		}
 
 		return project
@@ -35,7 +35,7 @@ export const getPromanActions = (config: PromanConfig) => {
 		await Fs.rename(tmpFile, path)
 	}
 
-	const saveProject = async(project: PromanProject) => {
+	const saveProject = async(project: Project) => {
 		// pretty-printing JSON here is important for git-friendliness
 		// when all project is oneline - any concurrent changes will introduce conflict
 		// when it's prettyprinted - git will be able to resolve most conflicts by itself
@@ -45,14 +45,14 @@ export const getPromanActions = (config: PromanConfig) => {
 
 	const produceResourcePack = async() => {
 		const project = JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
-		const resourcePack = await promanProjectToResourcePack(project, config)
+		const resourcePack = await projectToResourcePack(project, config)
 		const bytes = encodeResourcePack(resourcePack)
 		await safeWrite(config.resourcePackPath, bytes)
 	}
 
 	const produceTypescript = async() => {
 		const project = JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
-		const ts = await promanProjectToTypescript(project, config)
+		const ts = await projectToTypescript(project, config)
 		await safeWrite(config.ts.path, ts)
 	}
 

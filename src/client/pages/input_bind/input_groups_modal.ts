@@ -1,6 +1,6 @@
 import {WBox} from "@nartallax/cardboard"
-import {promanProject} from "client/proman_client_globals"
-import {PromanNamedId} from "data/proman_project"
+import {project} from "client/client_globals"
+import {NamedId} from "data/project"
 import {UUID} from "crypto"
 import {getRandomUUID, zeroUUID} from "common/uuid"
 import {showNamedIdListModal} from "client/component/named_id_list/named_id_list_modal"
@@ -12,10 +12,10 @@ interface Props {
 const emptyGroupId = zeroUUID
 
 export const showInputGroupsModal = async(props: Props): Promise<void> => {
-	const groups = promanProject.prop("inputGroups")
+	const groups = project.prop("inputGroups")
 	const groupsWithEmptyItem = groups.map(
 		groups => [{id: emptyGroupId, name: "<no group>"}, ...groups],
-		groupsWithNull => groupsWithNull.filter(x => x.id !== emptyGroupId) as PromanNamedId[]
+		groupsWithNull => groupsWithNull.filter(x => x.id !== emptyGroupId) as NamedId[]
 	)
 
 	const group = await showNamedIdListModal({
@@ -24,7 +24,7 @@ export const showInputGroupsModal = async(props: Props): Promise<void> => {
 		canDelete: async x => x.id !== emptyGroupId,
 		makeNew: async() => ({id: getRandomUUID(), name: "New group"}),
 		beforeDelete: x => {
-			const proj = promanProject.get()
+			const proj = project.get()
 			let totalChanges = 0
 			const bindSets = proj.inputBinds.map(bindSet => {
 				let changes = 0
@@ -40,7 +40,7 @@ export const showInputGroupsModal = async(props: Props): Promise<void> => {
 				return changes === 0 ? bindSet : {...bindSet, binds}
 			})
 			if(totalChanges > 0){
-				promanProject.set({
+				project.set({
 					...proj,
 					inputBinds: bindSets
 				})

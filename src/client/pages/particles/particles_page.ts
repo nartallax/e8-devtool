@@ -1,6 +1,6 @@
 import {NamedIdList} from "client/component/named_id_list/named_id_list"
 import {TwoColumnLayout} from "client/component/two_column_layout/two_column_layout"
-import {promanProject} from "client/proman_client_globals"
+import {project} from "client/client_globals"
 
 export const ParticlesPage = () => {
 	return TwoColumnLayout({
@@ -9,7 +9,7 @@ export const ParticlesPage = () => {
 		foregroundChildren: [
 			NamedIdList({
 				itemName: "particle",
-				items: promanProject.prop("particles")
+				items: project.prop("particles")
 			})
 		]
 	})

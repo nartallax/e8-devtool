@@ -1,7 +1,7 @@
-import {PromanApi} from "client/proman_api_client"
+import {Api} from "client/api_client"
 import "../fonts/opensans.scss" // cannot be imported from scss, otherwise paths will break
-import "./proman_style_root.scss"
-import {promanProject, textureFiles as allTextureFiles, promanConfigFile} from "client/proman_client_globals"
+import "./style_root.scss"
+import {project, textureFiles as allTextureFiles, configFile} from "client/client_globals"
 import {ModelPage} from "client/pages/model/model_page"
 import {initializeCardboardDom, urlBox, waitDocumentLoaded} from "@nartallax/cardboard-dom"
 import {attachUiHotkey} from "common/ui_hotkey"
@@ -67,30 +67,30 @@ const Root = () => {
 
 async function loadProject(): Promise<void> {
 	// eslint-disable-next-line prefer-const
-	let [project, textures, config] = await Promise.all([
-		PromanApi.getProject(),
-		PromanApi.getTextureFiles(),
-		PromanApi.getConfigFile()
+	let [_project, textures, config] = await Promise.all([
+		Api.getProject(),
+		Api.getTextureFiles(),
+		Api.getConfigFile()
 	])
 
-	if(project.collisionGroups.length === 0){
-		project = {
-			...project,
+	if(_project.collisionGroups.length === 0){
+		_project = {
+			..._project,
 			collisionGroups: [{id: getRandomUUID(), name: "default"}]
 		}
 	}
-	for(const [type, layers] of groupBy(project.layers, layer => layer.type)){
+	for(const [type, layers] of groupBy(_project.layers, layer => layer.type)){
 		if(layers.length === 0){
-			project = {
-				...project,
+			_project = {
+				..._project,
 				layers: [{id: getRandomUUID(), name: "default", type: type}]
 			}
 		}
 	}
 
-	promanProject.set(project)
+	project.set(_project)
 	allTextureFiles.set(textures)
-	promanConfigFile.set(config)
+	configFile.set(config)
 }
 
 function addSaveHotkey(): void {
@@ -110,7 +110,7 @@ function addSaveHotkey(): void {
 
 			try {
 				// this code is duplicated on backend
-				await PromanApi.saveAndProduce(promanProject.get())
+				await Api.saveAndProduce(project.get())
 				completed.set(true)
 				setTimeout(() => {
 					toast.remove()

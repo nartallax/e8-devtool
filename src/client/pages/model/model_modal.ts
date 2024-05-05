@@ -1,5 +1,5 @@
 import {WBox, calcBox} from "@nartallax/cardboard"
-import {promanProject, textureFiles} from "client/proman_client_globals"
+import {project, textureFiles} from "client/client_globals"
 import {BoolInput} from "client/component/bool_input/bool_input"
 import {Button} from "client/component/button/button"
 import {showModal} from "client/component/modal/modal"
@@ -8,20 +8,20 @@ import {Row} from "client/component/row_col/row_col"
 import {TextInput} from "client/component/text_input/text_input"
 import {Tooltip} from "client/component/tooltip/tooltip"
 import {TreeView} from "client/component/tree_view/tree_view"
-import {PromanProjectEntity} from "data/proman_project"
+import {ProjectEntity} from "data/project"
 import {getTreeLeaves} from "common/tree"
 import {showLayerListModal} from "client/pages/model/layer_list_modal"
 import {showCollisionGroupListModal} from "client/pages/model/collision_group_list_modal"
 
-export const showModelModal = async(model: WBox<PromanProjectEntity>): Promise<void> => {
+export const showModelModal = async(model: WBox<ProjectEntity>): Promise<void> => {
 	const name = model.prop("name")
 
 	const layerId = model.prop("layerId")
-	const layers = promanProject.prop("layers")
+	const layers = project.prop("layers")
 	const selectedLayer = calcBox([layers, layerId], (layers, layerId) => layers.find(x => x.id === layerId))
 
 	const collGroupId = model.prop("collisionGroupId")
-	const collGroups = promanProject.prop("collisionGroups")
+	const collGroups = project.prop("collisionGroups")
 	const selectedCollGroup = calcBox([collGroups, collGroupId], (collGroups, collGroupId) => collGroups.find(x => x.id === collGroupId))
 
 	// they shouldn't change anyway

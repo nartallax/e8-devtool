@@ -3,10 +3,10 @@ import {Button} from "client/component/button/button"
 import {showUserAlert} from "client/component/modal/show_user_alert"
 import {Col, Row} from "client/component/row_col/row_col"
 import {TreeView} from "client/component/tree_view/tree_view"
-import {PromanNamedId} from "data/proman_project"
+import {NamedId} from "data/project"
 import {askUserForString} from "client/component/modal/ask_user_for_string"
 
-export interface NamedIdListProps<T extends PromanNamedId> {
+export interface NamedIdListProps<T extends NamedId> {
 	readonly items: RBox<readonly T[]>
 	readonly itemName: string
 	readonly getName?: (item: T) => string
@@ -18,7 +18,7 @@ export interface NamedIdListProps<T extends PromanNamedId> {
 	readonly limit?: number
 }
 
-export const NamedIdList = <T extends PromanNamedId>(props: NamedIdListProps<T>) => {
+export const NamedIdList = <T extends NamedId>(props: NamedIdListProps<T>) => {
 
 	const buttons = [
 		!props.makeNew ? null : Button({

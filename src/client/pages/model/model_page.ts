@@ -1,5 +1,5 @@
 import {RBox, WBox, box, isArrayItemWBox} from "@nartallax/cardboard"
-import {promanProject, makeEmptyProjectModel} from "client/proman_client_globals"
+import {project, makeEmptyProjectModel} from "client/client_globals"
 import {Button} from "client/component/button/button"
 import {askUserForString} from "client/component/modal/ask_user_for_string"
 import {Row} from "client/component/row_col/row_col"
@@ -7,14 +7,14 @@ import {TreeView} from "client/component/tree_view/tree_view"
 import {TwoColumnLayout} from "client/component/two_column_layout/two_column_layout"
 import {ModelDisplay} from "client/pages/model/model_display/model_display"
 import {showModelModal} from "client/pages/model/model_modal"
-import {PromanNamedId} from "data/proman_project"
+import {NamedId} from "data/project"
 import {isTreeBranch, isTreeLeaf} from "common/tree"
 import {UUID} from "crypto"
 import {getRandomUUID} from "common/uuid"
 
 export const ModelPage = () => {
-	const modelTree = promanProject.prop("modelTree")
-	const models = promanProject.prop("models")
+	const modelTree = project.prop("modelTree")
+	const models = project.prop("models")
 	const modelContext = models.getArrayContext(x => x.id)
 	const selectedModelId = box<UUID | null>(null)
 
@@ -53,7 +53,7 @@ export const ModelPage = () => {
 				getRowLabel: treeBox => {
 					const tree = treeBox.get()
 					return isTreeBranch(tree)
-						? (treeBox.prop("value") as RBox<PromanNamedId>).prop("name")
+						? (treeBox.prop("value") as RBox<NamedId>).prop("name")
 						: modelContext.getBoxForKey(tree.value).prop("name")
 				},
 				allowReorder: true,
@@ -79,7 +79,7 @@ export const ModelPage = () => {
 						if(!newName){
 							return
 						}
-						(row.prop("value") as WBox<PromanNamedId>).prop("name").set(newName)
+						(row.prop("value") as WBox<NamedId>).prop("name").set(newName)
 					} else {
 						await showModelModal(modelContext.getBoxForKey(tree.value))
 					}

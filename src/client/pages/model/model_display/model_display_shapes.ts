@@ -1,6 +1,6 @@
 import {ArrayItemWBox, WBox, box, calcBox, unbox} from "@nartallax/cardboard"
 import {bindBox, svgTag, tag} from "@nartallax/cardboard-dom"
-import {PromanProjectShape} from "data/proman_project"
+import {ProjectShape} from "data/project"
 import * as css from "./model_display.module.scss"
 import {addMouseDragHandler} from "common/mouse_drag"
 import {findPointInsertionIndex, shapeToSvgPathD} from "client/pages/model/model_display/model_display_data"
@@ -133,7 +133,7 @@ function isAddDeleteEvent(e: MouseEvent | TouchEvent): boolean {
 
 
 interface ShapeNodesProps {
-	readonly shape: ArrayItemWBox<PromanProjectShape>
+	readonly shape: ArrayItemWBox<ProjectShape>
 	readonly mouseEventToCoords: (evt: MouseEvent | TouchEvent) => XY
 	readonly selectedShapeId: WBox<UUID | null>
 	readonly state: ModelDisplayLayersState

@@ -1,18 +1,18 @@
 import {RBox, WBox, box, calcBox, isArrayItemWBox} from "@nartallax/cardboard"
 import {onMount} from "@nartallax/cardboard-dom"
-import {promanProject} from "client/proman_client_globals"
+import {project} from "client/client_globals"
 import {Button} from "client/component/button/button"
 import {showModal} from "client/component/modal/modal"
 import {Row} from "client/component/row_col/row_col"
 import {TextInput} from "client/component/text_input/text_input"
 import {TreeView} from "client/component/tree_view/tree_view"
 import {showInputGroupsModal} from "client/pages/input_bind/input_groups_modal"
-import {PromanProjectInputBind} from "data/proman_project"
+import {ProjectInputBind} from "data/project"
 import {InputKey, Chord, chordToString, fixChord, knownMouseButtonInputs} from "@nartallax/e8"
 import {BoolInput} from "client/component/bool_input/bool_input"
 
 interface Props {
-	readonly bind: WBox<PromanProjectInputBind>
+	readonly bind: WBox<ProjectInputBind>
 }
 
 export const showInputBindModal = async(props: Props): Promise<void> => {
@@ -29,7 +29,7 @@ export const showInputBindModal = async(props: Props): Promise<void> => {
 	let receivingInputFor: WBox<Chord> | null = null
 
 	const inputGroupId = props.bind.prop("group")
-	const inputGroups = promanProject.prop("inputGroups")
+	const inputGroups = project.prop("inputGroups")
 	const selectedInputGroup = calcBox(
 		[inputGroups, inputGroupId],
 		(inputGroups, inputGroupId) => inputGroups.find(x => x.id === inputGroupId)

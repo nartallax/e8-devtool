@@ -1,11 +1,11 @@
-import {PromanProject} from "data/proman_project"
-import {getAllProjectModelsWithFolders, getSortedProjectBinds} from "data/proman_project_utils"
-import {PromanConfig} from "server/proman_config"
+import {Project} from "data/project"
+import {getAllProjectModelsWithFolders, getSortedProjectBinds} from "data/project_utils"
+import {Config} from "server/config"
 import {capitalize} from "common/capitalize"
 import {readdirAsArray} from "common/readdir_as_array"
 import * as Path from "path"
 
-export async function promanProjectToTypescript(project: PromanProject, config: PromanConfig): Promise<string> {
+export async function projectToTypescript(project: Project, config: Config): Promise<string> {
 	const classPaths = await gatherEntityClassPaths(config.entityClassesDirectoryPath)
 
 	const modelEntries = getAllProjectModelsWithFolders(project)

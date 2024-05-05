@@ -1,7 +1,7 @@
 import {ArrayContext, ArrayItemWBox, WBox, box} from "@nartallax/cardboard"
 import {tag} from "@nartallax/cardboard-dom"
 import * as css from "./model_display.module.scss"
-import {PromanProjectEntity} from "data/proman_project"
+import {ProjectEntity} from "data/project"
 import {ModelDisplayControls, ModelDisplayLayersState} from "client/pages/model/model_display/model_display_controls"
 import {ModelDisplayTexture} from "client/pages/model/model_display/model_display_texture"
 import {ModelDisplayGrid} from "client/pages/model/model_display/model_display_grid"
@@ -9,13 +9,13 @@ import {ModelDisplayShapes} from "client/pages/model/model_display/model_display
 import {ModelDisplayDecomp} from "client/pages/model/model_display/model_display_decomp"
 import {StateStack} from "common/state_stack"
 import {Workbench} from "client/component/workbench/workbench"
-import {promanConfigFile} from "client/proman_client_globals"
+import {configFile} from "client/client_globals"
 import {XY} from "@nartallax/e8"
 import {UUID} from "crypto"
 
 interface Props {
 	readonly selectedModelId: WBox<UUID | null>
-	readonly modelContext: ArrayContext<PromanProjectEntity, UUID, ArrayItemWBox<PromanProjectEntity>>
+	readonly modelContext: ArrayContext<ProjectEntity, UUID, ArrayItemWBox<ProjectEntity>>
 }
 
 export const ModelDisplay = (props: Props) => {
@@ -25,7 +25,7 @@ export const ModelDisplay = (props: Props) => {
 	const currentlyDrawnShapeId = box<UUID | null>(null)
 
 	// it shouldn't change anyway
-	const inworldUnitPixelSize = promanConfigFile.get().inworldUnitPixelSize
+	const inworldUnitPixelSize = configFile.get().inworldUnitPixelSize
 	const sizeMultiplier = Math.max(1000, inworldUnitPixelSize * 10)
 
 	function roundNumberToGrain(x: number): number {

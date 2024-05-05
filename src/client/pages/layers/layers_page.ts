@@ -1,10 +1,10 @@
 import {ModelBoundNamedIdList} from "client/component/named_id_list/model_bound_named_id_list"
 import {TwoColumnLayout} from "client/component/two_column_layout/two_column_layout"
 import {showLayerCreateModal} from "client/pages/layers/layer_create_modal"
-import {promanProject} from "client/proman_client_globals"
+import {project} from "client/client_globals"
 
 export const LayersPage = () => {
-	const layers = promanProject.prop("layers")
+	const layers = project.prop("layers")
 	return TwoColumnLayout({grow: 1,
 		backgroundChildren: [],
 		foregroundChildren: [

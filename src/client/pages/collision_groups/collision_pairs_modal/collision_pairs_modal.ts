@@ -1,6 +1,6 @@
 import {tag} from "@nartallax/cardboard-dom"
 import * as css from "./collision_pairs_modal.module.scss"
-import {promanProject} from "client/proman_client_globals"
+import {project} from "client/client_globals"
 import {WBox} from "@nartallax/cardboard"
 import {BoolInput} from "client/component/bool_input/bool_input"
 import {showModal} from "client/component/modal/modal"
@@ -22,14 +22,14 @@ function splitKey(key: string): [UUID, UUID] {
 }
 
 export async function showCollisionPairsModal(): Promise<void> {
-	const pairs = promanProject.prop("collisionGroupPairs")
+	const pairs = project.prop("collisionGroupPairs")
 	const pairSet = pairs.map(
 		pairs => new Set(pairs.map(([a, b]) => makeKey(a, b))),
 		set => [...set].map(key => splitKey(key))
 	)
 
 	const boxesForKeys = new Map<string, WBox<boolean>>()
-	const groups = promanProject.get().collisionGroups // let's just assume that they won't change
+	const groups = project.get().collisionGroups // let's just assume that they won't change
 	for(const group of groups){
 		for(const otherGroup of groups){
 			if(otherGroup.id < group.id){

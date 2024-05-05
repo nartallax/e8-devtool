@@ -1,7 +1,7 @@
 import {box} from "@nartallax/cardboard"
 import {bindBox, tag} from "@nartallax/cardboard-dom"
-import {PromanApi} from "client/proman_api_client"
-import {promanProject} from "client/proman_client_globals"
+import {Api} from "client/api_client"
+import {project} from "client/client_globals"
 import {Col} from "client/component/row_col/row_col"
 import {Spinner} from "client/component/spinner/spinner"
 import {Workbench} from "client/component/workbench/workbench"
@@ -55,9 +55,9 @@ export const AtlasPage = () => {
 		})
 	])
 
-	bindBox(page, promanProject, async project => {
+	bindBox(page, project, async project => {
 		atlasLayout.set(null)
-		const layout = await PromanApi.projectToAtlasLayout(project)
+		const layout = await Api.projectToAtlasLayout(project)
 		atlasLayout.set(layout)
 	})
 

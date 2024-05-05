@@ -1,19 +1,19 @@
 import {WBox, calcBox, isArrayItemWBox} from "@nartallax/cardboard"
-import {promanProject} from "client/proman_client_globals"
+import {project} from "client/client_globals"
 import {Button} from "client/component/button/button"
 import {askUserForString} from "client/component/modal/ask_user_for_string"
 import {Row} from "client/component/row_col/row_col"
 import {TreeView} from "client/component/tree_view/tree_view"
 import {TwoColumnLayout} from "client/component/two_column_layout/two_column_layout"
 import {showInputBindModal} from "client/pages/input_bind/input_bind_modal"
-import {PromanProjectInputBind, PromanNamedId} from "data/proman_project"
+import {ProjectInputBind, NamedId} from "data/project"
 import {TreeBranch, TreeLeaf, isTreeBranch} from "common/tree"
 import {chordToString} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
 
 export const InputBindPage = () => {
-	const bindSets = promanProject.prop("inputBinds")
-	const bindSetTree: WBox<TreeBranch<PromanProjectInputBind, PromanNamedId>[]> = bindSets.map(
+	const bindSets = project.prop("inputBinds")
+	const bindSetTree: WBox<TreeBranch<ProjectInputBind, NamedId>[]> = bindSets.map(
 		bindSets => bindSets.map(bindSet => ({
 			value: {id: bindSet.id, name: bindSet.name},
 			children: bindSet.binds.map(bind => ({
@@ -27,7 +27,7 @@ export const InputBindPage = () => {
 		}))
 	)
 
-	const inputGroups = promanProject.prop("inputGroups")
+	const inputGroups = project.prop("inputGroups")
 
 	return TwoColumnLayout({
 		grow: 1,
@@ -52,7 +52,7 @@ export const InputBindPage = () => {
 						return treeBox.prop("value").prop("name")
 					}
 					return calcBox([treeBox, inputGroups], ({value}, inputGroups) => {
-						const bind = value as PromanProjectInputBind
+						const bind = value as ProjectInputBind
 						const chords = bind.defaultChords
 
 						let chordsStr: string
@@ -82,7 +82,7 @@ export const InputBindPage = () => {
 					}
 				},
 				onAddToBranch: async row => {
-					const bind: PromanProjectInputBind = {
+					const bind: ProjectInputBind = {
 						name: "unnamed bind",
 						defaultChords: [],
 						id: getRandomUUID(),
@@ -92,7 +92,7 @@ export const InputBindPage = () => {
 					const children = row.prop("children")
 					const context = children.getArrayContext(x => x.value.id)
 					children.appendElement({value: bind})
-					const bindBox = context.getBoxForKey(bind.id).prop("value") as WBox<PromanProjectInputBind>
+					const bindBox = context.getBoxForKey(bind.id).prop("value") as WBox<ProjectInputBind>
 					await showInputBindModal({bind: bindBox})
 				},
 				onEdit: async row => {
@@ -109,7 +109,7 @@ export const InputBindPage = () => {
 						row.prop("value").prop("name").set(newName)
 					} else {
 						await showInputBindModal({
-							bind: (row as WBox<TreeLeaf<PromanProjectInputBind>>).prop("value")
+							bind: (row as WBox<TreeLeaf<ProjectInputBind>>).prop("value")
 						})
 					}
 				}

@@ -1,7 +1,7 @@
 import {box, calcBox} from "@nartallax/cardboard"
 import * as css from "./model_display.module.scss"
 import {tag} from "@nartallax/cardboard-dom"
-import {PromanApi} from "client/proman_api_client"
+import {Api} from "client/api_client"
 import {ModelDisplayLayersState} from "client/pages/model/model_display/model_display_controls"
 
 export const ModelDisplayTexture = (state: ModelDisplayLayersState) => {
@@ -17,7 +17,7 @@ export const ModelDisplayTexture = (state: ModelDisplayLayersState) => {
 		tag: "img",
 		class: css.texture,
 		attrs: {
-			src: texturePath.map(path => !path ? undefined : PromanApi.getTextureUrl(path))
+			src: texturePath.map(path => !path ? undefined : Api.getTextureUrl(path))
 		},
 		style: {
 			width: natWidth.map(width => width + "px"),

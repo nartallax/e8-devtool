@@ -3,12 +3,12 @@ import {getRandomUUID} from "common/uuid"
 import {LayerType} from "@nartallax/e8"
 import {askUserForString} from "client/component/modal/ask_user_for_string"
 import {SelectInput} from "client/component/select_input/select_input"
-import {PromanLayerDefinition} from "data/proman_project"
+import {LayerDefinition} from "data/project"
 
 const layerTypeOptions = (["model", "particle"] as const).map(name => ({name, value: name}))
 
-export const showLayerCreateModal = async(): Promise<PromanLayerDefinition> => {
-	const layerBox = box<PromanLayerDefinition>({
+export const showLayerCreateModal = async(): Promise<LayerDefinition> => {
+	const layerBox = box<LayerDefinition>({
 		id: getRandomUUID(),
 		name: "New layer",
 		type: "model"

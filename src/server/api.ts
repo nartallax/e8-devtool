@@ -1,29 +1,29 @@
-import {PromanProject, PromanNamedId, PromanTextureFile} from "data/proman_project"
+import {Project, NamedId, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {PromanConfig, PromanConfigFilePathless, stripCliArgsFromConfig, stripPathsFromConfigFile} from "server/proman_config"
+import {Config, ConfigFilePathless, stripCliArgsFromConfig, stripPathsFromConfigFile} from "server/config"
 import {Lock} from "common/lock"
 import {Tree, isTreeBranch} from "common/tree"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {projectToAtlasLayout} from "data/project_to_resourcepack/project_to_resourcepack"
 import {XY} from "@nartallax/e8"
-import {getPromanActions} from "server/proman_actions"
+import {getActions} from "server/actions"
 import {getRandomUUID} from "common/uuid"
 import {log} from "common/log"
 
-export function getPromanApi(config: PromanConfig): Record<string, (...args: any[]) => unknown> {
+export function getApi(config: Config): Record<string, (...args: any[]) => unknown> {
 	const projectManipulationLock = new Lock()
 
-	const actions = getPromanActions(config)
+	const actions = getActions(config)
 
 	return {
-		async getProject(): Promise<PromanProject> {
+		async getProject(): Promise<Project> {
 			return await actions.getProjectOrCreate()
 		},
 
-		async getTextureFiles(): Promise<Tree<PromanTextureFile, PromanNamedId>[]> {
+		async getTextureFiles(): Promise<Tree<TextureFile, NamedId>[]> {
 			const fileTree = await readdirAsTree(config.textureDirectoryPath)
 
-			const convert = (tree: Tree<string, string>, parents: readonly string[]): Tree<PromanTextureFile, PromanNamedId> => {
+			const convert = (tree: Tree<string, string>, parents: readonly string[]): Tree<TextureFile, NamedId> => {
 				if(isTreeBranch(tree)){
 					const newParents = [...parents, tree.value]
 					return {
@@ -45,11 +45,11 @@ export function getPromanApi(config: PromanConfig): Record<string, (...args: any
 			return fileTree.map(tree => convert(tree, []))
 		},
 
-		async projectToAtlasLayout(project: PromanProject): Promise<(SvgTextureFile & XY)[]> {
+		async projectToAtlasLayout(project: Project): Promise<(SvgTextureFile & XY)[]> {
 			return await projectToAtlasLayout(project, config)
 		},
 
-		async saveAndProduce(project: PromanProject): Promise<void> {
+		async saveAndProduce(project: Project): Promise<void> {
 			await projectManipulationLock.withLock(async() => {
 				log("Saving...")
 				await actions.saveProject(project)
@@ -57,7 +57,7 @@ export function getPromanApi(config: PromanConfig): Record<string, (...args: any
 			})
 		},
 
-		getConfigFile(): PromanConfigFilePathless {
+		getConfigFile(): ConfigFilePathless {
 			return stripPathsFromConfigFile(stripCliArgsFromConfig(config))
 		}
 	}

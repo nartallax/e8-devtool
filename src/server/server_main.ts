@@ -1,17 +1,17 @@
-import {getPromanApi} from "server/proman_api"
-import {getPromanConfig} from "server/proman_config"
+import {getApi} from "server/api"
+import {getConfig} from "server/config"
 import {HttpServer} from "common/http_server"
 import {log} from "common/log"
 import * as Process from "process"
 import * as open from "open"
-import {getPromanActions} from "server/proman_actions"
+import {getActions} from "server/actions"
 
 async function main(): Promise<void> {
 	log("Starting...")
-	const config = await getPromanConfig()
+	const config = await getConfig()
 
 	if(config.generate){
-		await getPromanActions(config).produceEverything()
+		await getActions(config).produceEverything()
 		return
 	}
 
@@ -25,7 +25,7 @@ async function main(): Promise<void> {
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,
 		apiRoot: "/api/",
-		apiMethods: getPromanApi(config)
+		apiMethods: getApi(config)
 	})
 
 	const addr = await server.start()

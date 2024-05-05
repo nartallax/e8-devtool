@@ -1,10 +1,10 @@
-import {PromanProject, PromanNamedId} from "data/proman_project"
-import {getAllProjectModels, getSortedProjectBinds} from "data/proman_project_utils"
+import {Project, NamedId} from "data/project"
+import {getAllProjectModels, getSortedProjectBinds} from "data/project_utils"
 import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
-import {PromanConfig} from "server/proman_config"
+import {Config} from "server/config"
 import {Atlas, InputBindSetDefinition, Model, ResourcePack} from "@nartallax/e8"
 import {promises as Fs} from "fs"
 import * as Path from "path"
@@ -12,8 +12,8 @@ import {XY} from "@nartallax/e8"
 import {UUID} from "crypto"
 import {omit} from "common/omit"
 
-/** Convert PromanProject into ResourcePack structure. */
-export async function promanProjectToResourcePack(project: PromanProject, config: PromanConfig): Promise<ResourcePack> {
+/** Convert project into ResourcePack structure. */
+export async function projectToResourcePack(project: Project, config: Config): Promise<ResourcePack> {
 	const allModels = getAllProjectModels(project)
 	const texturesWithPositions = await projectToAtlasLayout(project, config)
 	const atlasSideLength = getAtlasSideLength(texturesWithPositions)
@@ -67,7 +67,7 @@ export async function promanProjectToResourcePack(project: PromanProject, config
 	}
 }
 
-export async function projectToAtlasLayout(project: PromanProject, config: PromanConfig): Promise<(SvgTextureFile & XY)[]> {
+export async function projectToAtlasLayout(project: Project, config: Config): Promise<(SvgTextureFile & XY)[]> {
 	const allModels = getAllProjectModels(project)
 	const allTexturePaths = [...new Set(allModels.map(model => model.texturePath))]
 	const allTextures = await readAllTextures(
@@ -79,7 +79,7 @@ export async function projectToAtlasLayout(project: PromanProject, config: Proma
 	return buildAtlasLayout(allTextures, 1)
 }
 
-function namedIdsToIndexMap(name: string, ids: readonly PromanNamedId[]): (id: UUID) => number {
+function namedIdsToIndexMap(name: string, ids: readonly NamedId[]): (id: UUID) => number {
 	const map = new Map<UUID, number>(ids.map(({id}, index) => [id, index]))
 	return id => {
 		const index = map.get(id)

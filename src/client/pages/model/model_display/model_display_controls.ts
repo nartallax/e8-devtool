@@ -5,10 +5,10 @@ import {Col, Row} from "client/component/row_col/row_col"
 import {NumberInput} from "client/component/number_input/number_input"
 import {BoolInput} from "client/component/bool_input/bool_input"
 import {Button} from "client/component/button/button"
-import {PromanProjectEntity, PromanProjectShape} from "data/proman_project"
+import {ProjectEntity, ProjectShape} from "data/project"
 import {Tooltip} from "client/component/tooltip/tooltip"
 import {buildObjectShapeByImage} from "client/pages/model/model_display/auto_shape"
-import {PromanApi} from "client/proman_api_client"
+import {Api} from "client/api_client"
 import {StateStack} from "common/state_stack"
 import {WorkbenchState} from "client/component/workbench/workbench"
 import {XY} from "@nartallax/e8"
@@ -19,11 +19,11 @@ export interface ModelDisplayLayersState {
 	readonly isGridShowing: WBox<boolean>
 	readonly isShapesShowing: WBox<boolean>
 	readonly isDecompShowing: WBox<boolean>
-	readonly model: WBox<PromanProjectEntity>
+	readonly model: WBox<ProjectEntity>
 	readonly workbench: WorkbenchState
 	readonly currentlyDrawnShapeId: WBox<UUID | null>
 	readonly sizeMultiplier: number
-	readonly shapesStateStack: StateStack<PromanProjectShape[]>
+	readonly shapesStateStack: StateStack<ProjectShape[]>
 	readonly roundToGrain: (value: XY) => XY
 }
 
@@ -57,7 +57,7 @@ export const ModelDisplayControls = (state: ModelDisplayLayersState) => {
 				text: "Draw",
 				isDisabled: calcBox([state.isShapesShowing, state.currentlyDrawnShapeId], (show, id) => !show || id !== null),
 				onClick: () => {
-					const shape: PromanProjectShape = {id: getRandomUUID(), points: []}
+					const shape: ProjectShape = {id: getRandomUUID(), points: []}
 					state.shapesStateStack.box.appendElement(shape)
 					state.currentlyDrawnShapeId.set(shape.id)
 				}
@@ -66,10 +66,10 @@ export const ModelDisplayControls = (state: ModelDisplayLayersState) => {
 				text: "Auto",
 				onClick: async() => {
 					const model = state.model.get()
-					const texUrl = PromanApi.getTextureUrl(model.texturePath)
+					const texUrl = Api.getTextureUrl(model.texturePath)
 					let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, state.sizeMultiplier)
 					points = points.map(point => state.roundToGrain(point))
-					const shape: PromanProjectShape = {id: getRandomUUID(), points: points.map(p => [p.x, p.y])}
+					const shape: ProjectShape = {id: getRandomUUID(), points: points.map(p => [p.x, p.y])}
 					state.shapesStateStack.box.appendElement(shape)
 					state.shapesStateStack.storeState()
 				}
