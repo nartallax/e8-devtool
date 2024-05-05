@@ -1,0 +1,90 @@
+@media (hover: hover) {
+    .button:hover {
+		// this rule is declared above .disabled
+		// because .disabled should take precedence
+		background-color: var(--color-interactive-focus);
+
+		> .pendingOverlay {
+			background-color: var(--color-interactive-focus);
+		}
+	}
+}
+
+.button {
+
+	line-height: 1em;
+	background-color: var(--color-interactive);
+	color: var(--color-font);
+	border-radius: var(--default-border-radius);
+	padding: var(--default-spacing) calc(var(--default-spacing) * 1.5);
+	cursor: pointer;
+	
+	// border exists to be able to see the disabled button even on foreground element
+	border: var(--default-border-width) solid var(--color-border);
+
+	transition: background-color 0.15s linear, color 0.15s linear;
+	position: relative;
+	outline-color: var(--color-font);
+
+	> .icon {
+		display: inline-block;
+		font-size: 1.15em;
+		line-height: 1em;
+		width: 1em;
+		height: 1em;
+		margin-left: var(--default-spacing);
+		// to counter 0.5 padding of the button when icon is present
+		margin-right: calc(var(--default-spacing) * -0.5);
+	}
+
+	> .pendingOverlay {
+		font-size: calc(var(--default-spacing) * 2 + 0.75rem);
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		border-radius: var(--default-border-radius);
+		opacity: 0;
+		// this should help with animation performance
+		// animation runs each frame, however it should not be the case for hidden overlays
+		// the cost is - no smooth fadeout, which is whatever
+		display: none;
+		pointer-events: none;
+		background-color: var(--color-interactive);
+
+		transition: opacity 0.15s linear, background-color 0.15s linear, color 0.15s linear;
+
+		&::before {
+			position: relative;
+			// ew. wonder if it's still looking good on other systems/browsers
+			top: -2px;
+		}
+	}
+
+	&:active {
+		background-color: var(--color-interactive-active);
+
+		> .pendingOverlay {
+			// I need for pendingOverlay to match background color of the button
+			// to make illusion that button contents are fading
+			background-color: var(--color-interactive-active);
+		}
+	}
+
+	&.disabled {
+		color: var(--color-font-disabled);
+		background-color: var(--color-interactive-disabled);
+		pointer-events: none;
+
+		> .pendingOverlay {
+			color: var(--color-font-disabled);
+			background-color: var(--color-interactive-disabled);
+		}
+	}
+
+	&.pending > .pendingOverlay {
+		opacity: 1;
+		display: block;
+	}
+}

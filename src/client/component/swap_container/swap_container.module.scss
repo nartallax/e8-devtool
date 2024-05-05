@@ -1,0 +1,15 @@
+.swapContainer {
+	position: relative;
+}
+
+.contentWrap {
+	opacity: 1;
+	transition: opacity 0.15s;
+	flex: 1 1 0;
+	display: flex;
+
+	&.hidden {
+		opacity: 0;
+		pointer-events: none;
+	}
+}

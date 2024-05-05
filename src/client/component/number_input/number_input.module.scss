@@ -1,0 +1,33 @@
+@media (hover: hover) {
+    .numberInput:hover {
+		background-color: var(--color-interactive-focus);
+	}
+}
+
+.numberInput {
+	border: var(--default-border-width) solid var(--color-border);
+	color: var(--color-font);
+	border-radius: var(--default-border-radius);
+	padding: var(--default-spacing);
+	transition: background-color 0.15s;
+	outline-color: var(--color-font);
+	background-color: var(--color-interactive);
+
+	&::placeholder {
+		color: var(--color-font);
+		opacity: 0.75;
+		transition: opacity 0.15s;
+	}
+
+	&:focus {
+		&::placeholder {
+			opacity: 0;
+		}
+	}
+
+	&.disabled {
+		color: var(--color-font-disabled);
+		background-color: var(--color-interactive-disabled);
+		pointer-events: none;
+	}
+}

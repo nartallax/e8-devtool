@@ -1,0 +1,29 @@
+@media (hover: hover) {
+    .boolInput:hover {
+		background-color: var(--color-interactive-focus);
+	}
+}
+
+.boolInput {
+	height: 1.4em;
+	width: 1.4em;
+
+	// without those, the button sometimes can be squished, which is undesirable
+	min-width: 1.4em;
+	min-height: 1.4em;
+	display: inline-block;
+
+	border: 0.15rem solid var(--color-interactive-focus);
+	color: var(--color-font);
+	border-radius: var(--default-border-radius);
+	transition: background-color 0.15s;
+	outline-color: var(--color-font);
+	background-color: var(--color-interactive);
+	cursor: pointer;
+
+	&.disabled {
+		color: var(--color-font-disabled);
+		background-color: var(--color-interactive-disabled);
+		pointer-events: none;
+	}
+}
