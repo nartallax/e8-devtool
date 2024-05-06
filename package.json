@@ -6,27 +6,37 @@
   "license": "0BSD",
   "type": "module",
   "main": "e8-devtool.js",
+  "bin": {
+    "e8-devtool": "e8-devtool.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nartallax/e8-devtool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nartallax/e8-devtool/issues"
+  },
+  "homepage": "https://github.com/nartallax/e8-devtool#readme",
   "scripts": {
-    "e8": "npm install ../e8/target/e8.tgz",
     "typecheck": "cd src && ../node_modules/typescript/bin/tsc --noEmit && cd - > /dev/null",
     "test": "npm run test:prepare && npm run typecheck && npm run test:generate && npm run test:build && npm run test:run",
     "test:prepare": "rm -f src/generated/test.ts",
     "test:generate": "npx clamsensor_codegen src src/generated/test.ts",
     "test:build": "npx parcel build --target test --no-cache",
     "test:run": "node ./dist/test/test.js",
-    "dev": "npm run typecheck && npm run icons && (npm run dev:client & npm run dev:server & wait)",
+    "dev": "npm run typecheck && npm run icons && npm run dev:e8 && (npm run dev:client & npm run dev:server & wait)",
+    "dev:e8": "npm link ../e8/target",
     "dev:client": "npx parcel serve --target client --no-cache --no-hmr --port 24658",
-    "dev:server": "npm run dev:server:build && ((npx wait-file-change ./dist/server/server_main.js -t 10 && npm run dev:server:run) & npm run dev:server:watch)",
+    "dev:server": "npm run dev:server:build && ((npx wait-file-change ./target/e8-devtool.js -t 10 && npm run dev:server:run) & npm run dev:server:watch) && :",
     "dev:server:build": "npx parcel build --target server --no-cache",
     "dev:server:watch": "npx parcel watch --target server --no-cache --no-hmr",
-    "dev:server:run": "npx nodemon ./dist/server/server_main.js --watch ./dist/server/server_main.js -- --html 'http://localhost:24658' --config ./src/dev_project/config.e8.json --no-start-open",
-    "generate": "npm run dev:server:build && node ./dist/server/server_main.js --config ./src/dev_project/config.e8.json --generate",
-    "generate-everything": "npm run test:generate && npm run icons && npm run generate",
+    "dev:server:run": "npx nodemon ./target/e8-devtool.js --watch ./target/e8-devtool.js -- --html 'http://localhost:24658' --no-start-open --config $E8_DEVTOOL_CONFIG",
+    "generate-everything": "npm run test:generate && npm run icons",
     "icons": "npx icon-font-tool --svg-dir src/icons --font-path src/generated/icons --font-normalize --font-descent 150 --css-path src/generated/icons.css --ts-path src/generated/icons.ts --ts-css-import-style star --ts-name Icon",
     "build": "npm run typecheck && npm run build:prepare && npm run build:client && npm run build:server && npm run build:copy_static",
     "build:prepare": "rm -rf ./target && rm -rf ./dist && mkdir ./target",
-    "build:client": "npx parcel build --target client --no-cache && cp -r ./dist/client/ ./target/client",
-    "build:server": "npx parcel build --target server --no-cache && cp ./dist/server/server_main.js ./target/e8-devtool.js",
+    "build:client": "npx parcel build --target client --no-cache",
+    "build:server": "npx parcel build --target server --no-cache",
     "build:copy_static": "cp ./LICENSE ./target/ && cp ./README.md ./target && npm run build:cut_package",
     "build:cut_package": "npx package-cutter --output ./target/package.json",
     "pack": "npm run build && cd target && npm pack && mv *.tgz e8-devtool.tgz"
@@ -54,7 +64,7 @@
   },
   "dependencies": {
     "@nartallax/cardboard": "^2.1.10",
-    "@nartallax/cli": "^1.0.1",
+    "@nartallax/cli": "^1.0.2",
     "fernandez-polygon-decomposition": "^2.0.0",
     "mime-types": "^2.1.35",
     "open": "^10.1.0",
@@ -63,17 +73,21 @@
     "xml-js": "^1.6.11"
   },
   "peerDependencies": {
-    "@nartallax/e8": "file:../e8/target/e8.tgz"
+    "@nartallax/e8": "0.0.1"
   },
   "targets": {
     "client": {
-      "source": "src/client/index.html"
+      "distDir": "./target/client",
+      "source": "src/client/index.html",
+      "sourceMap": false
     },
     "server": {
-      "source": "src/server/server_main.ts",
+      "distDir": "./target",
+      "source": "src/server/e8-devtool.ts",
       "context": "node",
       "isLibrary": true,
       "optimize": true,
+      "sourceMap": false,
       "outputFormat": "esmodule"
     },
     "test": {

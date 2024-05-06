@@ -2,14 +2,11 @@ import {CLI} from "@nartallax/cli"
 import * as Path from "path"
 
 const cli = CLI.define({
-	helpHeader: "Webserver for picgen web GUI",
+	helpHeader: "Developer tool for E8 game engine.",
 	options: {
-		help: CLI.help({
-			keys: ["-h", "--h", "-help", "--help"],
-			description: "Display help and exit"
-		}),
 		html: CLI.str({
 			keys: ["--html"],
+			isHidden: true,
 			description: "Path to directory, or URL, that contains HTML and other browser-related devtool files. Mostly meant for development of the tool itself; for other purposes tool comes with its own client.",
 			default: Path.resolve(Path.dirname(process.argv[1] ?? "."), "./client/")
 		}),
