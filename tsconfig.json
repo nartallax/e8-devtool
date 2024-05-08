@@ -19,6 +19,7 @@
         "lib": ["dom", "ESNext"],
 
         "allowJs": false,
+        "jsx": "react-jsx",
         
         "noErrorTruncation": false,
         "downlevelIteration": true,

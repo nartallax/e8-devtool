@@ -1,5 +1,9 @@
 @use "./vars.scss" as *;
 
+html {
+	font-size: 14px;
+}
+
 body {
 	width: 100vw;
 	height: 100vh;

@@ -2,13 +2,14 @@ body {
 	--color-background: #222;
 	--color-foreground: #333;
 	--color-interactive: #444;
-	--color-border: #444;
 	--color-interactive-disabled: #333;
 	--color-interactive-focus: #555;
 	--color-interactive-active: #666;
+	--color-border: #444;
 	--color-font: #ddd;
 	--color-font-disabled: #999;
+	
 	--default-border-radius: 0.25rem;
 	--default-border-width: 2px;
-	--default-spacing: 0.25rem;
+	--default-border: var(--default-border-width) solid var(--color-border);
 }
