@@ -1,0 +1,44 @@
+.modalWrap {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+}
+
+.modalBackground {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: rgba(0, 0, 0, 0.25);
+
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal {
+	border: var(--default-border);
+	border-radius: var(--default-border-radius);
+	background-color: var(--color-background);
+}
+
+.modalHeader {
+	padding-left: calc(var(--default-padding) * 2);
+	border-bottom: var(--default-border);
+	background-color: var(--color-foreground);
+	font-weight: bold;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 1rem;
+	justify-content: space-between;
+	height: 1.8rem;
+}
+
+.modalBody {
+	padding: var(--default-padding);
+}

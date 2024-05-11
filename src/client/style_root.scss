@@ -4,7 +4,7 @@ html {
 	font-size: 14px;
 }
 
-body {
+#app {
 	width: 100vw;
 	height: 100vh;
 	background-color: var(--color-background);
@@ -12,18 +12,15 @@ body {
 	flex-direction: column;
 	align-items: stretch;
 	justify-content: flex-start;
+}
+
+* {
 	border: 0;
 	margin: 0;
 	padding: 0;
-
-	* {
-		border: 0;
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-		line-height: 1.3em;
-		font-size: 0.9rem;
-		font-family: 'OpenSans', Arial, Helvetica, sans-serif;
-		color: var(--color-font);
-	}
+	box-sizing: border-box;
+	line-height: 1.3em;
+	font-size: 1rem;
+	font-family: 'OpenSans', Arial, Helvetica, sans-serif;
+	color: var(--color-font);
 }

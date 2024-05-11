@@ -1,0 +1,6 @@
+.vanisher {
+	&.vanishing {
+		position: absolute;
+		pointer-events: none;
+	}
+}

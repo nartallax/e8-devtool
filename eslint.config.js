@@ -163,8 +163,12 @@ let result = tseslint.config(
 		"react/iframe-missing-sandbox": ["error"],
 		"react/jsx-boolean-value": ["warn"],
 		"react/jsx-child-element-spacing": ["warn"],
-		"react/jsx-closing-bracket-location": ["warn"],
-		"react/jsx-closing-tag-location": ["warn"],
+		"react/jsx-closing-bracket-location": ["warn", {
+			"nonEmpty": "after-props",
+			"selfClosing": "after-props"
+		}],
+		// it's too stupid for cases like `cond && <div>\ntext\n</div>`
+		"react/jsx-closing-tag-location": ["off"],
 		"react/jsx-curly-brace-presence": ["warn", { props: "never", children: "never" }],
 		"react/jsx-curly-newline": ["warn"],
 		"react/jsx-curly-spacing": ["warn"],
@@ -174,7 +178,8 @@ let result = tseslint.config(
 		// sometimes you may want to use React.Fragment to pass key
 		// but most of the time it's just <></>
 		"react/jsx-fragments": ["off"],
-		"react/jsx-handler-names": ["warn"],
+		// good rule in theory, but it was triggering on onClick={onClick} and I couldn't make it stop
+		"react/jsx-handler-names": ["off"],
 		"react/jsx-indent-props": ["warn", "tab"],
 		"react/jsx-indent": ["warn", "tab"],
 		"react/jsx-key": ["error"],
@@ -253,7 +258,7 @@ let result = tseslint.config(
 		"react/no-unescaped-entities": ["error"],
 		"react/no-unknown-property": ["error"],
 		"react/no-unsafe": ["error"],
-		"react/no-unstable-nested-components": ["error"],
+		"react/no-unstable-nested-components": ["error", {allowAsProps: true}],
 		"react/no-unused-class-component-methods": ["warn"],
 		"react/no-unused-prop-types": ["warn"],
 		"react/no-unused-state": ["warn"],
