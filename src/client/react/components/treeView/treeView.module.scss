@@ -1,0 +1,117 @@
+@use 'sass:color';
+
+.treeView {
+	border: var(--default-border);
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	border-radius: var(--default-border-radius);
+	background-color: var(--color-foreground);
+
+	--row-size: 2rem;
+	--branch-radius: 0.4rem;
+	--branch-width: 2px;
+	--branch-border: var(--branch-width) solid var(--color-guiding-lines);
+}
+
+.treeRow {
+	height: var(--row-size);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	background-color: var(--color-foreground);
+
+	&:hover {
+		background-color: var(--color-interactive);
+	}
+
+	&.isExpanded .branchExpander {
+		transform: translateX(1px) rotate(90deg);
+	}
+}
+
+.branchExpander, .branchSplit, .branchCorner, .branchEmpty, .branchVertical, .branchHorisontal {
+	height: var(--row-size);
+	width: var(--row-size);
+	position: relative;
+}
+
+.branchSplit, .branchCorner, .branchVertical, .branchHorisontal {
+	&::before, &::after {
+		border: var(--branch-border);
+		position: absolute;
+	}
+}
+
+.branchExpander {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+.branchSplit {
+	&::before {
+		content: '';
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		border-width: 0 0 0 var(--branch-width);
+	}
+
+	&::after {
+		content: '';
+		top: 0;
+		bottom: 50%;
+		left: 50%;
+		right: -25%;
+		border-width: 0 0 var(--branch-width) 0;
+		border-radius: 0 0 0 var(--branch-radius);
+	}
+}
+
+.branchCorner {
+	&::before {
+		content: '';
+		top: -15%;
+		bottom: 50%;
+		left: 50%;
+		right: -25%;
+		border-width: 0 0 var(--branch-width) var(--branch-width);
+		border-radius: 0 0 0 var(--branch-radius);
+	}
+}
+
+.branchVertical {
+	&::before {
+		content: '';
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		border-width: 0 0 0 var(--branch-width);
+	}
+}
+
+.branchHorisontal {
+	&::before {
+		content: '';
+		bottom: 50%;
+		left: 0;
+		right: 0;
+		border-width: 0 0 var(--branch-width) 0;
+	}
+}
+
+.treeChildrenWrap {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.branchSquareContainer {
+	display: flex;
+	flex-direction: row;
+	flex: 0 0 auto;
+	margin-right: 0.5rem;
+}

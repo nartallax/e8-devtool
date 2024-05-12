@@ -22,7 +22,7 @@ export const ProjectProvider = ({children}: PropsWithChildren) => {
 	)
 }
 
-export const useProject = () => {
+export const useProject = (): [Project, SetState<Project>] => {
 	const {project, setProject} = useContext(ProjectContext)
 	return [project, setProject]
 }

@@ -231,7 +231,8 @@ let result = tseslint.config(
 		"react/no-access-state-in-setstate": ["error"],
 		// not sure if I need it
 		"react/no-adjacent-inline-elements": ["off"],
-		"react/no-array-index-key": ["error"],
+		// I'm not stupid, if I'm using it - then it's okay
+		"react/no-array-index-key": ["off"],
 		"react/no-arrow-function-lifecycle": ["error"],
 		"react/no-children-prop": ["error"],
 		"react/no-danger-with-children": ["error"],
