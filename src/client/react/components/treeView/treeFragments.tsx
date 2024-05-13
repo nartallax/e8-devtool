@@ -12,6 +12,7 @@ type BaseProps<L, B> = {
 	readonly getLeafKey: (leaf: L) => string
 	readonly getBranchLabel: (branch: B) => React.ReactNode
 	readonly getLeafLabel: (leaf: L) => React.ReactNode
+	readonly onLeafDoubleclick?: (leaf: L) => void
 	readonly squares?: SquareName[]
 }
 
@@ -51,17 +52,17 @@ const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
 	)
 }
 
-const TreeRow = <T, B>({row, squares, isExpanded, getBranchLabel, getLeafLabel, onExpandChange}: RowProps<T, B>) => {
+const TreeRow = <T, B>({row, squares, isExpanded, getBranchLabel, getLeafLabel, onExpandChange, onLeafDoubleclick}: RowProps<T, B>) => {
 	if(isTreeBranch(row)){
 		return (
-			<div className={cn(css.treeRow, css.isBranch, {[css.isExpanded!]: isExpanded})} onClick={onExpandChange}>
+			<div className={cn(css.treeRow, {[css.isExpanded!]: isExpanded})} onClick={onExpandChange}>
 				<TreeRowSquares squares={squares ?? []} endsWith="expander"/>
 				{getBranchLabel(row.value)}
 			</div>
 		)
 	} else {
 		return (
-			<div className={css.treeRow}>
+			<div className={css.treeRow} onDoubleClick={() => onLeafDoubleclick?.(row.value)}>
 				{!squares
 					? <TreeRowSquares squares={["empty"]}/>
 					: <TreeRowSquares squares={squares} endsWith="horisontal"/>}

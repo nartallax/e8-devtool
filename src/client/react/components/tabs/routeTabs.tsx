@@ -15,13 +15,17 @@ type Props = {
 	readonly tabs: RouteTab[]
 	readonly historyActionType?: "push" | "replace"
 	readonly matchedUrl?: URL
+	readonly autoRouteToDefault?: boolean
 }
 
-export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl}: Props) => {
+export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, autoRouteToDefault = false}: Props) => {
 	const {matchedUrl: baseUrl} = useRoutingContext()
 	const effMatchedUrl = matchedUrl ?? baseUrl
 
 	useEffect(() => {
+		if(!autoRouteToDefault){
+			return
+		}
 		const matchingTab = tabs.find(tab => isMatching(tab, effMatchedUrl))
 		if(matchingTab){
 			return
@@ -31,7 +35,7 @@ export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl}: Props)
 			return
 		}
 		goToTab(baseUrl, defaultTab, historyActionType)
-	}, [effMatchedUrl, tabs, baseUrl, historyActionType])
+	}, [effMatchedUrl, tabs, baseUrl, historyActionType, autoRouteToDefault])
 
 	return (
 		<Tabs tabs={tabs.map(tab => ({
@@ -46,7 +50,7 @@ export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl}: Props)
 }
 
 const isMatching = (tab: RouteTab, url: URL): boolean => {
-	return url.pathname.endsWith(tab.suffix)
+	return url.pathname.startsWith(tab.suffix)
 }
 
 const goToTab = (baseUrl: URL, tab: RouteTab, historyActionType: Props["historyActionType"]) => {

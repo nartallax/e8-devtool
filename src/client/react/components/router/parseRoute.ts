@@ -91,7 +91,8 @@ const extractRouteArgs = (route: ParsedRoute, url: URL): Record<string, string> 
 const stripUsedRouteParts = (route: ParsedRoute, url: URL): URL => {
 	const path = "/" + url.pathname
 		.split("/")
-		.slice(route.path.length + 1) // +1 here because `pathname` always starts with /
+		.filter(x => x.length > 0)
+		.slice(route.path.length)
 		.join("/")
 
 	const query = [...url.searchParams.entries()]
@@ -143,7 +144,7 @@ const appendUsedRouteParts = (route: ParsedRoute, match: Record<string, string>,
 
 const matchPath = (matchers: ParsedRoute["path"], url: URL): Record<string, string> | null => {
 	const result: Record<string, string> = {}
-	const pathParts = (url.pathname ?? "").split("/").slice(1)
+	const pathParts = url.pathname.split("/").filter(x => x.length > 0)
 	for(let i = 0; i < matchers.length; i++){
 		const matcher = matchers[i]!
 		const pathPart = pathParts[i]

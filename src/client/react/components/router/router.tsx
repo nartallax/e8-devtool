@@ -1,5 +1,6 @@
 import {RouteDefinition, RouteMatchingResult, matchRoutes} from "client/react/components/router/parseRoute"
 import {RoutingContext, useRoutingContext} from "client/react/components/router/routingContext"
+import {Col} from "client/react/components/rowCol/rowCol"
 import {Vanisher} from "client/react/components/vanisher/vanisher"
 import {useEffect, useState} from "react"
 
@@ -19,7 +20,11 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 			matchedUrl: oldMatchedUrl,
 			routes
 		})
-		if((newRouteMatch === null) !== (routeMatch === null) || (newRouteMatch?.matchedUrl + "") !== (routeMatch?.matchedUrl + "")){
+		console.log(routes[0]?.[0], {oldMatchedUrl: oldMatchedUrl + "", oldNonMatchedUrl: oldNonMatchedUrl + "", newMatchedUrl: newRouteMatch?.matchedUrl + "", newNonMatchedUrl: newRouteMatch?.nonMatchedUrl + ""})
+		const hasMatchChanged = (newRouteMatch === null) !== (routeMatch === null)
+		const matchedUrlChanged = (newRouteMatch?.matchedUrl + "") !== (routeMatch?.matchedUrl + "")
+		const nonMatchedUrlChanged = (newRouteMatch?.nonMatchedUrl + "") !== (routeMatch?.nonMatchedUrl + "")
+		if(hasMatchChanged || matchedUrlChanged || nonMatchedUrlChanged){
 			setRouteMatch(newRouteMatch)
 			onMatchedUrlUpdate?.(newRouteMatch?.matchedUrl ?? null)
 		}
@@ -29,9 +34,11 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 
 	return !routeMatch ? null : (
 		<RoutingContext.Provider value={{nonMatchedUrl: routeMatch.nonMatchedUrl, matchedUrl: routeMatch.matchedUrl}}>
-			<Vanisher key={routeMatch.routePattern}>
-				{routeMatch.renderer(routeMatch.arguments)}
-			</Vanisher>
+			<Col grow={1} shrink={1} alignSelf="stretch">
+				<Vanisher key={routeMatch.routePattern}>
+					{routeMatch.renderer(routeMatch.arguments)}
+				</Vanisher>
+			</Col>
 		</RoutingContext.Provider>
 	)
 }

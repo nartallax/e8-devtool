@@ -4,10 +4,12 @@ import {CSSProperties, PropsWithChildren} from "react"
 
 type Props = {
 	readonly padding?: DefaultableSideSize
+	readonly margin?: DefaultableSideSize
 	readonly shrink?: number
 	readonly grow?: number
 	readonly justify?: "start" | "center" | "space-between" | "end"
 	readonly align?: "start" | "center" | "end" | "stretch"
+	readonly alignSelf?: "start" | "center" | "end" | "stretch"
 	readonly width?: MinMaxableSize
 	readonly height?: MinMaxableSize
 	readonly gap?: DefaultableSize
@@ -18,10 +20,12 @@ const defaultBorder = "var(--default-border-width)"
 
 const propsToStyle = (props: Props): CSSProperties => ({
 	padding: resolveDefaultableSideSize(props.padding),
+	margin: resolveDefaultableSideSize(props.margin),
 	flexShrink: props.shrink,
 	flexGrow: props.grow,
 	justifyContent: resolveFlexAlign(props.justify),
 	alignItems: resolveFlexAlign(props.align),
+	alignSelf: resolveFlexAlign(props.alignSelf),
 	gap: resolveDefaultableSize(props.gap),
 	borderWidth: resolveDefaultableSideSize(props.border, defaultBorder),
 	...resolveMinMaxableSize("width", props.width),

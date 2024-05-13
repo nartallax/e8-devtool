@@ -7,6 +7,8 @@
 	align-items: stretch;
 	border-radius: var(--default-border-radius);
 	background-color: var(--color-foreground);
+	flex: 1 1 0;
+	overflow: auto;
 
 	--row-size: 2rem;
 	--branch-radius: 0.4rem;

@@ -8,11 +8,11 @@ type Props = {
 }
 
 export const TabsAndRouter = ({tabs, routes}: Props) => {
-	const [matchedUrl, setMatchedUrl] = useState<URL | null>(null)
+	const [matchedUrl, setMatchedUrl] = useState<URL | null | undefined>(undefined)
 
 	return (
 		<>
-			<RouteTabs tabs={tabs} matchedUrl={matchedUrl ?? undefined}/>
+			<RouteTabs tabs={tabs} matchedUrl={matchedUrl ?? undefined} autoRouteToDefault={matchedUrl !== undefined}/>
 			<Router routes={routes} onMatchedUrlUpdate={setMatchedUrl}/>
 		</>
 	)
