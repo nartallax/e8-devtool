@@ -2,7 +2,7 @@ import {RouteDefinition, RouteMatchingResult, matchRoutes} from "client/react/co
 import {RoutingContext, useRoutingContext} from "client/react/components/router/routingContext"
 import {Col} from "client/react/components/rowCol/rowCol"
 import {Vanisher} from "client/react/components/vanisher/vanisher"
-import {useEffect, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
 export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 	const {nonMatchedUrl: oldNonMatchedUrl, matchedUrl: oldMatchedUrl} = useRoutingContext()
 	const [routeMatch, setRouteMatch] = useState<RouteMatchingResult | null>(null)
+	const everCalledUpdateHandler = useRef(false)
 
 	useEffect(() => {
 		const newRouteMatch = matchRoutes({
@@ -20,11 +21,11 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 			matchedUrl: oldMatchedUrl,
 			routes
 		})
-		console.log(routes[0]?.[0], {oldMatchedUrl: oldMatchedUrl + "", oldNonMatchedUrl: oldNonMatchedUrl + "", newMatchedUrl: newRouteMatch?.matchedUrl + "", newNonMatchedUrl: newRouteMatch?.nonMatchedUrl + ""})
 		const hasMatchChanged = (newRouteMatch === null) !== (routeMatch === null)
 		const matchedUrlChanged = (newRouteMatch?.matchedUrl + "") !== (routeMatch?.matchedUrl + "")
 		const nonMatchedUrlChanged = (newRouteMatch?.nonMatchedUrl + "") !== (routeMatch?.nonMatchedUrl + "")
-		if(hasMatchChanged || matchedUrlChanged || nonMatchedUrlChanged){
+		if(hasMatchChanged || matchedUrlChanged || nonMatchedUrlChanged || !everCalledUpdateHandler.current){
+			everCalledUpdateHandler.current = true
 			setRouteMatch(newRouteMatch)
 			onMatchedUrlUpdate?.(newRouteMatch?.matchedUrl ?? null)
 		}

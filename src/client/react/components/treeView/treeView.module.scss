@@ -31,6 +31,21 @@
 	&.isExpanded .branchExpander {
 		transform: translateX(1px) rotate(90deg);
 	}
+
+	.rowLabel {
+		flex: 1 1 0;
+		min-width: 0;
+		text-overflow: ellipsis;
+		overflow: hidden;
+	}
+
+	.rowButtons {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-end;
+		flex: 0 0 auto;
+	}
 }
 
 .branchExpander, .branchSplit, .branchCorner, .branchEmpty, .branchVertical, .branchHorisontal {
@@ -116,4 +131,13 @@
 	flex-direction: row;
 	flex: 0 0 auto;
 	margin-right: 0.5rem;
+}
+
+.inlineEditor {
+	background: transparent;
+	border: 0;
+	color: var(--font-color);
+	display: block;
+	flex: 1 1 0;
+	margin-right: 0.25rem;
 }

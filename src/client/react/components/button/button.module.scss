@@ -4,7 +4,7 @@
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	gap: 0.25rem;
+	gap: 0.5rem;
 	transition: background-color 0.15s;
 	cursor: pointer;
 
@@ -53,6 +53,16 @@
 		color: var(--color-font-disabled);
 	}
 
+	&.isPressed {
+		background: radial-gradient(circle at center, #aaa 0, #aaa 50%, transparent 50%, transparent 100%);
+		animation-name: growingcircle;
+		animation-duration: var(--holdTimeUntilAction);
+		animation-iteration-count: 1;
+		animation-timing-function: ease-out;
+		background-repeat: no-repeat;
+		background-position: 50% 50%;
+	}
+
 	.icon {
 		display: inline;
 	}
@@ -60,4 +70,14 @@
 	.text {
 		font-size: 1rem;
 	}
+}
+
+@keyframes growingcircle {
+  0% {
+	background-size: 0% 0%;
+  }
+  
+  100% {
+	background-size: 200% 200%;
+  }
 }

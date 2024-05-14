@@ -1,8 +1,7 @@
 import {Tree} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
-import {Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
-import {XY} from "@nartallax/e8"
+import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
 
 /** Project is source data for resource pack
  *

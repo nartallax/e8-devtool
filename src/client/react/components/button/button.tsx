@@ -13,20 +13,54 @@ type Props = {
 	readonly hotkey?: (e: KeyboardEvent) => boolean
 	readonly variant?: "default" | "plain-icon" | "tab"
 	readonly isActive?: boolean
+	/** If passed, user will be required to hold the button for some time until onClick is called.
+	This can be bypassed by holding shift when clicking */
+	readonly holdTimeUntilAction?: number
 }
 
-export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, hotkey, variant = "default", isActive = false}: Props) => {
+export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0}: Props) => {
 	const [disabledByTimeoutCount, setDisabledByTimeoutCount] = useState(0)
 	const isEffectivelyDisabled = disabledByTimeoutCount > 0 || isDisabled
 	const ref = useRef<HTMLButtonElement>(null)
+	const [isPressed, setIsPressed] = useState(false)
+	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-	const wrappedOnClick = useCallback(() => {
+	const doClick = useCallback(() => {
 		onClick?.()
 		if(clickRepeatTimeout > 0){
 			setDisabledByTimeoutCount(count => count + 1)
 			setTimeout(() => setDisabledByTimeoutCount(count => count - 1), 250)
 		}
 	}, [onClick, clickRepeatTimeout])
+
+	const wrappedOnClick = useCallback(() => {
+		if(holdTimeUntilAction > 0){
+			return // will be processed by onDown/onUp handlers
+		}
+		doClick()
+	}, [doClick, holdTimeUntilAction])
+
+	const onPress = useCallback((e: React.MouseEvent) => {
+		if(e.shiftKey){
+			doClick()
+			return
+		}
+		if(holdTimeUntilAction === 0){
+			return // processed by click handler
+		}
+		setIsPressed(true)
+		timeout.current = setTimeout(() => {
+			doClick()
+		}, holdTimeUntilAction)
+	}, [doClick, holdTimeUntilAction])
+
+	const onRelease = useCallback(() => {
+		setIsPressed(false)
+		if(timeout.current !== null){
+			clearTimeout(timeout.current)
+		}
+		timeout.current = null
+	}, [])
 
 	useHotkey({ref, shouldPick: hotkey, onPress: wrappedOnClick})
 
@@ -38,12 +72,16 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 				[css.defaultVariant!]: variant === "default",
 				[css.plainIconVariant!]: variant === "plain-icon",
 				[css.tabVariant!]: variant === "tab",
-				[css.isActive!]: isActive
+				[css.isActive!]: isActive,
+				[css.isPressed!]: isPressed
 			})}
+			style={{["--holdTimeUntilAction"]: (holdTimeUntilAction / 1000) + "s"} as React.CSSProperties}
 			disabled={isEffectivelyDisabled}
-			onClick={wrappedOnClick}>
-			{!!text && <div className={css.text}>{text}</div>}
+			onClick={wrappedOnClick}
+			onMouseDown={onPress}
+			onMouseUp={onRelease}>
 			{!!icon && <div className={cn(css.icon, icon)}/>}
+			{!!text && <div className={css.text}>{text}</div>}
 		</button>
 	)
 }

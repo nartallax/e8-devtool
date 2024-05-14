@@ -12,7 +12,7 @@ export const TabsAndRouter = ({tabs, routes}: Props) => {
 
 	return (
 		<>
-			<RouteTabs tabs={tabs} matchedUrl={matchedUrl ?? undefined} autoRouteToDefault={matchedUrl !== undefined}/>
+			<RouteTabs tabs={tabs} matchedUrl={matchedUrl ?? undefined} isAutoRoutingToDefaultEnabled={matchedUrl !== undefined}/>
 			<Router routes={routes} onMatchedUrlUpdate={setMatchedUrl}/>
 		</>
 	)
