@@ -9,6 +9,7 @@ import React = require("react")
 import {Button} from "client/react/components/button/button"
 import {SetState} from "client/react/uiUtils/setState"
 import {isInButton} from "client/react/uiUtils/domQueries"
+import {useTreeViewDrag} from "client/react/components/treeView/treeDrag"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -70,6 +71,8 @@ const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
 const TreeRow = <T, B>({
 	row, squares, isExpanded, getBranchLabel, getLeafLabel, onExpandChange, onLeafDoubleclick, path, inlineEditPath, onLabelEditComplete, canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, canDeleteBranch, canDeleteLeaf
 }: RowProps<T, B>) => {
+	const rowRef = React.useRef<HTMLDivElement | null>(null)
+	useTreeViewDrag(rowRef, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
 	const label = isTreeBranch(row) ? getBranchLabel(row.value) : getLeafLabel(row.value)
 	let labelOrEditor: React.ReactNode
@@ -111,7 +114,11 @@ const TreeRow = <T, B>({
 		}
 
 		return (
-			<div className={cn(css.treeRow, {[css.isExpanded!]: isExpanded})} onClick={onRowClick}>
+			<div
+				className={cn(css.treeRow, {[css.isExpanded!]: isExpanded})}
+				onClick={onRowClick}
+				ref={rowRef}
+				data-path={JSON.stringify(path)}>
 				<TreeRowSquares squares={squares ?? []} endsWith="expander"/>
 				{labelOrEditor}
 				{buttonsEl}
@@ -125,7 +132,11 @@ const TreeRow = <T, B>({
 		}
 
 		return (
-			<div className={css.treeRow} onDoubleClick={onRowDblClick}>
+			<div
+				className={css.treeRow}
+				onDoubleClick={onRowDblClick}
+				ref={rowRef}
+				data-path={JSON.stringify(path)}>
 				{!squares
 					? <TreeRowSquares squares={["empty"]}/>
 					: <TreeRowSquares squares={squares} endsWith="horisontal"/>}

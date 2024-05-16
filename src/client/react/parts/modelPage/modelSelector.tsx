@@ -4,7 +4,7 @@ import {Col, Row} from "client/react/components/rowCol/rowCol"
 import {TreeControls, TreeView} from "client/react/components/treeView/treeView"
 import {useProject} from "client/react/parts/projectContext"
 import {appendUrlPath, pushHistory} from "client/react/uiUtils/urls"
-import {Tree, TreePath, deleteTreeByPath, getBranchByPath, getLeafByPath, getTreeLeaves, updateBranchByPath} from "common/tree"
+import {Tree, TreePath, deleteTreeByPath, getBranchByPath, getLeafByPath, getTreeLeaves, moveTreeByPath, updateBranchByPath} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {Icon} from "generated/icons"
@@ -84,6 +84,13 @@ export const ModelSelector = () => {
 		})
 	}
 
+	const onDrag = (from: TreePath, to: TreePath) => {
+		setProject(project => {
+			const modelTree = moveTreeByPath(project.modelTree, from, to)
+			return {...project, modelTree}
+		})
+	}
+
 	return (
 		<Col
 			width="100%"
@@ -110,7 +117,8 @@ export const ModelSelector = () => {
 					onBranchLabelEdit={onBranchNameChange}
 					onLeafLabelEdit={onLeafNameChange}
 					onBranchDelete={onDirectoryDelete}
-					onLeafDelete={onModelDelete}/>
+					onLeafDelete={onModelDelete}
+					onDrag={onDrag}/>
 			</Col>
 		</Col>
 	)

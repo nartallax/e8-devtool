@@ -218,3 +218,37 @@ export const deleteTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreeP
 		return {...branch, children}
 	})
 }
+
+export const addTreeByPath = <T, B>(trees: readonly Tree<T, B>[], newTree: Tree<T, B>, path: TreePath): Tree<T, B>[] => {
+	if(path.length === 0){
+		throw new Error("Could not add tree by zero-length path")
+	}
+	const lastIndex = path[path.length - 1]!
+
+	if(path.length === 1){
+		return [...trees.slice(0, lastIndex), newTree, ...trees.slice(lastIndex)]
+	}
+
+	return updateBranchByPath(trees, path.slice(0, path.length - 1), branch => {
+		const children = [...branch.children.slice(0, lastIndex), newTree, ...branch.children.slice(lastIndex)]
+		return {...branch, children}
+	})
+}
+
+export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
+	const tree = getTreeByPath(trees, from)
+	if(!tree){
+		throw new Error("Nothing to move")
+	}
+
+	to = [...to]
+	for(let i = 0; i < Math.min(from.length, to.length); i++){
+		if(from[i]! < to[i]!){
+			to[i]!--
+			break
+		}
+	}
+
+	trees = deleteTreeByPath(trees, from)
+	return addTreeByPath(trees, tree, to)
+}

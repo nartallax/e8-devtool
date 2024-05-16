@@ -9,11 +9,29 @@
 	background-color: var(--color-foreground);
 	flex: 1 1 0;
 	overflow: auto;
+	position: relative;
 
 	--row-size: 2rem;
 	--branch-radius: 0.4rem;
 	--branch-width: 2px;
 	--branch-border: var(--branch-width) solid var(--color-guiding-lines);
+	--drag-dest-y: -100000px;
+	
+	&.dragContainer {
+		overflow-x: hidden;
+		&::after {
+			content: ' ';
+			height: 10px;
+			background: rgba(128, 128, 128, 0.5);
+			border-radius: 5px;
+			width: 200px;
+			transform: translate(-100px, -5px);
+
+			position: absolute;
+			top: var(--drag-dest-y);
+			left: 50%;
+		}
+	}
 }
 
 .treeRow {
@@ -45,6 +63,15 @@
 		align-items: center;
 		justify-content: flex-end;
 		flex: 0 0 auto;
+	}
+
+	&.draggedRow {
+		transform: translate(-50%, -50%) scale(0.5);
+		opacity: 0.5;
+		position: relative;
+		pointer-events: none;
+		top: var(--drag-offset-y);
+		left: var(--drag-offset-x);
 	}
 }
 
