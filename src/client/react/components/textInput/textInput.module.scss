@@ -1,0 +1,22 @@
+.textInput {
+	border: var(--default-border);
+	border-radius: var(--default-border-radius);
+	background-color: var(--color-interactive);
+	transition: backgroudn-color 0.15s;
+	padding: 0.25rem;
+	flex: 1 1 0;
+	min-width: 3rem;
+	line-height: 1.5rem;
+
+	&:hover, &:focus {
+		background-color: var(--color-interactive-focus);
+	}
+
+	&.hasError {
+		border-color: var(--color-error);
+	}
+
+	&[disabled]{
+		opacity: 0.5;
+	}
+}

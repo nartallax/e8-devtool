@@ -1,0 +1,22 @@
+.formField {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	justify-content: flex-start;
+}
+
+.formFieldLabel {
+	padding: var(--default-border-width);
+	width: 10rem;
+	min-width: 10rem;
+	text-align: right;
+
+	display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-end;
+
+	.formFieldLabelText {
+		padding: 0.25rem;
+	}
+}

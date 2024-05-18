@@ -13,10 +13,10 @@ import {useTreeViewDrag} from "client/react/components/treeView/treeDrag"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
-	readonly getBranchKey: (branch: B) => string
+	readonly getBranchKey?: (branch: B) => string
 	// eslint-disable-next-line react/no-unused-prop-types
 	readonly getLeafKey: (leaf: L) => string
-	readonly getBranchLabel: (branch: B) => string
+	readonly getBranchLabel?: (branch: B) => string
 	readonly getLeafLabel: (leaf: L) => string
 	readonly onLeafDoubleclick?: (leaf: L) => void
 	readonly squares?: SquareName[]
@@ -74,7 +74,15 @@ const TreeRow = <T, B>({
 	const rowRef = React.useRef<HTMLDivElement | null>(null)
 	useTreeViewDrag(rowRef, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
-	const label = isTreeBranch(row) ? getBranchLabel(row.value) : getLeafLabel(row.value)
+	let label: string
+	if(isTreeBranch(row)){
+		if(!getBranchLabel){
+			throw new Error("Cannot get branch label: no function provided.")
+		}
+		label = getBranchLabel(row.value)
+	} else {
+		label = getLeafLabel(row.value)
+	}
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
 		labelOrEditor = <InlineTreeElementEditor initialValue={label} onComplete={label => onLabelEditComplete(path, row, label)}/>
@@ -189,6 +197,9 @@ export const TreeBranchChildren = <T, B>({tree, squares, path, ...props}: TreeBr
 				const squares = (i === arr.length - 1 ? squaresCap : squaresMiddle)
 				const newPath = [...path, i]
 				if(isTreeBranch(tree)){
+					if(!getBranchKey){
+						throw new Error("Cannot get branch key: no function provided")
+					}
 					return (
 						<TreeBranch
 							branch={tree}

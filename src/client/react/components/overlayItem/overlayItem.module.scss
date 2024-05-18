@@ -1,0 +1,31 @@
+.overlayItem {
+	position: absolute;
+}
+
+.tooltipIcon {
+	cursor: pointer;
+	color: var(--color-font);
+	width: 2rem;
+	height: 2rem;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+
+	&.isError {
+		color: var(--color-error);
+	}
+
+	&.isHidden {
+		pointer-events: none;
+		visibility: hidden;
+	}
+}
+
+.tooltip {
+	min-width: 200px;
+	padding: 0.25rem;
+	border: var(--default-border);
+	border-radius: var(--default-border-radius);
+	background: var(--color-background);
+}
