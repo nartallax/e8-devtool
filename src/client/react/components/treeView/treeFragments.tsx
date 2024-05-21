@@ -10,6 +10,7 @@ import {Button} from "client/react/components/button/button"
 import {SetState} from "client/react/uiUtils/setState"
 import {isInButton} from "client/react/uiUtils/domQueries"
 import {useTreeViewDrag} from "client/react/components/treeView/treeDrag"
+import {ValidatorsMaybeFabric} from "client/react/components/form/validators"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -17,7 +18,9 @@ type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
 	readonly getLeafKey: (leaf: L) => string
 	readonly getBranchLabel?: (branch: B) => string
+	readonly getBranchSublabel?: (leaf: B) => string
 	readonly getLeafLabel: (leaf: L) => string
+	readonly getLeafSublabel?: (leaf: L) => string
 	readonly onLeafDoubleclick?: (leaf: L) => void
 	readonly squares?: SquareName[]
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -30,6 +33,8 @@ type BaseProps<L, B> = {
 	readonly onNodeDelete: (path: TreePath, tree: Tree<L, B>) => void
 	readonly canDeleteLeaf: boolean
 	readonly canDeleteBranch: boolean
+	readonly leafLabelValidators?: ValidatorsMaybeFabric<string, L>
+	readonly branchLabelValidators?: ValidatorsMaybeFabric<string, B>
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
@@ -69,7 +74,10 @@ const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
 }
 
 const TreeRow = <T, B>({
-	row, squares, isExpanded, getBranchLabel, getLeafLabel, onExpandChange, onLeafDoubleclick, path, inlineEditPath, onLabelEditComplete, canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, canDeleteBranch, canDeleteLeaf
+	row, squares, isExpanded, getBranchLabel, getLeafLabel, getLeafSublabel, getBranchSublabel,
+	onExpandChange, onLeafDoubleclick, path, inlineEditPath, onLabelEditComplete,
+	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, canDeleteBranch,
+	canDeleteLeaf, leafLabelValidators, branchLabelValidators
 }: RowProps<T, B>) => {
 	const rowRef = React.useRef<HTMLDivElement | null>(null)
 	useTreeViewDrag(rowRef, path)
@@ -85,9 +93,28 @@ const TreeRow = <T, B>({
 	}
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
-		labelOrEditor = <InlineTreeElementEditor initialValue={label} onComplete={label => onLabelEditComplete(path, row, label)}/>
+		if(isTreeBranch(row)){
+			// yeah, those two blocks are almost identical
+			// but there still should be two, for consistency
+			labelOrEditor = (<InlineTreeElementEditor
+				initialValue={label}
+				onComplete={label => onLabelEditComplete(path, row, label)}
+				row={row.value}
+				validators={branchLabelValidators}/>)
+		} else {
+			labelOrEditor = (<InlineTreeElementEditor
+				initialValue={label}
+				onComplete={label => onLabelEditComplete(path, row, label)}
+				row={row.value}
+				validators={leafLabelValidators}/>)
+		}
 	} else {
-		labelOrEditor = <div className={css.rowLabel}>{label}</div>
+		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value) : getLeafSublabel?.(row.value)
+
+		labelOrEditor = (<div className={css.rowLabel}>
+			{label}
+			{!!sublabel && <span className={css.rowSublabel}>{sublabel}</span>}
+		</div>)
 	}
 
 	const buttons: React.ReactNode[] = []

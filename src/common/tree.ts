@@ -235,12 +235,7 @@ export const addTreeByPath = <T, B>(trees: readonly Tree<T, B>[], newTree: Tree<
 	})
 }
 
-export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
-	const tree = getTreeByPath(trees, from)
-	if(!tree){
-		throw new Error("Nothing to move")
-	}
-
+const updateMovePath = (from: TreePath, to: TreePath): TreePath => {
 	to = [...to]
 	for(let i = 0; i < Math.min(from.length, to.length); i++){
 		if(from[i]! < to[i]!){
@@ -248,7 +243,35 @@ export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePat
 			break
 		}
 	}
+	return to
+}
+
+export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
+	const tree = getTreeByPath(trees, from)
+	if(!tree){
+		throw new Error("Nothing to move")
+	}
+
+	to = updateMovePath(from, to)
 
 	trees = deleteTreeByPath(trees, from)
 	return addTreeByPath(trees, tree, to)
+}
+
+// works exactly the same as moveTreeByPath, but for plain array, not for trees
+// useful for cases when you have simplier data than trees, but still want to use tree infrastructure
+export const moveArrayByPath = <T>(values: readonly T[], from: TreePath, to: TreePath): T[] => {
+	if(from.length !== 1 || to.length !== 1){
+		throw new Error("Path length is wrong")
+	}
+	to = updateMovePath(from, to)
+	const fromIndex = from[0]!
+	const toIndex = to[0]!
+
+	const value = values[fromIndex]!
+
+	let result = [...values.slice(0, fromIndex), ...values.slice(fromIndex + 1)]
+	result = [...result.slice(0, toIndex), value, ...result.slice(toIndex)]
+
+	return result
 }

@@ -154,7 +154,8 @@ let result = tseslint.config(
 		"react/button-has-type": ["error"],
 		"react/checked-requires-onchange-or-readonly": ["error"],
 		"react/forbid-component-props": ["warn"],
-		"react/function-component-definition": ["warn", {
+		// it's good for consistency, but you can't declare components with generic type arguments with arrow function
+		"react/function-component-definition": ["off", {
 			"namedComponents": "arrow-function",
 			"unnamedComponents": "arrow-function"
 		}],

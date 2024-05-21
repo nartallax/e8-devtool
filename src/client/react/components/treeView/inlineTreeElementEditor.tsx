@@ -1,15 +1,20 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import * as css from "./treeView.module.scss"
 import {useHotkey} from "client/react/components/hotkeyContext/hotkeyContext"
+import {cn} from "client/react/uiUtils/classname"
+import {ValidatorsMaybeFabric, resolveValidatorsMaybeFabric} from "client/react/components/form/validators"
 
-type Props = {
+type Props<T> = {
 	readonly initialValue: string
 	readonly onComplete: (newValue: string | null) => void
+	readonly row: T
+	readonly validators?: ValidatorsMaybeFabric<string, T>
 }
 
-export const InlineTreeElementEditor = ({initialValue, onComplete}: Props) => {
+export function InlineTreeElementEditor <T>({initialValue, onComplete, validators, row}: Props<T>) {
 	// this state is just to make it rerender-resistant
 	const [value, setValue] = useState(initialValue)
+	const [isShaking, setShaking] = useState(0)
 
 	const ref = useRef<HTMLInputElement | null>(null)
 
@@ -28,8 +33,15 @@ export const InlineTreeElementEditor = ({initialValue, onComplete}: Props) => {
 			if(!ref.current){
 				return
 			}
+			const resolvedValidators = resolveValidatorsMaybeFabric(validators, row)
 			const value = ref.current.value
-			onComplete(value)
+			const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
+			if(hasError){
+				setShaking(x => x + 1)
+				setTimeout(() => setShaking(x => x - 1), 300)
+			} else {
+				onComplete(value)
+			}
 		}
 	})
 
@@ -54,13 +66,13 @@ export const InlineTreeElementEditor = ({initialValue, onComplete}: Props) => {
 	return (
 		<input
 			type="text"
-			className={css.inlineEditor}
+			className={cn(css.inlineEditor, {[css.shake!]: !!isShaking})}
 			value={value}
 			onChange={updateValue}
 			onKeyDown={updateValue}
 			onKeyUp={updateValue}
 			onPaste={updateValue}
-			onBlur={() => onComplete(null)}
+			// onBlur={() => onComplete(null)}
 			ref={ref}/>
 	)
 }

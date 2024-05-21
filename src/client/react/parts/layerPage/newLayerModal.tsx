@@ -9,7 +9,8 @@ import {Select, SelectOption} from "client/react/components/select/select"
 import {TextInput} from "client/react/components/textInput/textInput"
 import {useProject} from "client/react/parts/projectContext"
 import {getRandomUUID} from "common/uuid"
-import {LayerDefinition} from "data/project"
+import {UUID} from "crypto"
+import {LayerDefinition, Project} from "data/project"
 import {useState} from "react"
 
 type Props = {
@@ -20,6 +21,17 @@ const layerTypeOptions: SelectOption<LayerType>[] = [
 	{label: "model", value: "model"},
 	{label: "particle", value: "particle"}
 ]
+
+export const getLayerNameValidators = (project: Project, editedLayerId?: UUID) => {
+	let layers = project.layers
+	if(editedLayerId){
+		layers = layers.filter(layer => layer.id !== editedLayerId)
+	}
+	return [
+		Validators.nonEmpty(),
+		Validators.isUnique({values: layers.map(layer => layer.name)})
+	]
+}
 
 export const NewLayerModal = ({onClose}: Props) => {
 	const [layerType, setLayerType] = useState<LayerType | null>(null)
@@ -46,10 +58,7 @@ export const NewLayerModal = ({onClose}: Props) => {
 						isAutofocused
 						value={name}
 						onChange={setName}
-						validators={[
-							Validators.nonEmpty(),
-							Validators.isUnique({values: project.layers.map(layer => layer.name)})
-						]}/>
+						validators={getLayerNameValidators(project)}/>
 					<Row justify="end" gap>
 						<Button text="Cancel" onClick={onClose}/>
 						<SubmitButton/>
