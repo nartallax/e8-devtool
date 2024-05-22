@@ -42,4 +42,10 @@
 
 .modalBody {
 	padding: var(--default-padding);
+	display: flex;
+	flex-direction: column;
+}
+
+.alertModalBody {
+	white-space: pre-wrap;
 }

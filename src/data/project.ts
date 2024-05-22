@@ -13,13 +13,18 @@ export interface Project {
 	readonly models: readonly ProjectEntity[]
 	readonly particles: readonly ProjectParticleDefinition[]
 	readonly modelTree: readonly Tree<UUID, NamedId>[]
-	readonly collisionGroups: readonly NamedId[]
+	// TODO: i'm starting to have second thoughts about readonly-ing everything
+	// sure, they are readonly, but it goes without saying
+	// and readonly-ing everything just introduces a lot of clutter
+	readonly collisionGroups: readonly CollisionGroup[]
 	readonly inputGroups: readonly NamedId[]
 	/** Couples of groups that should be colliding. */
 	readonly collisionGroupPairs: readonly (readonly [UUID, UUID])[]
 	readonly layers: readonly LayerDefinition[]
 	readonly inputBinds: readonly ProjectInputBindSet[]
 }
+
+export type CollisionGroup = NamedId
 
 export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
 	/** This only matters to devtool and calculation of `.amount`
@@ -59,6 +64,7 @@ export interface NamedId {
 	readonly id: UUID
 }
 
+// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectEntity extends NamedId {
 	readonly isStatic: boolean
 	readonly shapes: ProjectShape[]
@@ -68,6 +74,7 @@ export interface ProjectEntity extends NamedId {
 	readonly size: XY
 }
 
+// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectShape {
 	readonly id: UUID
 	readonly points: readonly (readonly [x: number, y: number])[]

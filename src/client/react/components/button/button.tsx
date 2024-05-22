@@ -52,6 +52,7 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 		setIsPressed(true)
 		timeout.current = setTimeout(() => {
 			doClick()
+			setIsPressed(false)
 		}, holdTimeUntilAction)
 	}, [doClick, holdTimeUntilAction])
 

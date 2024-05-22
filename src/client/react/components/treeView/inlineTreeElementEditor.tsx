@@ -72,7 +72,7 @@ export function InlineTreeElementEditor <T>({initialValue, onComplete, validator
 			onKeyDown={updateValue}
 			onKeyUp={updateValue}
 			onPaste={updateValue}
-			// onBlur={() => onComplete(null)}
+			onBlur={() => onComplete(null)}
 			ref={ref}/>
 	)
 }

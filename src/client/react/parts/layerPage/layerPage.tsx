@@ -1,10 +1,11 @@
 import {Button} from "client/react/components/button/button"
+import {AlertModal} from "client/react/components/modal/alertModal"
 import {Col, Row} from "client/react/components/rowCol/rowCol"
 import {TreeView} from "client/react/components/treeView/treeView"
 import {NewLayerModal, getLayerNameValidators} from "client/react/parts/layerPage/newLayerModal"
 import {useProject} from "client/react/parts/projectContext"
-import {moveArrayByPath} from "common/tree"
-import {LayerDefinition} from "data/project"
+import {TreePath, moveArrayByPath} from "common/tree"
+import {LayerDefinition, ProjectEntity} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -22,6 +23,35 @@ export const LayerPage = () => {
 		}
 	}
 
+	const [deletionConflictModels, setDeletionConflictModels] = useState<ProjectEntity[]>([])
+	const tryDeleteLayer = (path: TreePath) => {
+		const index = path[0]
+		if(index === undefined || path.length > 1){
+			throw new Error("wat")
+		}
+
+		const layer = project.layers[index]!
+		const models = project.models.filter(model => model.layerId === layer.id)
+		if(models.length > 0){
+			setDeletionConflictModels(models)
+		} else {
+			setProject(project => {
+				const layers = project.layers.filter(({id}) => id !== layer.id)
+				return {...project, layers}
+			})
+		}
+	}
+
+	const getDeletionConflictMessage = (models: ProjectEntity[]): string => {
+		const firstFewNames = models.slice(0, 10).map(x => x.name)
+		if(firstFewNames.length < models.length){
+			firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
+		}
+		const namesStr = firstFewNames.join("\n\t")
+
+		return `This layer is already used in some models: \n\t${namesStr}\nYou should remove models from this layer before deleting it.`
+	}
+
 	return (
 		<Col
 			width="100%"
@@ -35,6 +65,10 @@ export const LayerPage = () => {
 				gap>
 				<Row justify="start" gap>
 					{!!isNewLayerModalOpen && <NewLayerModal onClose={onNewLayerModalClose}/>}
+					{deletionConflictModels.length > 0 && <AlertModal
+						header="This layer is in use"
+						body={getDeletionConflictMessage(deletionConflictModels)}
+						onClose={() => setDeletionConflictModels([])}/>}
 					<Button text="Add layer" icon={Icon.filePlus} onClick={() => setNewLayerModalOpen(true)}/>
 				</Row>
 				<TreeView
@@ -47,6 +81,7 @@ export const LayerPage = () => {
 						const layers = moveArrayByPath(project.layers, from, to)
 						return {...project, layers}
 					})}
+					onLeafDelete={tryDeleteLayer}
 					onLeafLabelEdit={(path, name) => {
 						if(path.length !== 1){
 							throw new Error("how.")

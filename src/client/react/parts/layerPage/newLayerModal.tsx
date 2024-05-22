@@ -8,8 +8,7 @@ import {Col, Row} from "client/react/components/rowCol/rowCol"
 import {Select, SelectOption} from "client/react/components/select/select"
 import {TextInput} from "client/react/components/textInput/textInput"
 import {useProject} from "client/react/parts/projectContext"
-import {getRandomUUID} from "common/uuid"
-import {UUID} from "crypto"
+import {UUID, getRandomUUID} from "common/uuid"
 import {LayerDefinition, Project} from "data/project"
 import {useState} from "react"
 
@@ -37,6 +36,7 @@ export const NewLayerModal = ({onClose}: Props) => {
 	const [layerType, setLayerType] = useState<LayerType | null>(null)
 	const [name, setName] = useState("")
 	const [project] = useProject()
+
 	return (
 		<Modal header="New layer" onClose={onClose} contentWidth="350px">
 			<Form

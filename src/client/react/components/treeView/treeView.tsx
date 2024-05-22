@@ -8,7 +8,9 @@ import {TreeDragContextProvider} from "client/react/components/treeView/treeDrag
 type Props<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
 	readonly controlRef?: MutableRefObject<TreeControls | null>
 	readonly onBranchLabelEdit?: (path: TreePath, newLabel: string) => void
+	readonly onBranchLabelEditCancel?: (path: TreePath) => void
 	readonly onLeafLabelEdit?: (path: TreePath, newLabel: string) => void
+	readonly onLeafLabelEditCancel?: (path: TreePath) => void
 	readonly onBranchDelete?: (path: TreePath) => void
 	readonly onLeafDelete?: (path: TreePath) => void
 	readonly onDrag?: (from: TreePath, to: TreePath) => void
@@ -24,7 +26,10 @@ export type TreeControls = {
 	setInlineEditPath: SetState<TreePath | null>
 }
 
-export const TreeView = <L, B>({controlRef, onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, tree, ...props}: Props<L, B>) => {
+export const TreeView = <L, B>({
+	onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, onBranchLabelEditCancel, onLeafLabelEditCancel,
+	controlRef, tree, ...props
+}: Props<L, B>) => {
 	const rootRef = useRef<HTMLDivElement | null>(null)
 
 	const [inlineEditPath, setInlineEditPath] = useState<TreePath | null>(null)
@@ -34,16 +39,18 @@ export const TreeView = <L, B>({controlRef, onBranchLabelEdit, onLeafLabelEdit, 
 
 	const onLabelEditComplete = useCallback((path: TreePath, tree: Tree<L, B>, newLabel: string | null) => {
 		setInlineEditPath(null)
-		if(!newLabel?.trim()){
-			return
-		}
-
-		if(isTreeBranch(tree)){
-			onBranchLabelEdit?.(path, newLabel)
+		if(newLabel?.trim()){
+			if(isTreeBranch(tree)){
+				onBranchLabelEdit?.(path, newLabel)
+			} else {
+				onLeafLabelEdit?.(path, newLabel)
+			}
+		} else if(isTreeBranch(tree)){
+			onBranchLabelEditCancel?.(path)
 		} else {
-			onLeafLabelEdit?.(path, newLabel)
+			onLeafLabelEditCancel?.(path)
 		}
-	}, [onBranchLabelEdit, onLeafLabelEdit])
+	}, [onBranchLabelEdit, onLeafLabelEdit, onBranchLabelEditCancel, onLeafLabelEditCancel])
 
 	const onNodeDelete = useCallback((path: TreePath, tree: Tree<L, B>) => {
 		setInlineEditPath(null) // just to avoid weird state
