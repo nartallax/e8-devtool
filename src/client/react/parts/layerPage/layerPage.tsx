@@ -1,8 +1,8 @@
 import {Button} from "client/react/components/button/button"
 import {AlertModal} from "client/react/components/modal/alertModal"
-import {Col} from "client/react/components/rowCol/rowCol"
 import {MappedNamedIdTreeView} from "client/react/components/treeView/mappedNamedIdTreeView"
 import {NewLayerModal} from "client/react/parts/layerPage/newLayerModal"
+import {CentralColumn} from "client/react/parts/layouts/centralColumn"
 import {useProject} from "client/react/parts/projectContext"
 import {AbortError} from "client/react/uiUtils/abortError"
 import {LayerDefinition, ProjectEntity} from "data/project"
@@ -43,31 +43,21 @@ export const LayerPage = () => {
 	}
 
 	return (
-		<Col
-			width="100%"
-			padding
-			align="center"
-			grow={1}>
-			<Col
-				width={["400px", "50vw", "800px"]}
-				grow={1}
-				align="stretch"
-				gap>
-				{!!isNewLayerModalOpen && <NewLayerModal onClose={onNewLayerModalClose}/>}
-				{deletionConflictModels.length > 0 && <AlertModal
-					header="This layer is in use"
-					body={getDeletionConflictMessage(deletionConflictModels)}
-					onClose={() => setDeletionConflictModels([])}/>}
-				<MappedNamedIdTreeView
-					values={project.layers}
-					toTree={layer => ({value: layer})}
-					fromTree={node => node.value}
-					buttons={() => <Button text="Add layer" icon={Icon.filePlus} onClick={() => setNewLayerModalOpen(true)}/>}
-					onChange={layers => setProject(project => ({...project, layers}))}
-					getLeafSublabel={(layer: LayerDefinition) => `(${layer.type})`}
-					onLeafDelete={onDelete}
-					canBeChildOf={(_, parent) => !parent}/>
-			</Col>
-		</Col>
+		<CentralColumn>
+			{!!isNewLayerModalOpen && <NewLayerModal onClose={onNewLayerModalClose}/>}
+			{deletionConflictModels.length > 0 && <AlertModal
+				header="This layer is in use"
+				body={getDeletionConflictMessage(deletionConflictModels)}
+				onClose={() => setDeletionConflictModels([])}/>}
+			<MappedNamedIdTreeView
+				values={project.layers}
+				toTree={layer => ({value: layer})}
+				fromTree={node => node.value}
+				buttons={() => <Button text="Add layer" icon={Icon.filePlus} onClick={() => setNewLayerModalOpen(true)}/>}
+				onChange={layers => setProject(project => ({...project, layers}))}
+				getLeafSublabel={(layer: LayerDefinition) => `(${layer.type})`}
+				onLeafDelete={onDelete}
+				canBeChildOf={(_, parent) => !parent}/>
+		</CentralColumn>
 	)
 }
