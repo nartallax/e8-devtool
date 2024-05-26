@@ -8,22 +8,22 @@ import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
  * this data structure only relevant to project manager,
  * and is not used anywhere in the actual engine runtime  */
 export interface Project {
-	readonly models: readonly ProjectEntity[]
+	readonly models: readonly ProjectModel[]
 	readonly particles: readonly ProjectParticleDefinition[]
 	readonly modelTree: readonly Tree<UUID, NamedId>[]
 	// TODO: i'm starting to have second thoughts about readonly-ing everything
 	// sure, they are readonly, but it goes without saying
 	// and readonly-ing everything just introduces a lot of clutter
-	readonly collisionGroups: readonly CollisionGroup[]
-	readonly inputGroups: readonly InputGroup[]
+	readonly collisionGroups: readonly ProjectCollisionGroup[]
+	readonly inputGroups: readonly ProjectInputGroup[]
 	/** Couples of groups that should be colliding. */
 	readonly collisionGroupPairs: readonly (readonly [UUID, UUID])[]
-	readonly layers: readonly LayerDefinition[]
+	readonly layers: readonly ProjectLayerDefinition[]
 	readonly inputBinds: readonly ProjectInputBindSet[]
 }
 
-export type InputGroup = NamedId
-export type CollisionGroup = NamedId
+export type ProjectInputGroup = NamedId
+export type ProjectCollisionGroup = NamedId
 
 export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
 	/** This only matters to devtool and calculation of `.amount`
@@ -31,16 +31,14 @@ export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
 	emissionType: "once" | "continuous"
 }
 
-export interface LayerDefinition extends NamedId {
+export interface ProjectLayerDefinition extends NamedId {
 	readonly type: LayerType
 }
 
-// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectInputBindSet extends NamedId {
 	readonly binds: ProjectInputBind[]
 }
 
-// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectInputBind extends NamedId {
 	readonly group: UUID | null
 	readonly isHold: boolean
@@ -65,9 +63,7 @@ export interface NamedId {
 	readonly id: UUID
 }
 
-// TODO: rename? we removed Project prefix from everywhere else
-// TODO: also, it's Entity here, and Model in the engine, let's make up our mind on that
-export interface ProjectEntity extends NamedId {
+export interface ProjectModel extends NamedId {
 	readonly isStatic: boolean
 	readonly shapes: ProjectShape[]
 	readonly collisionGroupId: UUID
@@ -76,13 +72,12 @@ export interface ProjectEntity extends NamedId {
 	readonly size: XY
 }
 
-// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectShape {
 	readonly id: UUID
 	readonly points: readonly (readonly [x: number, y: number])[]
 }
 
-export function makeBlankProjectModel(layerId: UUID, collisionGroupId: UUID): ProjectEntity {
+export function makeBlankProjectModel(layerId: UUID, collisionGroupId: UUID): ProjectModel {
 	return {
 		id: getRandomUUID(),
 		layerId,

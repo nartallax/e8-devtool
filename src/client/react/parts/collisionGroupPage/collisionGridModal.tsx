@@ -3,7 +3,7 @@ import {UUID} from "common/uuid"
 import * as css from "./collisionGridModal.module.scss"
 import {useProject} from "client/react/parts/projectContext"
 import {useState} from "react"
-import {CollisionGroup} from "data/project"
+import {ProjectCollisionGroup} from "data/project"
 import {Col, Row} from "client/react/components/rowCol/rowCol"
 import {Button} from "client/react/components/button/button"
 
@@ -13,7 +13,7 @@ type Props = {
 
 type PairMap = Map<UUID, Set<UUID>>
 
-const buildPairMap = (groups: readonly CollisionGroup[], pairs: readonly (readonly [UUID, UUID])[]) => {
+const buildPairMap = (groups: readonly ProjectCollisionGroup[], pairs: readonly (readonly [UUID, UUID])[]) => {
 	const result = new Map<UUID, Set<UUID>>(groups.map(group => [group.id, new Set()]))
 
 	for(const [a, b] of pairs){

@@ -4,11 +4,11 @@ import {UUID} from "common/uuid"
 import {askUserForConfirmation} from "client/component/modal/ask_user_for_confirmation"
 import {NamedIdList, NamedIdListProps} from "client/component/named_id_list/named_id_list"
 import {project} from "client/client_globals"
-import {NamedId, Project, ProjectEntity} from "data/project"
+import {NamedId, Project, ProjectModel} from "data/project"
 
 export interface ModelBoundNamedIdListProps<T extends NamedId> extends Omit<NamedIdListProps<T>, "canDelete" | "beforeDelete"> {
-	readonly modelHasId: (model: ProjectEntity, id: UUID) => boolean
-	readonly setModelId: (model: ProjectEntity, id: UUID) => ProjectEntity
+	readonly modelHasId: (model: ProjectModel, id: UUID) => boolean
+	readonly setModelId: (model: ProjectModel, id: UUID) => ProjectModel
 	readonly getSubstituteList: (project: Project) => readonly NamedId[]
 	readonly onDelete?: (id: UUID) => void
 	readonly canDelete?: NamedIdListProps<T>["canDelete"]
@@ -62,7 +62,7 @@ function findSubstituteItem(items: readonly NamedId[], target: NamedId): NamedId
 	return items[index + 1]!
 }
 
-function massUpdateModels(shouldUpdate: (model: ProjectEntity) => boolean, update: (model: ProjectEntity) => ProjectEntity): void {
+function massUpdateModels(shouldUpdate: (model: ProjectModel) => boolean, update: (model: ProjectModel) => ProjectModel): void {
 	let _project = project.get()
 	const models = _project.models
 	let updateCount = 0

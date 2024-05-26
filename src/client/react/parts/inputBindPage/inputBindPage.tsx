@@ -2,6 +2,7 @@ import {Button} from "client/react/components/button/button"
 import {MappedNamedIdTreeControls, MappedNamedIdTreeView} from "client/react/components/treeView/mappedNamedIdTreeView"
 import {CentralColumn} from "client/react/parts/layouts/centralColumn"
 import {useProject} from "client/react/parts/projectContext"
+import {isTreeBranch} from "common/tree"
 import {ProjectInputBind, ProjectInputBindSet} from "data/project"
 import {Icon} from "generated/icons"
 
@@ -21,6 +22,7 @@ export const InputBindPage = () => {
 					...branch.value,
 					binds: branch.children.map(node => node.value)
 				})}
+				canBeChildOf={(child, parent) => isTreeBranch(child) ? parent === null : parent !== null}
 				buttons={(controls: MappedNamedIdTreeControls<ProjectInputBind, ProjectInputBindSet>) => (<Button
 					text="Add bind set"
 					icon={Icon.filePlus}

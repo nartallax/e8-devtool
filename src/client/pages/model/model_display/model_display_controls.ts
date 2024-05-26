@@ -5,7 +5,7 @@ import {Col, Row} from "client/component/row_col/row_col"
 import {NumberInput} from "client/component/number_input/number_input"
 import {BoolInput} from "client/component/bool_input/bool_input"
 import {Button} from "client/component/button/button"
-import {ProjectEntity, ProjectShape} from "data/project"
+import {ProjectModel, ProjectShape} from "data/project"
 import {Tooltip} from "client/component/tooltip/tooltip"
 import {buildObjectShapeByImage} from "client/pages/model/model_display/auto_shape"
 import {Api} from "client/api_client"
@@ -19,7 +19,7 @@ export interface ModelDisplayLayersState {
 	readonly isGridShowing: WBox<boolean>
 	readonly isShapesShowing: WBox<boolean>
 	readonly isDecompShowing: WBox<boolean>
-	readonly model: WBox<ProjectEntity>
+	readonly model: WBox<ProjectModel>
 	readonly workbench: WorkbenchState
 	readonly currentlyDrawnShapeId: WBox<UUID | null>
 	readonly sizeMultiplier: number

@@ -7,7 +7,7 @@ import {CentralColumn} from "client/react/parts/layouts/centralColumn"
 import {useProject} from "client/react/parts/projectContext"
 import {AbortError} from "client/react/uiUtils/abortError"
 import {UUID} from "common/uuid"
-import {CollisionGroup, Project, ProjectEntity} from "data/project"
+import {ProjectCollisionGroup, Project, ProjectModel} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -25,10 +25,10 @@ export const getCollisionGroupNameValidators = (project: Project, editedGroupId?
 
 export const CollisionGroupPage = () => {
 	const [project, setProject] = useProject()
-	const [conflictingModels, setConflictingModels] = useState<ProjectEntity[]>([])
+	const [conflictingModels, setConflictingModels] = useState<ProjectModel[]>([])
 	const [isCollisonGridOpen, setCollisionGridOpen] = useState(false)
 
-	const onDelete = (group: CollisionGroup) => {
+	const onDelete = (group: ProjectCollisionGroup) => {
 		const models = project.models.filter(model => model.collisionGroupId === group.id)
 		if(models.length > 0){
 			setConflictingModels(models)
@@ -36,7 +36,7 @@ export const CollisionGroupPage = () => {
 		}
 	}
 
-	const getDeletionConflictMessage = (models: ProjectEntity[]): string => {
+	const getDeletionConflictMessage = (models: ProjectModel[]): string => {
 		const firstFewNames = models.slice(0, 10).map(x => x.name)
 		if(firstFewNames.length < models.length){
 			firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)

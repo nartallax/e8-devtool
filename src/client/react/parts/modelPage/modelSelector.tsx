@@ -18,7 +18,6 @@ export const ModelSelector = () => {
 			<MappedNamedIdTreeView
 				values={project.modelTree}
 				toTree={node => mapTreeLeaves(node, id => ({id, name: modelMap.get(id)!.name}))}
-				// TODO: think about renaming. name is lost here
 				fromTree={node => mapTreeLeaves(node, namedId => namedId.id)}
 				onChange={modelTree => setProject(project => ({...project, modelTree}))}
 				canBeChildOf={() => true}

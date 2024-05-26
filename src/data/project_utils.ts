@@ -1,4 +1,4 @@
-import {Project, ProjectInputBindSet, ProjectEntity} from "data/project"
+import {Project, ProjectInputBindSet, ProjectModel} from "data/project"
 import {copySortBy, sortBy} from "common/sort_by"
 import {getTreeLeaves} from "common/tree"
 
@@ -6,8 +6,8 @@ import {getTreeLeaves} from "common/tree"
 // because it will guarantee that the order is the same each time
 // and order is important, because index of the model is its id
 /** @returns [all folder labels, in descendance order; model] */
-export function getAllProjectModelsWithFolders(project: Project): [string[], ProjectEntity][] {
-	const allModels: [string[], ProjectEntity][] = []
+export function getAllProjectModelsWithFolders(project: Project): [string[], ProjectModel][] {
+	const allModels: [string[], ProjectModel][] = []
 	const modelsById = new Map(project.models.map(model => [model.id, model]))
 	for(const rootFolder of project.modelTree){
 		for(const [folders, id] of getTreeLeaves(rootFolder)){
@@ -18,7 +18,7 @@ export function getAllProjectModelsWithFolders(project: Project): [string[], Pro
 	return allModels
 }
 
-export function getAllProjectModels(project: Project): ProjectEntity[] {
+export function getAllProjectModels(project: Project): ProjectModel[] {
 	return getAllProjectModelsWithFolders(project).map(x => x[1])
 }
 

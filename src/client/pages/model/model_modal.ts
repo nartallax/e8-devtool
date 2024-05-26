@@ -8,12 +8,12 @@ import {Row} from "client/component/row_col/row_col"
 import {TextInput} from "client/component/text_input/text_input"
 import {Tooltip} from "client/component/tooltip/tooltip"
 import {TreeView} from "client/component/tree_view/tree_view"
-import {ProjectEntity} from "data/project"
+import {ProjectModel} from "data/project"
 import {getTreeLeaves} from "common/tree"
 import {showLayerListModal} from "client/pages/model/layer_list_modal"
 import {showCollisionGroupListModal} from "client/pages/model/collision_group_list_modal"
 
-export const showModelModal = async(model: WBox<ProjectEntity>): Promise<void> => {
+export const showModelModal = async(model: WBox<ProjectModel>): Promise<void> => {
 	const name = model.prop("name")
 
 	const layerId = model.prop("layerId")

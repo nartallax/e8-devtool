@@ -9,11 +9,11 @@ import {Select, SelectOption} from "client/react/components/select/select"
 import {TextInput} from "client/react/components/textInput/textInput"
 import {useProject} from "client/react/parts/projectContext"
 import {UUID, getRandomUUID} from "common/uuid"
-import {LayerDefinition, Project} from "data/project"
+import {ProjectLayerDefinition, Project} from "data/project"
 import {useState} from "react"
 
 type Props = {
-	readonly onClose: (newLayer?: LayerDefinition) => void
+	readonly onClose: (newLayer?: ProjectLayerDefinition) => void
 }
 
 const layerTypeOptions: SelectOption<LayerType>[] = [

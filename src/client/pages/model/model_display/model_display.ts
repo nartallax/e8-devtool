@@ -1,7 +1,7 @@
 import {ArrayContext, ArrayItemWBox, WBox, box} from "@nartallax/cardboard"
 import {tag} from "@nartallax/cardboard-dom"
 import * as css from "./model_display.module.scss"
-import {ProjectEntity} from "data/project"
+import {ProjectModel} from "data/project"
 import {ModelDisplayControls, ModelDisplayLayersState} from "client/pages/model/model_display/model_display_controls"
 import {ModelDisplayTexture} from "client/pages/model/model_display/model_display_texture"
 import {ModelDisplayGrid} from "client/pages/model/model_display/model_display_grid"
@@ -15,7 +15,7 @@ import {UUID} from "crypto"
 
 interface Props {
 	readonly selectedModelId: WBox<UUID | null>
-	readonly modelContext: ArrayContext<ProjectEntity, UUID, ArrayItemWBox<ProjectEntity>>
+	readonly modelContext: ArrayContext<ProjectModel, UUID, ArrayItemWBox<ProjectModel>>
 }
 
 export const ModelDisplay = (props: Props) => {

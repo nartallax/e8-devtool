@@ -5,7 +5,7 @@ import {NewLayerModal} from "client/react/parts/layerPage/newLayerModal"
 import {CentralColumn} from "client/react/parts/layouts/centralColumn"
 import {useProject} from "client/react/parts/projectContext"
 import {AbortError} from "client/react/uiUtils/abortError"
-import {LayerDefinition, ProjectEntity} from "data/project"
+import {ProjectLayerDefinition, ProjectModel} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -13,7 +13,7 @@ export const LayerPage = () => {
 	const [project, setProject] = useProject()
 
 	const [isNewLayerModalOpen, setNewLayerModalOpen] = useState(false)
-	const onNewLayerModalClose = (layer?: LayerDefinition) => {
+	const onNewLayerModalClose = (layer?: ProjectLayerDefinition) => {
 		setNewLayerModalOpen(false)
 		if(layer){
 			setProject(project => ({
@@ -23,8 +23,9 @@ export const LayerPage = () => {
 		}
 	}
 
-	const [deletionConflictModels, setDeletionConflictModels] = useState<ProjectEntity[]>([])
-	const onDelete = (layer: LayerDefinition) => {
+	const [deletionConflictModels, setDeletionConflictModels] = useState<ProjectModel[]>([])
+	const onDelete = (layer: ProjectLayerDefinition) => {
+		// TODO: check particles for particle type layers
 		const models = project.models.filter(model => model.layerId === layer.id)
 		if(models.length > 0){
 			setDeletionConflictModels(models)
@@ -32,7 +33,7 @@ export const LayerPage = () => {
 		}
 	}
 
-	const getDeletionConflictMessage = (models: ProjectEntity[]): string => {
+	const getDeletionConflictMessage = (models: ProjectModel[]): string => {
 		const firstFewNames = models.slice(0, 10).map(x => x.name)
 		if(firstFewNames.length < models.length){
 			firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
@@ -55,7 +56,7 @@ export const LayerPage = () => {
 				fromTree={node => node.value}
 				buttons={() => <Button text="Add layer" icon={Icon.filePlus} onClick={() => setNewLayerModalOpen(true)}/>}
 				onChange={layers => setProject(project => ({...project, layers}))}
-				getLeafSublabel={(layer: LayerDefinition) => `(${layer.type})`}
+				getLeafSublabel={(layer: ProjectLayerDefinition) => `(${layer.type})`}
 				onLeafDelete={onDelete}
 				canBeChildOf={(_, parent) => !parent}/>
 		</CentralColumn>
