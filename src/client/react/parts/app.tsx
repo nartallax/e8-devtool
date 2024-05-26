@@ -17,14 +17,22 @@ export const App = () => {
 						<ProjectProvider>
 							<TabsAndRouter
 								tabs={[
-									{suffix: "/models", text: "Models", isDefault: true},
-									{suffix: "/layers", text: "Layers"},
-									{suffix: "/collision_groups", text: "Collisions"}
-								]}
-								routes={[
-									["/models", () => <ModelPage/>],
-									["/layers", () => <LayerPage/>],
-									["/collision_groups", () => <CollisionGroupPage/>]
+									{
+										suffix: "/models",
+										text: "Models",
+										isDefault: true,
+										render: () => <ModelPage/>
+									},
+									{
+										suffix: "/layers",
+										text: "Layers",
+										render: () => <LayerPage/>
+									},
+									{
+										suffix: "/collision_groups",
+										text: "Collisions",
+										render: () => <CollisionGroupPage/>
+									}
 								]}/>
 						</ProjectProvider>
 					</TextureTreeProvider>

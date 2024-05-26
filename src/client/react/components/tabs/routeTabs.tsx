@@ -3,7 +3,7 @@ import {Tabs} from "client/react/components/tabs/tabs"
 import {Icon} from "generated/icons"
 import {useEffect} from "react"
 
-type RouteTab = {
+export type RouteTab = {
 	suffix: string
 	text?: string
 	icon?: Icon

@@ -65,14 +65,15 @@ export const CollisionGridModal = ({onClose}: Props) => {
 		<Modal
 			contentWidth={[null, "300px", "90vw"]}
 			contentHeight={[null, "300px", "90vh"]}
-			header="Collision grid">
+			header="Collision grid"
+			onClose={onClose}>
 			<Col
 				align="center"
 				justify="center"
 				grow={1}
 				alignSelf="stretch">
 				<div className={css.rows}>
-					<div className={css.row}>
+					<div className={css.row} key='labels'>
 						{project.collisionGroups.map(group =>
 							(<div className={css.topLabelContainer} key={group.id}>
 								<div className={css.topLabel}>
@@ -81,7 +82,7 @@ export const CollisionGridModal = ({onClose}: Props) => {
 							</div>))}
 					</div>
 					{project.collisionGroups.map(groupA => (<div className={css.row} key={groupA.id}>
-						<div className={css.sideLabel} key={groupA.id}>
+						<div key='name'>
 							{groupA.name}
 						</div>
 						{project.collisionGroups.map(groupB =>

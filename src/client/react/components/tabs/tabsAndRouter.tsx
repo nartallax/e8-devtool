@@ -1,19 +1,21 @@
+import {RouteRenderer} from "client/react/components/router/parseRoute"
 import {Router} from "client/react/components/router/router"
-import {RouteTabs} from "client/react/components/tabs/routeTabs"
-import {ComponentProps, useState} from "react"
+import {RouteTab, RouteTabs} from "client/react/components/tabs/routeTabs"
+import {useState} from "react"
+
+type Tab = RouteTab & {render: RouteRenderer}
 
 type Props = {
-	readonly tabs: ComponentProps<typeof RouteTabs>["tabs"]
-	readonly routes: ComponentProps<typeof Router>["routes"]
+	readonly tabs: Tab[]
 }
 
-export const TabsAndRouter = ({tabs, routes}: Props) => {
+export const TabsAndRouter = ({tabs}: Props) => {
 	const [matchedUrl, setMatchedUrl] = useState<URL | null | undefined>(undefined)
 
 	return (
 		<>
 			<RouteTabs tabs={tabs} matchedUrl={matchedUrl ?? undefined} isAutoRoutingToDefaultEnabled={matchedUrl !== undefined}/>
-			<Router routes={routes} onMatchedUrlUpdate={setMatchedUrl}/>
+			<Router routes={tabs.map(tab => [tab.suffix, tab.render])} onMatchedUrlUpdate={setMatchedUrl}/>
 		</>
 	)
 }
