@@ -203,7 +203,7 @@ export const getBranchByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePa
 	return lastNode
 }
 
-export const deleteTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
+export const deleteFromTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Could not delete tree by zero-length path")
 	}
@@ -254,24 +254,47 @@ export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePat
 
 	to = updateMovePath(from, to)
 
-	trees = deleteTreeByPath(trees, from)
+	trees = deleteFromTreeByPath(trees, from)
 	return addTreeByPath(trees, tree, to)
+}
+
+// TODO: move all those utils into separate file
+
+const getSingleIndex = (path: TreePath): number => {
+	if(path.length !== 1){
+		throw new Error("Path length is wrong")
+	}
+	return path[0]!
 }
 
 // works exactly the same as moveTreeByPath, but for plain array, not for trees
 // useful for cases when you have simplier data than trees, but still want to use tree infrastructure
 export const moveArrayByPath = <T>(values: readonly T[], from: TreePath, to: TreePath): T[] => {
-	if(from.length !== 1 || to.length !== 1){
-		throw new Error("Path length is wrong")
-	}
 	to = updateMovePath(from, to)
-	const fromIndex = from[0]!
-	const toIndex = to[0]!
+	const value = values[getSingleIndex(from)]!
 
-	const value = values[fromIndex]!
-
-	let result = [...values.slice(0, fromIndex), ...values.slice(fromIndex + 1)]
-	result = [...result.slice(0, toIndex), value, ...result.slice(toIndex)]
+	let result = deleteFromArrayByPath(values, from)
+	result = addToArrayByPath(values, value, to)
 
 	return result
+}
+
+export const updateArrayByPath = <T>(values: readonly T[], path: TreePath, updater: (value: T) => T): T[] => {
+	const index = getSingleIndex(path)
+
+	const item = values[index]!
+	const newItem = updater(item)
+	const result = [...values]
+	result[index] = newItem
+	return result
+}
+
+export const deleteFromArrayByPath = <T>(values: readonly T[], path: TreePath): T[] => {
+	const index = getSingleIndex(path)
+	return [...values.slice(0, index), ...values.slice(index + 1)]
+}
+
+export const addToArrayByPath = <T>(values: readonly T[], newValue: T, path: TreePath): T[] => {
+	const index = getSingleIndex(path)
+	return [...values.slice(0, index), newValue, ...values.slice(index)]
 }

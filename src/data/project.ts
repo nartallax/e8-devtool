@@ -5,10 +5,8 @@ import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
 
 /** Project is source data for resource pack
  *
- * "project manager project" is a bit redundant of a name, true,
- * but I want to outline that this data structure only relevant to project manager,
- * and is not used anywhere in the actual engine runtime
- * (same goes for other names like that) */
+ * this data structure only relevant to project manager,
+ * and is not used anywhere in the actual engine runtime  */
 export interface Project {
 	readonly models: readonly ProjectEntity[]
 	readonly particles: readonly ProjectParticleDefinition[]
@@ -17,13 +15,14 @@ export interface Project {
 	// sure, they are readonly, but it goes without saying
 	// and readonly-ing everything just introduces a lot of clutter
 	readonly collisionGroups: readonly CollisionGroup[]
-	readonly inputGroups: readonly NamedId[]
+	readonly inputGroups: readonly InputGroup[]
 	/** Couples of groups that should be colliding. */
 	readonly collisionGroupPairs: readonly (readonly [UUID, UUID])[]
 	readonly layers: readonly LayerDefinition[]
 	readonly inputBinds: readonly ProjectInputBindSet[]
 }
 
+export type InputGroup = NamedId
 export type CollisionGroup = NamedId
 
 export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
@@ -36,10 +35,12 @@ export interface LayerDefinition extends NamedId {
 	readonly type: LayerType
 }
 
+// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectInputBindSet extends NamedId {
 	readonly binds: ProjectInputBind[]
 }
 
+// TODO: rename? we removed Project prefix from everywhere else
 export interface ProjectInputBind extends NamedId {
 	readonly group: UUID | null
 	readonly isHold: boolean
@@ -65,6 +66,7 @@ export interface NamedId {
 }
 
 // TODO: rename? we removed Project prefix from everywhere else
+// TODO: also, it's Entity here, and Model in the engine, let's make up our mind on that
 export interface ProjectEntity extends NamedId {
 	readonly isStatic: boolean
 	readonly shapes: ProjectShape[]

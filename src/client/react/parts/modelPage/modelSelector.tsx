@@ -4,7 +4,7 @@ import {Col, Row} from "client/react/components/rowCol/rowCol"
 import {TreeControls, TreeView} from "client/react/components/treeView/treeView"
 import {useProject} from "client/react/parts/projectContext"
 import {appendUrlPath, pushHistory} from "client/react/uiUtils/urls"
-import {Tree, TreePath, deleteTreeByPath, getBranchByPath, getLeafByPath, getTreeLeaves, moveTreeByPath, updateBranchByPath} from "common/tree"
+import {Tree, TreePath, deleteFromTreeByPath, getBranchByPath, getLeafByPath, getTreeLeaves, moveTreeByPath, updateBranchByPath} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {Icon} from "generated/icons"
@@ -70,7 +70,7 @@ export const ModelSelector = () => {
 			}
 			const modelIdSet = new Set(modelIds)
 			const models = project.models.filter(model => !modelIdSet.has(model.id))
-			const modelTree = deleteTreeByPath(project.modelTree, path)
+			const modelTree = deleteFromTreeByPath(project.modelTree, path)
 			return {...project, models, modelTree}
 		})
 	}
@@ -79,7 +79,7 @@ export const ModelSelector = () => {
 		setProject(project => {
 			const leaf = getLeafByPath(project.modelTree, path)
 			const models = project.models.filter(model => model.id !== leaf.value)
-			const modelTree = deleteTreeByPath(project.modelTree, path)
+			const modelTree = deleteFromTreeByPath(project.modelTree, path)
 			return {...project, models, modelTree}
 		})
 	}

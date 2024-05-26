@@ -3,6 +3,7 @@ import {RoutingContextProvider} from "client/react/components/router/routingCont
 import {TabsAndRouter} from "client/react/components/tabs/tabsAndRouter"
 import {ApiProvider} from "client/react/parts/apiContext"
 import {CollisionGroupPage} from "client/react/parts/collisionGroupPage/collisionGroupPage"
+import {InputBindPage} from "client/react/parts/inputBindPage/inputBindPage"
 import {LayerPage} from "client/react/parts/layerPage/layerPage"
 import {ModelPage} from "client/react/parts/modelPage/modelPage"
 import {ProjectProvider} from "client/react/parts/projectContext"
@@ -32,6 +33,11 @@ export const App = () => {
 										suffix: "/collision_groups",
 										text: "Collisions",
 										render: () => <CollisionGroupPage/>
+									},
+									{
+										suffix: "/inputs",
+										text: "Inputs",
+										render: () => <InputBindPage/>
 									}
 								]}/>
 						</ProjectProvider>
