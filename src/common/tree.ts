@@ -122,19 +122,22 @@ function resolveTreeIndicesToTrees<T, B>(trees: readonly Tree<T, B>[], indices: 
 	return result
 }
 
-export function getTreeByPath<T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B> | null {
+export function getTreeByPath<T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B> {
 	for(let i = 0; i < path.length; i++){
 		const currentKey = path[i]!
 		const nextTree = trees[currentKey]
 		if(i === path.length - 1){
-			return nextTree ?? null
+			if(!nextTree){
+				throw new Error("Path does not point to tree node.")
+			}
+			return nextTree
 		}
 		if(!nextTree || !isTreeBranch(nextTree)){
-			return null
+			throw new Error("Path does not point to tree node.")
 		}
 		trees = nextTree.children
 	}
-	return null
+	throw new Error("Path does not point to tree node.")
 }
 
 export const updateTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath, updater: (tree: Tree<T, B>) => Tree<T, B>): Tree<T, B>[] => {
@@ -183,9 +186,6 @@ export const updateLeafByPath = <T, B>(
 
 export const getLeafByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): TreeLeaf<T> => {
 	const lastNode = getTreeByPath(trees, path)
-	if(!lastNode){
-		throw new Error("Path does not point to a tree node.")
-	}
 	if(isTreeBranch(lastNode)){
 		throw new Error("Path points to a branch, not leaf")
 	}
@@ -194,9 +194,6 @@ export const getLeafByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath
 
 export const getBranchByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): TreeBranch<T, B> => {
 	const lastNode = getTreeByPath(trees, path)
-	if(!lastNode){
-		throw new Error("Path does not point to a tree node.")
-	}
 	if(!isTreeBranch(lastNode)){
 		throw new Error("Path points to a leaf, not branch")
 	}
@@ -248,14 +245,25 @@ const updateMovePath = (from: TreePath, to: TreePath): TreePath => {
 
 export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
 	const tree = getTreeByPath(trees, from)
-	if(!tree){
-		throw new Error("Nothing to move")
-	}
-
 	to = updateMovePath(from, to)
 
 	trees = deleteFromTreeByPath(trees, from)
 	return addTreeByPath(trees, tree, to)
+}
+
+export const getTreeSiblings = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): readonly Tree<T, B>[] => {
+	if(path.length === 0){
+		throw new Error("Wrong path")
+	}
+	const parentPath = path.slice(0, path.length - 1)
+	if(parentPath.length === 0){
+		return trees
+	}
+	const parent = getTreeByPath(trees, parentPath)
+	if(!isTreeBranch(parent)){
+		throw new Error("Path is all wrong")
+	}
+	return parent.children
 }
 
 // TODO: move all those utils into separate file

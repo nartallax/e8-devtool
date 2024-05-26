@@ -1,15 +1,15 @@
 import {Button} from "client/react/components/button/button"
 import {Validators} from "client/react/components/form/validators"
 import {AlertModal} from "client/react/components/modal/alertModal"
-import {Col, Row} from "client/react/components/rowCol/rowCol"
-import {TreeControls, TreeView} from "client/react/components/treeView/treeView"
+import {Col} from "client/react/components/rowCol/rowCol"
+import {MappedNamedIdTreeView} from "client/react/components/treeView/mappedNamedIdTreeView"
 import {CollisionGridModal} from "client/react/parts/collisionGroupPage/collisionGridModal"
 import {useProject} from "client/react/parts/projectContext"
-import {TreePath, moveArrayByPath} from "common/tree"
-import {UUID, getRandomUUID} from "common/uuid"
+import {AbortError} from "client/react/uiUtils/abortError"
+import {UUID} from "common/uuid"
 import {CollisionGroup, Project, ProjectEntity} from "data/project"
 import {Icon} from "generated/icons"
-import {useRef, useState} from "react"
+import {useState} from "react"
 
 
 export const getCollisionGroupNameValidators = (project: Project, editedGroupId?: UUID) => {
@@ -25,65 +25,14 @@ export const getCollisionGroupNameValidators = (project: Project, editedGroupId?
 
 export const CollisionGroupPage = () => {
 	const [project, setProject] = useProject()
-	const treeControls = useRef<TreeControls | null>(null)
-	const freshlyAddedGroupId = useRef<UUID | null>(null)
 	const [conflictingModels, setConflictingModels] = useState<ProjectEntity[]>([])
 	const [isCollisonGridOpen, setCollisionGridOpen] = useState(false)
 
-	const addGroup = () => {
-		const newGroup: CollisionGroup = {
-			id: getRandomUUID(),
-			name: ""
-		}
-		setProject(project => ({
-			...project,
-			collisionGroups: [newGroup, ...project.collisionGroups]
-		}))
-		freshlyAddedGroupId.current = newGroup.id
-
-		treeControls?.current?.setInlineEditPath?.([0])
-	}
-
-	const renameGroup = (path: TreePath, name: string) => {
-		if(path.length !== 1){
-			throw new Error("wtf")
-		}
-
-		setProject(project => {
-			const collisionGroups = [...project.collisionGroups]
-			collisionGroups[path[0]!] = {...collisionGroups[path[0]!]!, name}
-			return {...project, collisionGroups}
-		})
-
-		freshlyAddedGroupId.current = null
-	}
-
-	const deleteGroup = (path: TreePath) => {
-		const index = path[0]
-		if(index === undefined || path.length > 1){
-			throw new Error("wat")
-		}
-
-
-		const group = project.collisionGroups[index]!
+	const onDelete = (group: CollisionGroup) => {
 		const models = project.models.filter(model => model.collisionGroupId === group.id)
 		if(models.length > 0){
 			setConflictingModels(models)
-		} else {
-			setProject(project => {
-				const collisionGroups = project.collisionGroups.filter(({id}) => id !== group.id)
-				const collisionGroupPairs = project.collisionGroupPairs.filter(([a, b]) => a !== group.id && b !== group.id)
-				return {...project, collisionGroups, collisionGroupPairs}
-			})
-		}
-	}
-
-	const cancelGroupRenaming = (path: TreePath) => {
-		if(path.length !== 1){
-			throw new Error("wtf")
-		}
-		if(project.collisionGroups[path[0]!]!.id === freshlyAddedGroupId.current){
-			deleteGroup(path)
+			throw new AbortError("Has conflicts")
 		}
 	}
 
@@ -113,33 +62,17 @@ export const CollisionGroupPage = () => {
 				grow={1}
 				align="stretch"
 				gap>
-				<Row justify="start" gap>
-					<Button text="Add group" icon={Icon.filePlus} onClick={addGroup}/>
-					<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
-				</Row>
-				<TreeView
-					tree={project.collisionGroups.map(group => ({value: group}))}
-					controlRef={treeControls}
-					getLeafKey={({id}) => id}
-					getLeafLabel={({name}) => name}
-					leafLabelValidators={group => getCollisionGroupNameValidators(project, group.id)}
-					onDrag={(from, to) => setProject(project => {
-						const collisionGroups = moveArrayByPath(project.collisionGroups, from, to)
-						return {...project, collisionGroups}
-					})}
-					onBranchLabelEdit={renameGroup}
-					onLeafLabelEditCancel={cancelGroupRenaming}
-					onLeafDelete={deleteGroup}
-					onLeafLabelEdit={(path, name) => {
-						if(path.length !== 1){
-							throw new Error("how.")
-						}
-						setProject(project => {
-							const collisionGroups = [...project.collisionGroups]
-							collisionGroups[path[0]!] = {...collisionGroups[path[0]!]!, name}
-							return {...project, collisionGroups}
-						})
-					}}/>
+				<MappedNamedIdTreeView
+					values={project.collisionGroups}
+					toTree={group => ({value: group})}
+					fromTree={leaf => leaf.value}
+					onChange={collisionGroups => setProject(project => ({...project, collisionGroups}))}
+					onLeafDelete={onDelete}
+					canBeChildOf={(_, parent) => !parent}
+					buttons={controls => (<>
+						<Button text="Add group" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf({})}/>
+						<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
+					</>)}/>
 			</Col>
 		</Col>
 	)

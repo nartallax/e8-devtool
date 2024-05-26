@@ -2,16 +2,17 @@ import {useCallback, useEffect, useRef, useState} from "react"
 import * as css from "./treeView.module.scss"
 import {useHotkey} from "client/react/components/hotkeyContext/hotkeyContext"
 import {cn} from "client/react/uiUtils/classname"
-import {ValidatorsMaybeFabric, resolveValidatorsMaybeFabric} from "client/react/components/form/validators"
+import {ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/react/components/form/validators"
+import {TreePath} from "common/tree"
 
-type Props<T> = {
+type Props = {
 	readonly initialValue: string
 	readonly onComplete: (newValue: string | null) => void
-	readonly row: T
-	readonly validators?: ValidatorsMaybeFabric<string, T>
+	readonly treePath: TreePath
+	readonly validators?: ValidatorsMaybeFactory<string, TreePath>
 }
 
-export function InlineTreeElementEditor <T>({initialValue, onComplete, validators, row}: Props<T>) {
+export const InlineTreeElementEditor = ({initialValue, onComplete, validators, treePath}: Props) => {
 	// this state is just to make it rerender-resistant
 	const [value, setValue] = useState(initialValue)
 	const [isShaking, setShaking] = useState(0)
@@ -33,7 +34,7 @@ export function InlineTreeElementEditor <T>({initialValue, onComplete, validator
 			if(!ref.current){
 				return
 			}
-			const resolvedValidators = resolveValidatorsMaybeFabric(validators, row)
+			const resolvedValidators = resolveValidatorsMaybeFactory(validators, treePath)
 			const value = ref.current.value
 			const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
 			if(hasError){

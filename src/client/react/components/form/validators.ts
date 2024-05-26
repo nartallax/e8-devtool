@@ -1,8 +1,8 @@
 import {Validator} from "client/react/components/form/formContext"
 
-export type ValidatorsMaybeFabric<T, V> = Validator<T>[] | ((value: V) => (Validator<T>[] | undefined))
+export type ValidatorsMaybeFactory<T, V> = Validator<T>[] | ((value: V) => (Validator<T>[] | undefined))
 
-export function resolveValidatorsMaybeFabric<T, V>(validators: ValidatorsMaybeFabric<T, V> | undefined, value: V): Validator<T>[] | undefined {
+export function resolveValidatorsMaybeFactory<T, V>(validators: ValidatorsMaybeFactory<T, V> | undefined, value: V): Validator<T>[] | undefined {
 	if(typeof(validators) === "function"){
 		return validators(value)
 	} else {

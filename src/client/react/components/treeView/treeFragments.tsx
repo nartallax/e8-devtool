@@ -10,7 +10,7 @@ import {Button} from "client/react/components/button/button"
 import {SetState} from "client/react/uiUtils/setState"
 import {isInButton} from "client/react/uiUtils/domQueries"
 import {useTreeViewDrag} from "client/react/components/treeView/treeDrag"
-import {ValidatorsMaybeFabric} from "client/react/components/form/validators"
+import {ValidatorsMaybeFactory} from "client/react/components/form/validators"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -33,8 +33,8 @@ type BaseProps<L, B> = {
 	readonly onNodeDelete: (path: TreePath, tree: Tree<L, B>) => void
 	readonly canDeleteLeaf: boolean
 	readonly canDeleteBranch: boolean
-	readonly leafLabelValidators?: ValidatorsMaybeFabric<string, L>
-	readonly branchLabelValidators?: ValidatorsMaybeFabric<string, B>
+	readonly leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
+	readonly branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
@@ -93,21 +93,11 @@ const TreeRow = <T, B>({
 	}
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
-		if(isTreeBranch(row)){
-			// yeah, those two blocks are almost identical
-			// but there still should be two, for consistency
-			labelOrEditor = (<InlineTreeElementEditor
-				initialValue={label}
-				onComplete={label => onLabelEditComplete(path, row, label)}
-				row={row.value}
-				validators={branchLabelValidators}/>)
-		} else {
-			labelOrEditor = (<InlineTreeElementEditor
-				initialValue={label}
-				onComplete={label => onLabelEditComplete(path, row, label)}
-				row={row.value}
-				validators={leafLabelValidators}/>)
-		}
+		labelOrEditor = (<InlineTreeElementEditor
+			initialValue={label}
+			onComplete={label => onLabelEditComplete(path, row, label)}
+			treePath={path}
+			validators={isTreeBranch(row) ? branchLabelValidators : leafLabelValidators}/>)
 	} else {
 		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value) : getLeafSublabel?.(row.value)
 

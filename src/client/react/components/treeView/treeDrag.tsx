@@ -1,7 +1,7 @@
 import {addMouseDragHandler, pointerEventsToClientCoords, pointerEventsToOffsetCoords} from "common/mouse_drag"
 import {RefObject, useEffect} from "react"
 import * as css from "./treeView.module.scss"
-import {Tree, TreePath, getTreeByPath, isTreeBranch} from "common/tree"
+import {Tree, TreeBranch, TreePath, getBranchByPath, getTreeByPath, isTreeBranch} from "common/tree"
 import {nodeOrParentThatMatches} from "client/react/uiUtils/domQueries"
 import {useTreeDragContext} from "client/react/components/treeView/treeDragContext"
 
@@ -16,10 +16,10 @@ type DragDestination<T, B> = {
 }
 
 export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, rowPath: TreePath) => {
-	const {onDrag, rootRef, canBeChildOf, tree} = useTreeDragContext<T, B>()
+	const {onDrag, canDrag, rootRef, canBeChildOf, tree} = useTreeDragContext<T, B>()
 
 	useEffect(() => {
-		if(!onDrag || !rootRef){
+		if(!onDrag || !rootRef || !canDrag){
 			return
 		}
 
@@ -38,8 +38,25 @@ export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, row
 			if(!newDest){
 				return
 			}
+
 			if(isPathInsidePath(rowPath, newDest.path)){
 				return
+			}
+
+			if(canBeChildOf){
+				let parent: TreeBranch<T, B> | null = null
+				if(newDest.disposition === "inside"){
+					parent = newDest.tree as TreeBranch<T, B>
+				} else {
+					const parentPath = newDest.path.slice(0, newDest.path.length - 1)
+					if(parentPath.length > 0){
+						parent = getBranchByPath(tree, parentPath)
+					}
+				}
+
+				if(!canBeChildOf(getTreeByPath(tree, rowPath), parent)){
+					return
+				}
 			}
 
 			dest = newDest
@@ -91,7 +108,7 @@ export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, row
 		})
 
 		return () => handlers.detach()
-	}, [rowRef, onDrag, rootRef, canBeChildOf, tree, rowPath])
+	}, [rowRef, onDrag, rootRef, canBeChildOf, tree, rowPath, canDrag])
 }
 
 
@@ -107,9 +124,6 @@ const getDragDestination = <T, B>(tree: readonly Tree<T, B>[], event: MouseEvent
 	const dispositionYPercent = (y - targetRect.top) / targetRect.height
 
 	const targetTree = getTreeByPath(tree, path)
-	if(!targetTree){
-		return null
-	}
 	let disp: DragDestinationDisposition = isTreeBranch(targetTree)
 		? dispositionYPercent < 0.25 ? "above" : dispositionYPercent > 0.75 ? "below" : "inside"
 		: dispositionYPercent < 0.5 ? "above" : "below"

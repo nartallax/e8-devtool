@@ -1,11 +1,11 @@
-import {Tree, TreePath, isTreeBranch} from "common/tree"
+import {Tree, TreeBranch, TreePath, isTreeBranch} from "common/tree"
 import * as css from "./treeView.module.scss"
 import {TreeBranchChildren, TreeBranchChildrenProps} from "client/react/components/treeView/treeFragments"
 import {MutableRefObject, useCallback, useMemo, useRef, useState} from "react"
 import {SetState} from "client/react/uiUtils/setState"
 import {TreeDragContextProvider} from "client/react/components/treeView/treeDragContext"
 
-type Props<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
+export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
 	readonly controlRef?: MutableRefObject<TreeControls | null>
 	readonly onBranchLabelEdit?: (path: TreePath, newLabel: string) => void
 	readonly onBranchLabelEditCancel?: (path: TreePath) => void
@@ -15,7 +15,7 @@ type Props<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inl
 	readonly onLeafDelete?: (path: TreePath) => void
 	readonly onDrag?: (from: TreePath, to: TreePath) => void
 	/** Allows to control if @param child can be dragged to be child of @param parent. Defaults to () => true.  */
-	readonly canBeChildOf?: (child: Tree<L, B>, parent: Tree<L, B> | null) => boolean
+	readonly canBeChildOf?: (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => boolean
 }
 
 /** This object provides some external controls for tree view
@@ -29,7 +29,7 @@ export type TreeControls = {
 export const TreeView = <L, B>({
 	onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, onBranchLabelEditCancel, onLeafLabelEditCancel,
 	controlRef, tree, ...props
-}: Props<L, B>) => {
+}: TreeViewProps<L, B>) => {
 	const rootRef = useRef<HTMLDivElement | null>(null)
 
 	const [inlineEditPath, setInlineEditPath] = useState<TreePath | null>(null)
@@ -66,12 +66,12 @@ export const TreeView = <L, B>({
 	}
 
 	return (
-		<TreeDragContextProvider value={{
-			canBeChildOf,
-			tree,
-			onDrag,
-			rootRef
-		}}>
+		<TreeDragContextProvider
+			canBeChildOf={canBeChildOf}
+			tree={tree}
+			onDrag={onDrag}
+			rootRef={rootRef}
+			canDrag={!!onDrag}>
 			<div className={css.treeView} ref={rootRef}>
 				<TreeBranchChildren
 					{...props}
