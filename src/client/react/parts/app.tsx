@@ -24,12 +24,12 @@ export const App = () => {
 										isDefault: true,
 										render: () => <ModelPage/>
 									},
-									{
+									{ // TODO: remove, make it a button on model editing
 										suffix: "/layers",
 										text: "Layers",
 										render: () => <LayerPage/>
 									},
-									{
+									{ // TODO: remove, make it a button on model editing
 										suffix: "/collision_groups",
 										text: "Collisions",
 										render: () => <CollisionGroupPage/>

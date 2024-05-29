@@ -2,10 +2,10 @@ import {Validators, ValidatorsMaybeFactory} from "client/react/components/form/v
 import {Row} from "client/react/components/rowCol/rowCol"
 import {TreeControls, TreeView, TreeViewProps} from "client/react/components/treeView/treeView"
 import {AbortError} from "client/react/uiUtils/abortError"
-import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch} from "common/tree"
+import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
-import {useMemo, useRef, useState} from "react"
+import {useCallback, useMemo, useRef, useState} from "react"
 
 type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafDoubleclick" > & {
 	readonly values: readonly S[]
@@ -18,15 +18,22 @@ type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick
 	// rename handlers exist for cases when name is lost during mapping
 	readonly onBranchRename?: (branch: B, name: string) => void
 	readonly onLeafRename?: (leaf: L, name: string) => void
+	// in theory nothing is stopping us from making new branches here
+	// just branches could contain children, and it is unobvious how to resolve that
+	// because we imply that user will need to input name, and we can't input more than one name at a time
+	// (and if we only make leafs, no need to wrap it with `{value: ...}`)
+	readonly makeNewChild?: () => NoNameId<L>
 }
 
+type NoNameId<T> = Omit<T, "name" | "id">
+
 export type MappedNamedIdTreeControls<L, B> = {
-	addRenameBranch: (branch: Omit<B, "name" | "id">, path?: TreePath) => void
-	addRenameLeaf: (leaf: Omit<L, "name" | "id">, path?: TreePath) => void
+	addRenameBranch: (branch: NoNameId<B>, path?: TreePath) => void
+	addRenameLeaf: (leaf: NoNameId<L>, path?: TreePath) => void
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, ...props}: Props<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, ...props}: Props<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -104,10 +111,10 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 		updateByTree(deleteFromTreeByPath(tree, path))
 	}
 
-	const addRenameNode = (node: Tree<L, B>, path: TreePath) => {
+	const addRenameNode = useCallback((node: Tree<L, B>, path: TreePath) => {
 		setNewNode({node, path})
 		treeControls.current?.setInlineEditPath(path)
-	}
+	}, [])
 
 	const mappedControls: MappedNamedIdTreeControls<L, B> = {
 		addRenameBranch: (branch, path = [0]) => addRenameNode({
@@ -128,6 +135,23 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 		const haveSiblingWithSameName = siblings.some(sibling => sibling.value.id !== child.value.id && sibling.value.name === child.value.name)
 		return !haveSiblingWithSameName
 	}
+
+	const onAddChild = useMemo(() => {
+		if(!makeNewChild){
+			return
+		}
+		return (path: TreePath) => {
+			const value = makeNewChild()
+			const node: TreeLeaf<L> = {
+				value: {
+					...value,
+					name: "",
+					id: getRandomUUID()
+				} as L
+			}
+			addRenameNode(node, [...path, 0])
+		}
+	}, [makeNewChild, addRenameNode])
 
 	return (
 		<>
@@ -151,7 +175,8 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 				onLeafLabelEditCancel={cancelEditName}
 				onBranchLabelEditCancel={cancelEditName}
 				onLeafDelete={deleteNode}
-				onBranchDelete={deleteNode}/>
+				onBranchDelete={deleteNode}
+				onAddChild={onAddChild}/>
 		</>
 	)
 }

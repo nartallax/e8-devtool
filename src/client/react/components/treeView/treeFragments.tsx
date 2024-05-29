@@ -20,8 +20,9 @@ type BaseProps<L, B> = {
 	readonly getBranchLabel?: (branch: B) => string
 	readonly getBranchSublabel?: (leaf: B) => string
 	readonly getLeafLabel: (leaf: L) => string
-	readonly getLeafSublabel?: (leaf: L) => string
+	readonly getLeafSublabel?: (leaf: L) => React.ReactNode
 	readonly onLeafDoubleclick?: (leaf: L) => void
+	readonly onAddChild?: (parentPath: TreePath) => void
 	readonly squares?: SquareName[]
 	// eslint-disable-next-line react/no-unused-prop-types
 	readonly path: TreePath
@@ -76,7 +77,7 @@ const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
 const TreeRow = <T, B>({
 	row, squares, isExpanded, getBranchLabel, getLeafLabel, getLeafSublabel, getBranchSublabel,
 	onExpandChange, onLeafDoubleclick, path, inlineEditPath, onLabelEditComplete,
-	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, canDeleteBranch,
+	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, onAddChild, canDeleteBranch,
 	canDeleteLeaf, leafLabelValidators, branchLabelValidators
 }: RowProps<T, B>) => {
 	const rowRef = React.useRef<HTMLDivElement | null>(null)
@@ -126,6 +127,14 @@ const TreeRow = <T, B>({
 			onClick={() => onNodeDelete(path, row)}
 			holdTimeUntilAction={500}
 			key="delete"/>)
+	}
+
+	if(isTreeBranch(row) && onAddChild){
+		buttons.push(<Button
+			variant="plain-icon"
+			icon={Icon.plus}
+			onClick={() => onAddChild(path)}
+			key="add-child"/>)
 	}
 
 	const buttonsEl = buttons.length === 0 ? null : <div className={css.rowButtons}>{buttons}</div>
