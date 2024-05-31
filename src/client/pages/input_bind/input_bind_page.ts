@@ -8,7 +8,6 @@ import {TwoColumnLayout} from "client/component/two_column_layout/two_column_lay
 import {showInputBindModal} from "client/pages/input_bind/input_bind_modal"
 import {ProjectInputBind, NamedId} from "data/project"
 import {TreeBranch, TreeLeaf, isTreeBranch} from "common/tree"
-import {chordToString} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
 
 export const InputBindPage = () => {
@@ -59,11 +58,12 @@ export const InputBindPage = () => {
 						if(chords.length === 0){
 							chordsStr = "no default"
 						} else {
-							const chord = chords[0]!
-							chordsStr = chordToString(chord)
-							if(chords.length > 1){
-								chordsStr += ` and ${chords.length - 1} more`
-							}
+							// const chord = chords[0]!
+							// chordsStr = chordToString(chord)
+							// if(chords.length > 1){
+							// 	chordsStr += ` and ${chords.length - 1} more`
+							// }
+							chordsStr = ""
 						}
 
 						let groupStr = ""

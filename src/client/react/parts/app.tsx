@@ -1,3 +1,4 @@
+import {Form} from "client/react/components/form/form"
 import {HotkeyContextProvider} from "client/react/components/hotkeyContext/hotkeyContext"
 import {RoutingContextProvider} from "client/react/components/router/routingContext"
 import {TabsAndRouter} from "client/react/components/tabs/tabsAndRouter"
@@ -16,30 +17,32 @@ export const App = () => {
 				<RoutingContextProvider>
 					<TextureTreeProvider>
 						<ProjectProvider>
-							<TabsAndRouter
-								tabs={[
-									{
-										suffix: "/models",
-										text: "Models",
-										isDefault: true,
-										render: () => <ModelPage/>
-									},
-									{ // TODO: remove, make it a button on model editing
-										suffix: "/layers",
-										text: "Layers",
-										render: () => <LayerPage/>
-									},
-									{ // TODO: remove, make it a button on model editing
-										suffix: "/collision_groups",
-										text: "Collisions",
-										render: () => <CollisionGroupPage/>
-									},
-									{
-										suffix: "/inputs",
-										text: "Inputs",
-										render: () => <InputBindPage/>
-									}
-								]}/>
+							<Form>
+								<TabsAndRouter
+									tabs={[
+										{
+											suffix: "/models",
+											text: "Models",
+											isDefault: true,
+											render: () => <ModelPage/>
+										},
+										{ // TODO: remove, make it a button on model editing
+											suffix: "/layers",
+											text: "Layers",
+											render: () => <LayerPage/>
+										},
+										{ // TODO: remove, make it a button on model editing
+											suffix: "/collision_groups",
+											text: "Collisions",
+											render: () => <CollisionGroupPage/>
+										},
+										{
+											suffix: "/inputs",
+											text: "Inputs",
+											render: () => <InputBindPage/>
+										}
+									]}/>
+							</Form>
 						</ProjectProvider>
 					</TextureTreeProvider>
 				</RoutingContextProvider>

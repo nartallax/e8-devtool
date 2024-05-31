@@ -21,6 +21,7 @@ type BaseProps<L, B> = {
 	readonly getBranchSublabel?: (leaf: B) => string
 	readonly getLeafLabel: (leaf: L) => string
 	readonly getLeafSublabel?: (leaf: L) => React.ReactNode
+	readonly onLeafClick?: (leaf: L, path: TreePath) => void
 	readonly onLeafDoubleclick?: (leaf: L) => void
 	readonly onAddChild?: (parentPath: TreePath) => void
 	readonly squares?: SquareName[]
@@ -36,6 +37,8 @@ type BaseProps<L, B> = {
 	readonly canDeleteBranch: boolean
 	readonly leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
 	readonly branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
+	readonly selectedPath?: TreePath
+	readonly InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>}) => React.ReactNode
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
@@ -76,10 +79,11 @@ const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
 
 const TreeRow = <T, B>({
 	row, squares, isExpanded, getBranchLabel, getLeafLabel, getLeafSublabel, getBranchSublabel,
-	onExpandChange, onLeafDoubleclick, path, inlineEditPath, onLabelEditComplete,
+	onExpandChange, onLeafDoubleclick, onLeafClick, path, inlineEditPath, onLabelEditComplete,
 	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, onAddChild, canDeleteBranch,
-	canDeleteLeaf, leafLabelValidators, branchLabelValidators
+	canDeleteLeaf, leafLabelValidators, branchLabelValidators, selectedPath, InlineEditor = InlineTreeElementEditor
 }: RowProps<T, B>) => {
+	const isSelected = !!selectedPath && areTreePathsEqual(selectedPath, path)
 	const rowRef = React.useRef<HTMLDivElement | null>(null)
 	useTreeViewDrag(rowRef, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
@@ -94,7 +98,7 @@ const TreeRow = <T, B>({
 	}
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
-		labelOrEditor = (<InlineTreeElementEditor
+		labelOrEditor = (<InlineEditor
 			initialValue={label}
 			onComplete={label => onLabelEditComplete(path, row, label)}
 			treePath={path}
@@ -109,6 +113,14 @@ const TreeRow = <T, B>({
 	}
 
 	const buttons: React.ReactNode[] = []
+
+	if(isTreeBranch(row) && onAddChild){
+		buttons.push(<Button
+			variant="plain-icon"
+			icon={Icon.plus}
+			onClick={() => onAddChild(path)}
+			key="add-child"/>)
+	}
 
 	const canEdit = !!(isTreeBranch(row) ? canEditBranchLabel : canEditLeafLabel)
 	if(canEdit){
@@ -129,16 +141,12 @@ const TreeRow = <T, B>({
 			key="delete"/>)
 	}
 
-	if(isTreeBranch(row) && onAddChild){
-		buttons.push(<Button
-			variant="plain-icon"
-			icon={Icon.plus}
-			onClick={() => onAddChild(path)}
-			key="add-child"/>)
-	}
-
 	const buttonsEl = buttons.length === 0 ? null : <div className={css.rowButtons}>{buttons}</div>
 
+	const className = cn(css.treeRow, {
+		[css.isExpanded!]: isExpanded,
+		[css.isSelected!]: isSelected
+	})
 
 	if(isTreeBranch(row)){
 		const onRowClick = (e: React.MouseEvent) => {
@@ -149,7 +157,7 @@ const TreeRow = <T, B>({
 
 		return (
 			<div
-				className={cn(css.treeRow, {[css.isExpanded!]: isExpanded})}
+				className={className}
 				onClick={onRowClick}
 				ref={rowRef}
 				data-path={JSON.stringify(path)}>
@@ -165,9 +173,16 @@ const TreeRow = <T, B>({
 			}
 		}
 
+		const onRowClick = (e: React.MouseEvent) => {
+			if(shouldHandleRowClick(e)){
+				onLeafClick?.(row.value, path)
+			}
+		}
+
 		return (
 			<div
-				className={css.treeRow}
+				className={className}
+				onClick={onRowClick}
 				onDoubleClick={onRowDblClick}
 				ref={rowRef}
 				data-path={JSON.stringify(path)}>

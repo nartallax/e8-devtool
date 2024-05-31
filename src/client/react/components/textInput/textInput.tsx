@@ -29,7 +29,7 @@ export const TextInput = ({value, onChange, isDisabled, placeholder, isAutofocus
 	}, [isAutofocused])
 
 	return (
-		<FormField id={id}>
+		<FormField id={id} onLabelClick={() => ref.current?.focus()}>
 			<input
 				ref={ref}
 				className={cn(css.textInput, {[css.hasError!]: hasError})}

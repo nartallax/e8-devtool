@@ -48,6 +48,10 @@
 		transform: translateX(1px) rotate(90deg);
 	}
 
+	&.isSelected {
+		background-color: var(--color-interactive);
+	}
+
 	.rowLabel {
 		flex: 1 1 0;
 		min-width: 0;

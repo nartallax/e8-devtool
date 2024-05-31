@@ -1,6 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import * as css from "./treeView.module.scss"
-import {useHotkey} from "client/react/components/hotkeyContext/hotkeyContext"
 import {cn} from "client/react/uiUtils/classname"
 import {ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/react/components/form/validators"
 import {TreePath} from "common/tree"
@@ -27,32 +26,34 @@ export const InlineTreeElementEditor = ({initialValue, onComplete, validators, t
 		setValue(value)
 	}, [setValue])
 
-	useHotkey({
-		ref,
-		shouldPick: e => e.key === "Enter",
-		onPress: () => {
-			if(!ref.current){
-				return
-			}
-			const resolvedValidators = resolveValidatorsMaybeFactory(validators, treePath)
-			const value = ref.current.value
-			const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
-			if(hasError){
-				setShaking(x => x + 1)
-				setTimeout(() => setShaking(x => x - 1), 300)
-			} else {
-				onComplete(value)
-			}
+	const completeWithSuccess = useCallback(() => {
+		if(!ref.current){
+			return
 		}
-	})
+		const resolvedValidators = resolveValidatorsMaybeFactory(validators, treePath)
+		const value = ref.current.value
+		const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
+		if(hasError){
+			setShaking(x => x + 1)
+			setTimeout(() => setShaking(x => x - 1), 300)
+		} else {
+			onComplete(value)
+		}
+	}, [onComplete, treePath, validators])
 
-	useHotkey({
-		ref,
-		shouldPick: e => e.key === "Escape",
-		onPress: () => {
+	const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+		if(e.key === "Enter"){
+			e.preventDefault()
+			e.stopPropagation()
+			completeWithSuccess()
+		} else if(e.key === "Escape"){
+			e.preventDefault()
+			e.stopPropagation()
 			onComplete(null)
+		} else {
+			updateValue()
 		}
-	})
+	}, [updateValue, completeWithSuccess, onComplete])
 
 	useEffect(() => {
 		const el = ref.current
@@ -70,7 +71,7 @@ export const InlineTreeElementEditor = ({initialValue, onComplete, validators, t
 			className={cn(css.inlineEditor, {[css.shake!]: !!isShaking})}
 			value={value}
 			onChange={updateValue}
-			onKeyDown={updateValue}
+			onKeyDown={onKeyDown}
 			onKeyUp={updateValue}
 			onPaste={updateValue}
 			onBlur={() => onComplete(null)}

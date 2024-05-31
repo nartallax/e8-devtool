@@ -2,16 +2,19 @@ import {Validators, ValidatorsMaybeFactory} from "client/react/components/form/v
 import {Row} from "client/react/components/rowCol/rowCol"
 import {TreeControls, TreeView, TreeViewProps} from "client/react/components/treeView/treeView"
 import {AbortError} from "client/react/uiUtils/abortError"
-import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf} from "common/tree"
-import {getRandomUUID} from "common/uuid"
+import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath} from "common/tree"
+import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
 
-type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafDoubleclick" > & {
+type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
 	readonly values: readonly S[]
 	readonly onChange: (values: readonly S[]) => void
 	readonly toTree: (sourceValue: S) => T
 	readonly fromTree: (tree: T) => S
+	// on..Delete handlers only exist for some special cases
+	// for example, validations - they can throw AbortError, and it will be handled
+	// simple deletion could be performed without them
 	readonly onLeafDelete?: (leaf: L) => void
 	readonly onBranchDelete?: (branch: B) => void
 	readonly buttons?: (controls: MappedNamedIdTreeControls<L, B>) => React.ReactNode
@@ -23,6 +26,7 @@ type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick
 	// because we imply that user will need to input name, and we can't input more than one name at a time
 	// (and if we only make leafs, no need to wrap it with `{value: ...}`)
 	readonly makeNewChild?: () => NoNameId<L>
+	readonly selectedValue?: UUID
 }
 
 type NoNameId<T> = Omit<T, "name" | "id">
@@ -33,7 +37,7 @@ export type MappedNamedIdTreeControls<L, B> = {
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, ...props}: Props<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, selectedValue, ...props}: Props<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -46,6 +50,13 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 		}
 		return tree
 	}, [values, toTree, newNode])
+
+	const selectedPath = useMemo(() => {
+		if(!selectedValue){
+			return undefined
+		}
+		return findTreeNodePath(tree, value => value.id === selectedValue)
+	}, [selectedValue, tree])
 
 	const validatorFactory = useMemo(() => labelValidatorFactory(tree), [tree])
 
@@ -176,7 +187,8 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 				onBranchLabelEditCancel={cancelEditName}
 				onLeafDelete={deleteNode}
 				onBranchDelete={deleteNode}
-				onAddChild={onAddChild}/>
+				onAddChild={onAddChild}
+				selectedPath={selectedPath}/>
 		</>
 	)
 }

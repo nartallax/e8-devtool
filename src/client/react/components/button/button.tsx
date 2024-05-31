@@ -10,8 +10,9 @@ type Props = {
 	readonly onClick?: () => void
 	readonly clickRepeatTimeout?: number
 	readonly isDisabled?: boolean
+	readonly isError?: boolean
 	readonly hotkey?: (e: KeyboardEvent) => boolean
-	readonly variant?: "default" | "plain-icon" | "tab"
+	readonly variant?: "default" | "plain-icon" | "large-plain-icon" | "tab"
 	readonly type?: "submit" | "reset" | "button"
 	readonly isActive?: boolean
 	/** If passed, user will be required to hold the button for some time until onClick is called.
@@ -19,7 +20,7 @@ type Props = {
 	readonly holdTimeUntilAction?: number
 }
 
-export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0, type = "button"}: Props) => {
+export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, isError, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0, type = "button"}: Props) => {
 	const [disabledByTimeoutCount, setDisabledByTimeoutCount] = useState(0)
 	const isEffectivelyDisabled = disabledByTimeoutCount > 0 || isDisabled
 	const ref = useRef<HTMLButtonElement>(null)
@@ -75,9 +76,11 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 			className={cn(css.button, {
 				[css.defaultVariant!]: variant === "default",
 				[css.plainIconVariant!]: variant === "plain-icon",
+				[css.largePlainIconVariant!]: variant === "large-plain-icon",
 				[css.tabVariant!]: variant === "tab",
 				[css.isActive!]: isActive,
-				[css.isPressed!]: isPressed
+				[css.isPressed!]: isPressed,
+				[css.isError!]: isError
 			})}
 			style={{["--holdTimeUntilAction"]: (holdTimeUntilAction / 1000) + "s"} as React.CSSProperties}
 			disabled={isEffectivelyDisabled}

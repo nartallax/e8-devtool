@@ -3,7 +3,7 @@ import {UUID} from "common/uuid"
 import {PropsWithChildren, useCallback, useMemo, useState} from "react"
 
 type Props = {
-	readonly onSubmit: () => void | Promise<void>
+	readonly onSubmit?: () => void | Promise<void>
 }
 
 export const Form = ({children, onSubmit}: PropsWithChildren<Props>) => {
@@ -24,7 +24,9 @@ export const Form = ({children, onSubmit}: PropsWithChildren<Props>) => {
 		if(hasErrors){
 			return
 		}
-		await Promise.resolve(onSubmit())
+		if(onSubmit){
+			await Promise.resolve(onSubmit())
+		}
 	}, [onSubmit, hasErrors])
 
 	return (

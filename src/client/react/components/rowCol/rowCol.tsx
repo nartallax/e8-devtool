@@ -5,8 +5,12 @@ import {CSSProperties, PropsWithChildren, RefObject} from "react"
 type Props = {
 	readonly padding?: DefaultableSideSize
 	readonly margin?: DefaultableSideSize
-	readonly shrink?: number
-	readonly grow?: number
+	readonly shrink?: number | boolean
+	readonly grow?: number | boolean
+	/** Shorthand for align="stretch" */
+	readonly stretch?: boolean
+	/** Shorthand for alignSelf="stretch" */
+	readonly stretchSelf?: boolean
 	readonly justify?: "start" | "center" | "space-between" | "end"
 	readonly align?: "start" | "center" | "end" | "stretch"
 	readonly alignSelf?: "start" | "center" | "end" | "stretch"
@@ -23,11 +27,11 @@ const defaultBorder = "var(--default-border-width)"
 const propsToStyle = (props: Props): CSSProperties => ({
 	padding: resolveDefaultableSideSize(props.padding),
 	margin: resolveDefaultableSideSize(props.margin),
-	flexShrink: props.shrink,
-	flexGrow: props.grow,
+	flexShrink: resolveGrowValue(props.shrink),
+	flexGrow: resolveGrowValue(props.grow),
 	justifyContent: resolveFlexAlign(props.justify),
-	alignItems: resolveFlexAlign(props.align),
-	alignSelf: resolveFlexAlign(props.alignSelf),
+	alignItems: resolveFlexAlign(props.align, props.stretch),
+	alignSelf: resolveFlexAlign(props.alignSelf, props.stretchSelf),
 	gap: resolveDefaultableSize(props.gap),
 	borderWidth: resolveDefaultableSideSize(props.border, defaultBorder),
 	position: props.position,
@@ -35,8 +39,10 @@ const propsToStyle = (props: Props): CSSProperties => ({
 	...resolveMinMaxableSize("height", props.height)
 })
 
-const resolveFlexAlign = (align?: string): string | undefined => {
-	return align === "start" || align === "end" ? "flex-" + align : align
+const resolveGrowValue = (value?: number | boolean) => value === true ? 1 : value === false ? 0 : value
+
+const resolveFlexAlign = (align?: string, stretch?: boolean): string | undefined => {
+	return (align === "start" || align === "end" ? "flex-" + align : align) ?? (stretch === true ? "stretch" : undefined)
 }
 
 export const Row = ({children, ref, ...props}: PropsWithChildren<Props>) => {

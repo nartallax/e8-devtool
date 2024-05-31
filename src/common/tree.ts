@@ -54,6 +54,22 @@ function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B
 	}
 }
 
+export function findTreeNodePath<T, B>(trees: readonly Tree<T, B>[], isThisIt: (value: T | B) => boolean): TreePath | undefined {
+	for(let i = 0; i < trees.length; i++){
+		const node = trees[i]!
+		if(isThisIt(node.value)){
+			return [i]
+		}
+		if(isTreeBranch(node)){
+			const result = findTreeNodePath(node.children, isThisIt)
+			if(result){
+				return [i, ...result]
+			}
+		}
+	}
+	return undefined
+}
+
 export function findOneLeafInTrees<T, B>(trees: readonly Tree<T, B>[], isThisIt: (value: T) => boolean): TreeLeaf<T> | undefined {
 	for(const tree of trees){
 		const result = findOneLeaf(tree, isThisIt)

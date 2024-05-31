@@ -4,8 +4,9 @@ import * as css from "./collisionGridModal.module.scss"
 import {useProject} from "client/react/parts/projectContext"
 import {useState} from "react"
 import {ProjectCollisionGroup} from "data/project"
-import {Col, Row} from "client/react/components/rowCol/rowCol"
-import {Button} from "client/react/components/button/button"
+import {Col} from "client/react/components/rowCol/rowCol"
+import {Form} from "client/react/components/form/form"
+import {ModalSubmitCancelButtons} from "client/react/parts/modalButtons/modalSubmitCancelButtons"
 
 type Props = {
 	readonly onClose: () => void
@@ -67,37 +68,36 @@ export const CollisionGridModal = ({onClose}: Props) => {
 			contentHeight={[null, "300px", "90vh"]}
 			header="Collision grid"
 			onClose={onClose}>
-			<Col
-				align="center"
-				justify="center"
-				grow={1}
-				alignSelf="stretch">
-				<div className={css.rows}>
-					<div className={css.row} key='labels'>
-						{project.collisionGroups.map(group =>
-							(<div className={css.topLabelContainer} key={group.id}>
-								<div className={css.topLabel}>
-									{group.name}
-								</div>
-							</div>))}
-					</div>
-					{project.collisionGroups.map(groupA => (<div className={css.row} key={groupA.id}>
-						<div key='name'>
-							{groupA.name}
+			<Form onSubmit={onSubmit}>
+				<Col
+					align="center"
+					justify="center"
+					grow={1}
+					alignSelf="stretch">
+					<div className={css.rows}>
+						<div className={css.row} key='labels'>
+							{project.collisionGroups.map(group =>
+								(<div className={css.topLabelContainer} key={group.id}>
+									<div className={css.topLabel}>
+										{group.name}
+									</div>
+								</div>))}
 						</div>
-						{project.collisionGroups.map(groupB =>
-							(<PairCheckbox
-								key={groupB.id}
-								onChange={onChange}
-								map={pairMap}
-								pair={[groupA.id, groupB.id]}/>))}
-					</div>))}
-				</div>
-			</Col>
-			<Row gap justify="end">
-				<Button text="Cancel" onClick={onClose}/>
-				<Button text="OK" onClick={onSubmit} hotkey={e => e.key === "Enter"}/>
-			</Row>
+						{project.collisionGroups.map(groupA => (<div className={css.row} key={groupA.id}>
+							<div key='name'>
+								{groupA.name}
+							</div>
+							{project.collisionGroups.map(groupB =>
+								(<PairCheckbox
+									key={groupB.id}
+									onChange={onChange}
+									map={pairMap}
+									pair={[groupA.id, groupB.id]}/>))}
+						</div>))}
+					</div>
+				</Col>
+				<ModalSubmitCancelButtons onCancel={onClose}/>
+			</Form>
 		</Modal>
 	)
 }
@@ -110,6 +110,7 @@ type CheckboxProps = {
 
 const PairCheckbox = ({pair, map, onChange}: CheckboxProps) => {
 	const isChecked = map.get(pair[0])?.has(pair[1])
+	// TODO: use <Checkbox> here?
 	return (
 		<input
 			className={css.checkbox}

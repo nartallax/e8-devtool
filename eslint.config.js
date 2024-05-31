@@ -150,7 +150,7 @@ let result = tseslint.config(
 		"@typescript-eslint/space-before-function-paren": ["warn", "never"],
 		"@typescript-eslint/space-infix-ops": ["warn"],
 
-		"react/boolean-prop-naming": ["warn", {}],
+		"react/boolean-prop-naming": ["warn", {rule: "^(value|(is|has)[A-Z]([A-Za-z0-9]?)+)"}],
 		"react/button-has-type": ["error"],
 		"react/checked-requires-onchange-or-readonly": ["error"],
 		"react/forbid-component-props": ["warn"],

@@ -42,7 +42,12 @@ export interface ProjectInputBindSet extends NamedId {
 export interface ProjectInputBind extends NamedId {
 	readonly group: UUID | null
 	readonly isHold: boolean
-	readonly defaultChords: readonly Chord[]
+	readonly defaultChords: readonly ProjectChord[]
+}
+
+export type ProjectChord = {
+	id: UUID
+	chord: Chord
 }
 
 export function makeBlankProject(): Project {

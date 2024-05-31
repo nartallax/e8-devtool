@@ -46,7 +46,7 @@ export function Select<T>({options, value, onChange: setValue, ...props}: Props<
 	const {id, hasError} = useRegisterField({...props, value})
 
 	return (
-		<FormField id={id}>
+		<FormField id={id} onLabelClick={() => ref.current?.focus()}>
 			<select
 				className={cn(css.select, {[css.hasError!]: hasError})}
 				value={optionValueToId.get(value)!}

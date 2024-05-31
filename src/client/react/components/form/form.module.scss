@@ -16,6 +16,10 @@
     align-items: flex-start;
     justify-content: flex-end;
 
+	&.isClickable {
+		cursor: pointer;
+	}
+
 	.formFieldLabelText {
 		padding: 0.25rem;
 	}

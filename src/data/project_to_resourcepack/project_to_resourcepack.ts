@@ -51,7 +51,10 @@ export async function projectToResourcePack(project: Project, config: Config): P
 		binds: bindSet.binds.map(bind => ({
 			group: bind.group === null ? null : inputGroups(bind.group),
 			isHold: bind.isHold,
-			defaultChords: bind.defaultChords.filter(chord => chord.length > 0)
+			// TODO: unique here
+			defaultChords: bind.defaultChords
+				.map(chord => chord.chord)
+				.filter(chord => chord.length > 0)
 		}))
 	}))
 
