@@ -4,6 +4,7 @@ import * as css from "./treeView.module.scss"
 import {Tree, TreeBranch, TreePath, getBranchByPath, getTreeByPath, isTreeBranch} from "common/tree"
 import {nodeOrParentThatMatches} from "client/react/uiUtils/domQueries"
 import {useTreeDragContext} from "client/react/components/treeView/treeDragContext"
+import {lockUserSelect, unlockUserSelect} from "client/react/uiUtils/userSelectLock"
 
 
 
@@ -77,12 +78,12 @@ export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, row
 				draggedRowOffsetX = rowRect.left - rootRect.left
 				draggedRowOffsetY = rowRect.top - rootRect.top
 
-				document.body.style.userSelect = "none"
+				lockUserSelect()
 				root.classList.add(css.dragContainer!)
 				el.classList.add(css.draggedRow!)
 			},
 			stop: () => {
-				document.body.style.userSelect = ""
+				unlockUserSelect()
 				root.classList.remove(css.dragContainer!)
 				root.style.removeProperty("--drag-offset-x")
 				root.style.removeProperty("--drag-offset-y")

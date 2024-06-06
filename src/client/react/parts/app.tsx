@@ -3,6 +3,7 @@ import {HotkeyContextProvider} from "client/react/components/hotkeyContext/hotke
 import {RoutingContextProvider} from "client/react/components/router/routingContext"
 import {TabsAndRouter} from "client/react/components/tabs/tabsAndRouter"
 import {ApiProvider} from "client/react/parts/apiContext"
+import {AtlasPage} from "client/react/parts/atlasPage/atlasPage"
 import {CollisionGroupPage} from "client/react/parts/collisionGroupPage/collisionGroupPage"
 import {InputBindPage} from "client/react/parts/inputBindPage/inputBindPage"
 import {LayerPage} from "client/react/parts/layerPage/layerPage"
@@ -40,6 +41,11 @@ export const App = () => {
 											suffix: "/inputs",
 											text: "Inputs",
 											render: () => <InputBindPage/>
+										},
+										{
+											suffix: "/atlas",
+											text: "Atlas",
+											render: () => <AtlasPage/>
 										}
 									]}/>
 							</Form>

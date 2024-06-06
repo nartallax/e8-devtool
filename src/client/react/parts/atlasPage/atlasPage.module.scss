@@ -1,0 +1,16 @@
+@media(hover: hover) {
+	.atlasElement:hover {
+		outline-style: solid;
+		outline-color: var(--color-font);
+		outline-width: var(--default-border-width);
+		z-index: 1;
+	}
+}
+
+.atlasElement {
+	position: absolute;
+}
+
+.atlasElementContainer {
+	background-color: var(--color-foreground);
+}
