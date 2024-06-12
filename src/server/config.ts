@@ -17,6 +17,9 @@ export interface ConfigFilePathless {
 
 export interface ConfigFile extends ConfigFilePathless {
 	readonly projectPath: string
+	// TODO: let's move all this stuff into UI?
+	// this way we can have 1 less file, which is a good thing
+	// and stuff we can't move into UI, like host and port, we can move into CLI args
 	readonly resourcePackPath: string
 	readonly textureDirectoryPath: string
 	/** Path that contains classes related to entities */

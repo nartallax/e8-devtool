@@ -1,40 +1,24 @@
+import {WorkbenchPositionState} from "client/react/components/workbench/workbench"
 import {lockUserSelect, unlockUserSelect} from "client/react/uiUtils/userSelectLock"
-import {addMouseDragHandler, pointerEventsToOffsetCoords} from "common/mouse_drag"
+import {addMouseDragHandler} from "common/mouse_drag"
 import {RefObject, useEffect} from "react"
 
 type SetterFn<T> = (callback: (value: T) => T) => void
 
 type Props = {
-	setBenchState: SetterFn<{x: number, y: number, zoom: number}>
+	setBenchState: SetterFn<WorkbenchPositionState>
 	zoomSpeed: number
 	zoomMin: number
 	zoomMax: number
 	rootRef: RefObject<HTMLElement | null>
-	rootSize: {width: number, height: number}
-	contentWidth: number
-	contentHeight: number
+	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent, zoom?: number, x?: number, y?: number) => {x: number, y: number}
 }
 
-export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, zoomMin, zoomMax, contentWidth, contentHeight}: Props) => {
+export const useWorkbenchInput = ({setBenchState, rootRef, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax}: Props) => {
 	useEffect(() => {
 		const root = rootRef.current
 		if(!root){
 			return
-		}
-
-		const pointerEventToWorkbenchCoords = (e: MouseEvent | TouchEvent, x: number, y: number, zoom: number) => {
-			const coords = pointerEventsToOffsetCoords(e, root)!
-			coords.x -= rootSize.width / 2
-			coords.y -= rootSize.height / 2
-			coords.x -= contentWidth / 2
-			coords.y -= contentHeight / 2
-			coords.x /= zoom
-			coords.y /= zoom
-			coords.x += contentWidth
-			coords.y += contentHeight
-			coords.x -= x
-			coords.y -= y
-			return coords
 		}
 
 		const wheelHandler = (e: WheelEvent) => {
@@ -49,8 +33,8 @@ export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, 
 				}
 				newZoom = Math.max(zoomMin, Math.min(zoomMax, newZoom))
 
-				const zoomPointCoordsBeforeZoom = pointerEventToWorkbenchCoords(e, x, y, zoom)
-				const zoomPointCoordsAfterZoom = pointerEventToWorkbenchCoords(e, x, y, newZoom)
+				const zoomPointCoordsBeforeZoom = pointerEventToWorkbenchCoords(e, zoom)
+				const zoomPointCoordsAfterZoom = pointerEventToWorkbenchCoords(e, newZoom)
 				const dx = zoomPointCoordsBeforeZoom.x - zoomPointCoordsAfterZoom.x
 				const dy = zoomPointCoordsBeforeZoom.y - zoomPointCoordsAfterZoom.y
 				return {
@@ -66,10 +50,6 @@ export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, 
 		const mouseDrag = addMouseDragHandler({
 			distanceBeforeMove: 2,
 			element: root,
-			onClick: e => setBenchState(({x, y, zoom}) => {
-				console.log(pointerEventToWorkbenchCoords(e, x, y, zoom))
-				return {x, y, zoom}
-			}),
 			start: e => {
 				// TODO: overlays...?
 				// if(e.target !== container && !hasParent(e.target, contentPlain)){
@@ -78,7 +58,7 @@ export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, 
 				// 	return false
 				// }
 				setBenchState(({x, y, zoom}) => {
-					startCursorPos = pointerEventToWorkbenchCoords(e, x, y, zoom)
+					startCursorPos = pointerEventToWorkbenchCoords(e)
 					startCenterPos = {x, y}
 					return {x, y, zoom}
 				})
@@ -90,7 +70,7 @@ export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, 
 			},
 			onMove: e => {
 				setBenchState(({zoom}) => {
-					const curCursorPos = pointerEventToWorkbenchCoords(e, startCenterPos.x, startCenterPos.y, zoom)
+					const curCursorPos = pointerEventToWorkbenchCoords(e, zoom, startCenterPos.x, startCenterPos.y)
 					const dx = startCursorPos.x - curCursorPos.x
 					const dy = startCursorPos.y - curCursorPos.y
 					return {
@@ -107,5 +87,5 @@ export const useWorkbenchInput = ({setBenchState, rootRef, rootSize, zoomSpeed, 
 			mouseDrag.detach()
 			root.removeEventListener("wheel", wheelHandler)
 		}
-	}, [setBenchState, rootRef, zoomMax, zoomMin, zoomSpeed, rootSize, contentWidth, contentHeight])
+	}, [setBenchState, rootRef, zoomMax, zoomMin, zoomSpeed, pointerEventToWorkbenchCoords])
 }

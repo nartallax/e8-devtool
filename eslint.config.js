@@ -166,7 +166,7 @@ let result = tseslint.config(
 		"react/jsx-child-element-spacing": ["warn"],
 		"react/jsx-closing-bracket-location": ["warn", {
 			"nonEmpty": "after-props",
-			"selfClosing": "after-props"
+			"selfClosing": "tag-aligned"
 		}],
 		// it's too stupid for cases like `cond && <div>\ntext\n</div>`
 		"react/jsx-closing-tag-location": ["off"],
@@ -220,10 +220,10 @@ let result = tseslint.config(
 		}],
 		// wonder how many times I'll return to this rule to adjust the config
 		"react/jsx-wrap-multilines": ["warn", {
-			"declaration": "parens",
-			"assignment": "parens",
+			"declaration": "parens-new-line",
+			"assignment": "parens-new-line",
 			"return": "parens-new-line",
-			"arrow": "parens",
+			"arrow": "parens-new-line",
 			"condition": "ignore",
 			"logical": "ignore",
 			"prop": "ignore"

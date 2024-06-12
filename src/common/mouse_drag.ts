@@ -1,6 +1,6 @@
 type XY = {x: number, y: number}
 
-export function pointerEventsToClientCoords(e: MouseEvent | TouchEvent): XY {
+export function pointerEventsToClientCoords(e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): XY {
 	if(isTouchEvent(e)){
 		const touch = (e.touches[0] ?? e.changedTouches[0])!
 		return {
@@ -28,8 +28,15 @@ export function pointerEventsToOffsetCoords(e: MouseEvent | TouchEvent, target: 
 	return coords
 }
 
-export function isTouchEvent(e: MouseEvent | TouchEvent): e is TouchEvent {
-	return !!(e as TouchEvent).touches
+export function pointerEventsToOffsetCoordsByRect(e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent, rect: DOMRect): XY {
+	const coords = pointerEventsToClientCoords(e)
+	coords.x -= rect.left
+	coords.y -= rect.top
+	return coords
+}
+
+export function isTouchEvent(e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): e is TouchEvent | React.TouchEvent {
+	return !!(e as TouchEvent | React.TouchEvent).touches
 }
 
 export type MouseDragHandlerParams = {

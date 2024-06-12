@@ -1,0 +1,1 @@
+export type SetState<T> = ((value: T | ((oldValue: T) => T)) => void)
