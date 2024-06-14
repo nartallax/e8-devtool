@@ -1,4 +1,4 @@
-import {useModelDisplayContext} from "client/react/parts/modelPage/modelDisplayContext"
+import {useModelWorkbenchContext} from "client/react/parts/modelPage/modelDisplayContext"
 import {cn} from "client/react/uiUtils/classname"
 import * as css from "./modelDisplay.module.scss"
 import {findPointInsertionIndex, shapeToSvgPathD} from "client/pages/model/model_display/model_display_data"
@@ -11,7 +11,7 @@ import React = require("react")
 
 export const ModelShapeLayer = () => {
 	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
-	const {selectedShapeId, shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId} = useModelDisplayContext()
+	const {selectedShapeId, shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId} = useModelWorkbenchContext()
 
 	const addNodeAt = useCallback((e: MouseEvent | React.MouseEvent) => {
 		if(selectedShapeId === null){
@@ -71,7 +71,7 @@ export const ModelShapeLayer = () => {
 }
 
 const ModelShapePaths = () => {
-	const {model, sizeMultiplier, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
+	const {model, sizeMultiplier, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelWorkbenchContext()
 	return (
 		<>{model.shapes.map(shape => (
 			<path
@@ -97,7 +97,7 @@ type MovingPointState = {
 
 // TODO: refactor this clusterfuck
 const ModelShapeNodes = () => {
-	const {model, selectedShapeId, setSelectedShapeId, sizeMultiplier, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelDisplayContext()
+	const {model, selectedShapeId, setSelectedShapeId, sizeMultiplier, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelWorkbenchContext()
 	const rootRef = useRef<SVGGElement | null>(null)
 
 	useHotkey({
@@ -122,6 +122,16 @@ const ModelShapeNodes = () => {
 		onPress: useCallback(() => {
 			updateShapes(() => shapesStateStack.redo())
 		}, [shapesStateStack, updateShapes])
+	})
+
+	useHotkey({
+		ref: rootRef,
+		shouldPick: useCallback((e: KeyboardEvent) => e.key === "Delete" && selectedShapeId !== null, [selectedShapeId]),
+		onPress: useCallback(() => {
+			updateShapes(shapes => shapes.filter(shape => shape.id !== selectedShapeId))
+			shapesStateStack.storeState(getShapes())
+			setSelectedShapeId(null)
+		}, [shapesStateStack, getShapes, selectedShapeId, setSelectedShapeId, updateShapes])
 	})
 
 	const selectedPointState = useRef<MovingPointState>({
@@ -203,8 +213,15 @@ const ModelShapeNodes = () => {
 
 				if(currentlyDrawnShapeId === selectedPointState.current.shapeId){
 					// closing the loop
+					const shape = getShapes().find(shape => shape.id === currentlyDrawnShapeId)
+					if((shape?.points.length ?? 0) < 3){
+						// no single-dimension shapes
+						updateShapes(shapes => shapes.filter(shape => shape.id !== currentlyDrawnShapeId))
+					} else {
+						shapesStateStack.storeState(getShapes())
+					}
+
 					setCurrentlyDrawnShapeId(null)
-					shapesStateStack.storeState(getShapes())
 					return false
 				}
 
@@ -249,6 +266,7 @@ const ModelShapeNodes = () => {
 					{shape.points.map(([x, y], i) => (
 						<g
 							key={i}
+							// TODO: size mult is used here for points, but embedded in <path>'s d attr - let's make this consistent
 							transform={`translate(${x * sizeMultiplier}, ${y * sizeMultiplier})`}
 							data-shape-id={shape.id}
 							data-point-index={i}>

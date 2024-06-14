@@ -153,7 +153,7 @@ let result = tseslint.config(
 		"react/boolean-prop-naming": ["warn", {rule: "^(value|(is|has)[A-Z]([A-Za-z0-9]?)+)"}],
 		"react/button-has-type": ["error"],
 		"react/checked-requires-onchange-or-readonly": ["error"],
-		"react/forbid-component-props": ["warn"],
+		"react/forbid-component-props": ["off"],
 		// it's good for consistency, but you can't declare components with generic type arguments with arrow function
 		"react/function-component-definition": ["off", {
 			"namedComponents": "arrow-function",
@@ -194,7 +194,8 @@ let result = tseslint.config(
 		// maybe I'll enable it later. too vague, not sure if I need it
 		"react/jsx-no-constructed-context-values": ["off"],
 		"react/jsx-no-duplicate-props": ["error"],
-		"react/jsx-no-leaked-render": ["error"],
+		// useful in theory, but with TS we can guarantee that something is a boolean; and this rule will still trigger on that, which is irritating
+		"react/jsx-no-leaked-render": ["off"],
 		// why would I want it
 		"react/jsx-no-literals": ["off"],
 		// not sure why anyone would use script-urls in our times, but sure, let's just forbid them

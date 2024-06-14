@@ -1,6 +1,7 @@
 import {DefaultableSideSize, DefaultableSize, MinMaxableSize, resolveDefaultableSideSize, resolveDefaultableSize, resolveMinMaxableSize} from "client/react/uiUtils/sizes"
 import * as css from "./rowCol.module.scss"
 import {CSSProperties, PropsWithChildren, RefObject} from "react"
+import {cn} from "client/react/uiUtils/classname"
 
 type Props = {
 	readonly padding?: DefaultableSideSize
@@ -20,6 +21,7 @@ type Props = {
 	readonly border?: DefaultableSideSize
 	readonly ref?: RefObject<HTMLDivElement>
 	readonly position?: "static" | "relative" | "absolute" | "fixed"
+	readonly className?: string
 }
 
 const defaultBorder = "var(--default-border-width)"
@@ -45,12 +47,12 @@ const resolveFlexAlign = (align?: string, stretch?: boolean): string | undefined
 	return (align === "start" || align === "end" ? "flex-" + align : align) ?? (stretch === true ? "stretch" : undefined)
 }
 
-export const Row = ({children, ref, ...props}: PropsWithChildren<Props>) => {
-	return <div className={css.row} style={propsToStyle(props)} ref={ref}>{children}</div>
+export const Row = ({children, ref, className, ...props}: PropsWithChildren<Props>) => {
+	return <div className={cn(css.row, className)} style={propsToStyle(props)} ref={ref}>{children}</div>
 }
 
-export const Col = ({children, ref, ...props}: PropsWithChildren<Props>) => {
-	return <div className={css.col} style={propsToStyle(props)} ref={ref}>{children}</div>
+export const Col = ({children, ref, className, ...props}: PropsWithChildren<Props>) => {
+	return <div className={cn(css.col, className)} style={propsToStyle(props)} ref={ref}>{children}</div>
 }
 
 export const RowCol = ({children, direction = "row", ...props}: PropsWithChildren<Props & {readonly direction?: "row" | "col"}>) => {

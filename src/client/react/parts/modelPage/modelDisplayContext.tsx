@@ -44,24 +44,26 @@ const defaultModelDisplayContext = {
 	updateShapes: (updater: (shapes: ProjectShape[]) => ProjectShape[]) => {
 		void updater
 	},
-	getShapes: (): ProjectShape[] => [],
-	mouseEventToInworldCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): XY => {
-		void e
-		return {x: 0, y: 0}
-	}
+	getShapes: (): ProjectShape[] => []
 }
+
+type MouseEventToInworldCoordsConverter = (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
 
 type ModelDisplayContextValue = typeof defaultModelDisplayContext
 
 const ModelDisplayContext = createContext(defaultModelDisplayContext)
 
 type Props = {
-	readonly model: ProjectModel
-	readonly sizeMultiplier: number
+	readonly modelId: UUID
 }
 
-export const ModelDisplayContextProvider = ({model, sizeMultiplier, children}: PropsWithChildren<Props>) => {
-	const [, setProject] = useProject()
+export const ModelDisplayContextProvider = ({modelId, children}: PropsWithChildren<Props>) => {
+	const [project, setProject] = useProject()
+	const model = project.models.find(model => model.id === modelId)
+	if(!model){
+		throw new Error("No model for ID = " + modelId)
+	}
+
 	const {inworldUnitPixelSize} = useConfig()
 	// TODO: save this in localstorage..?
 	const [isShowingDecomp, setShowDecomp] = useState(false)
@@ -69,9 +71,10 @@ export const ModelDisplayContextProvider = ({model, sizeMultiplier, children}: P
 	const [isShowingGrid, setShowGrid] = useState(false)
 	const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 	const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
-	const {pointerEventToWorkbenchCoords} = useWorkbenchContext()
 
-	const modelId = model.id
+	// tbh I don't exactly remember what it is and why can't we just use inworldUnitPixelSize
+	// TODO: investigate
+	const sizeMultiplier = Math.max(1000, inworldUnitPixelSize * 10)
 
 	const setModel = useCallback((modelOrCallback: ProjectModel | ((oldValue: ProjectModel) => ProjectModel)) => {
 		setProject(project => {
@@ -111,13 +114,6 @@ export const ModelDisplayContextProvider = ({model, sizeMultiplier, children}: P
 
 	const getShapes = useCallback(() => shapesRef.current!, [shapesRef])
 
-	const mouseEventToInworldCoords = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): XY => {
-		let {x, y} = pointerEventToWorkbenchCoords(e)
-		x /= sizeMultiplier
-		y /= sizeMultiplier
-		return roundToGrain({x, y})
-	}, [sizeMultiplier, roundToGrain, pointerEventToWorkbenchCoords])
-
 	const value: ModelDisplayContextValue = {
 		isShowingDecomp,
 		setShowDecomp,
@@ -136,8 +132,7 @@ export const ModelDisplayContextProvider = ({model, sizeMultiplier, children}: P
 		shapesStateStack,
 		roundToGrain,
 		updateShapes,
-		getShapes,
-		mouseEventToInworldCoords
+		getShapes
 	}
 
 	return <ModelDisplayContext.Provider value={value}>{children}</ModelDisplayContext.Provider>
@@ -145,6 +140,22 @@ export const ModelDisplayContextProvider = ({model, sizeMultiplier, children}: P
 
 export const useModelDisplayContext = (): ModelDisplayContextValue => {
 	return useContext(ModelDisplayContext)
+}
+
+export const useModelWorkbenchContext = (): ModelDisplayContextValue & {mouseEventToInworldCoords: MouseEventToInworldCoordsConverter} => {
+	const baseContext = useModelDisplayContext()
+	const {pointerEventToWorkbenchCoords} = useWorkbenchContext()
+
+	const sizeMultiplier = baseContext.sizeMultiplier
+	const roundToGrain = baseContext.roundToGrain
+	const mouseEventToInworldCoords = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): XY => {
+		let {x, y} = pointerEventToWorkbenchCoords(e)
+		x /= sizeMultiplier
+		y /= sizeMultiplier
+		return roundToGrain({x, y})
+	}, [sizeMultiplier, roundToGrain, pointerEventToWorkbenchCoords])
+
+	return {...baseContext, mouseEventToInworldCoords}
 }
 
 

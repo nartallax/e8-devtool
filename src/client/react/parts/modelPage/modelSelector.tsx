@@ -21,10 +21,12 @@ export const ModelSelector = () => {
 				fromTree={node => mapTreeLeaves(node, namedId => namedId.id)}
 				onChange={modelTree => setProject(project => ({...project, modelTree}))}
 				canBeChildOf={() => true}
-				buttons={controls => (<>
-					<Button text="Add directory" icon={Icon.folderPlus} onClick={() => controls.addRenameBranch({})}/>
-					<Button text="Add model" icon={Icon.filePlus}/>
-				</>)}
+				buttons={controls => (
+					<>
+						<Button text="Add directory" icon={Icon.folderPlus} onClick={() => controls.addRenameBranch({})}/>
+						<Button text="Add model" icon={Icon.filePlus}/>
+					</>
+				)}
 				onLeafDoubleclick={namedId => pushHistory(appendUrlPath(matchedUrl, `./${namedId.id}`))}
 				onLeafRename={(namedId, name) => setProject(project => {
 					const models = project.models.map(model => {
@@ -34,7 +36,8 @@ export const ModelSelector = () => {
 						return {...model, name}
 					})
 					return {...project, models}
-				})}/>
+				})}
+			/>
 		</CentralColumn>
 	)
 }

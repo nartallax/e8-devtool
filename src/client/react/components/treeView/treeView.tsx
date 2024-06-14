@@ -26,6 +26,7 @@ export type TreeControls = {
 	setInlineEditPath: SetState<TreePath | null>
 }
 
+// TODO: search?
 export const TreeView = <L, B>({
 	onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, onBranchLabelEditCancel, onLeafLabelEditCancel,
 	controlRef, tree, ...props
@@ -84,7 +85,8 @@ export const TreeView = <L, B>({
 					onNodeDelete={onNodeDelete}
 					canDeleteBranch={!!onBranchDelete}
 					canDeleteLeaf={!!onLeafDelete}
-					tree={tree}/>
+					tree={tree}
+				/>
 			</div>
 		</TreeDragContextProvider>
 	)

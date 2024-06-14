@@ -2,6 +2,7 @@
   position: absolute;
   top: 0;
   left: 0;
+  overflow: visible;
 }
 
 .shapePath {
@@ -14,6 +15,13 @@
     fill: rgba(0, 128, 128, 0.5);
     stroke: rgba(0, 192, 192, 0.5);
   }
+}
+
+.decompPath {
+  fill: rgba(128, 0, 0, 0.25);
+  stroke: rgba(255, 0, 0, 0.25);
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .shapeNodes {
@@ -32,4 +40,8 @@
       fill: rgba(0, 255, 255, 1);
     }
   }
+}
+
+.gridLine {
+  fill: var(--color-foreground);
 }

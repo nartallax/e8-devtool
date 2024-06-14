@@ -11,6 +11,9 @@ export interface Project {
 	readonly models: readonly ProjectModel[]
 	readonly particles: readonly ProjectParticleDefinition[]
 	readonly modelTree: readonly Tree<UUID, NamedId>[]
+	// TODO: create a tree for everything. layers, groups etc.
+	// store names in tree only
+	// this will allow for more uniform editing experience
 	// TODO: i'm starting to have second thoughts about readonly-ing everything
 	// sure, they are readonly, but it goes without saying
 	// and readonly-ing everything just introduces a lot of clutter
