@@ -41,7 +41,8 @@ export const TextInput = ({value, onChange, isDisabled, placeholder, isAutofocus
 				onBlur={handleChange}
 				onKeyDown={handleChange}
 				onKeyUp={handleChange}
-				onChange={handleChange}/>
+				onChange={handleChange}
+			/>
 		</FormField>
 	)
 }

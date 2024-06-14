@@ -2,8 +2,9 @@ import {Api} from "client/api_client"
 import {buildObjectShapeByImage} from "client/pages/model/model_display/auto_shape"
 import {Button} from "client/react/components/button/button"
 import {Checkbox} from "client/react/components/checkbox/checkbox"
+import {NumberInput} from "client/react/components/numberInput/numberInput"
 import {TooltipIcon} from "client/react/components/overlayItem/tooltipIcon"
-import {Col, Row} from "client/react/components/rowCol/rowCol"
+import {Row} from "client/react/components/rowCol/rowCol"
 import {Sidebar, SidebarLayout} from "client/react/components/sidebarLayout/sidebarLayout"
 import {Workbench} from "client/react/components/workbench/workbench"
 import {ModelDecompLayer} from "client/react/parts/modelPage/modelDecompLayer"
@@ -42,7 +43,7 @@ export const ModelDisplay = ({modelId}: Props) => {
 const ModelSidebar = () => {
 	// TODO: move isShowing... from context to state in parent control
 	// just to avoid re-rendering workbench stuff
-	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, isShowingShapes, setShowShapes, isShowingDecomp, setShowDecomp, isShowingGrid, setShowGrid, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes} = useModelDisplayContext()
+	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, isShowingShapes, setShowShapes, isShowingDecomp, setShowDecomp, isShowingGrid, setShowGrid, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
 
 	const startShapeDrawing = () => {
 		const shape: ProjectShape = {id: getRandomUUID(), points: []}
@@ -61,13 +62,35 @@ const ModelSidebar = () => {
 		setSelectedShapeId(shape.id)
 	}
 
+	const setModelSize = (x: number, y: number) => {
+		const {x: oldX, y: oldY} = model.size
+		const multX = x / oldX
+		const multY = y / oldY
+		setModel(model => ({...model, size: {x, y}}))
+		updateShapes(shapes => shapes.map(shape => ({...shape, points: shape.points.map(([x, y]) => [x * multX, y * multY])})))
+	}
+
 	return (
 		<>
-			<Col>
-				<Checkbox label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
-				<Checkbox label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
-				<Checkbox label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
-			</Col>
+			<Checkbox label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
+			<NumberInput
+				label="Width"
+				value={model.size.x}
+				min={0}
+				// no strong basis for this value, it's just for sizes to look better
+				step={0.01}
+				onChange={x => setModelSize(x, model.size.y)}
+			/>
+			<NumberInput
+				label="Height"
+				value={model.size.y}
+				min={0}
+				step={0.01}
+				onChange={y => setModelSize(model.size.x, y)}
+			/>
+			<Checkbox label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
+			<Checkbox label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
+			<Checkbox label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
 			<Row gap>
 				<TooltipIcon
 					icon={Icon.questionCircle}
@@ -102,10 +125,11 @@ const ModelSidebar = () => {
 }
 
 const ModelWorkbench = () => {
-	const {sizeMultiplier, model, isShowingShapes, isShowingDecomp, isShowingGrid} = useModelDisplayContext()
+	const {sizeMultiplier, model, isShowingShapes, isShowingDecomp, isShowingGrid, workbenchRef} = useModelDisplayContext()
 
 	return (
 		<Workbench
+			contextRef={workbenchRef}
 			width={model.size.x * sizeMultiplier}
 			height={model.size.y * sizeMultiplier}
 			maxZoom={10}

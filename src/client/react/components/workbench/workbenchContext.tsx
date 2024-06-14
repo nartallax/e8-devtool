@@ -1,4 +1,4 @@
-import {PropsWithChildren, createContext, useContext} from "react"
+import {MutableRefObject, PropsWithChildren, createContext, useContext} from "react"
 
 const defaultWorkbenchContext = {
 	width: 1,
@@ -6,15 +6,24 @@ const defaultWorkbenchContext = {
 	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
 		void e
 		return {x: 0, y: 0}
-	}
+	},
+	resetPosition: () => {/* nothing! */}
 }
 
-type WorkbenchContextValue = typeof defaultWorkbenchContext
+export type WorkbenchContextValue = typeof defaultWorkbenchContext
 
 const WorkbenchContext = createContext(defaultWorkbenchContext)
 
-export const WorkbenchContextProvider = ({width, height, pointerEventToWorkbenchCoords, children}: PropsWithChildren<WorkbenchContextValue>) => {
-	return <WorkbenchContext.Provider value={{width, height, pointerEventToWorkbenchCoords}}>{children}</WorkbenchContext.Provider>
+type Props = WorkbenchContextValue & {
+	readonly contextRef?: MutableRefObject<WorkbenchContextValue | null>
+}
+
+export const WorkbenchContextProvider = ({width, height, pointerEventToWorkbenchCoords, resetPosition, children, contextRef}: PropsWithChildren<Props>) => {
+	const value: WorkbenchContextValue = {width, height, pointerEventToWorkbenchCoords, resetPosition}
+	if(contextRef){
+		contextRef.current = value
+	}
+	return <WorkbenchContext.Provider value={value}>{children}</WorkbenchContext.Provider>
 }
 
 export const useWorkbenchContext = (): WorkbenchContextValue => useContext(WorkbenchContext)

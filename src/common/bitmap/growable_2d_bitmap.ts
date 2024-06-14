@@ -187,7 +187,7 @@ export class Growable2DBitmap {
 		// this really could be more optimal, but whatever
 		const result = new Growable2DBitmap(this.width * factor, this.height * factor)
 		for(let x = 0; x < this.width; x++){
-			for(let y = 0; y < this.width; y++){
+			for(let y = 0; y < this.height; y++){
 				if(this.get(x, y)){
 					const startX = x * factor
 					const startY = y * factor

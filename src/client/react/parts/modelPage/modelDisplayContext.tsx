@@ -1,12 +1,12 @@
 import {XY} from "@nartallax/e8"
-import {useWorkbenchContext} from "client/react/components/workbench/workbenchContext"
+import {WorkbenchContextValue, useWorkbenchContext} from "client/react/components/workbench/workbenchContext"
 import {useConfig} from "client/react/parts/configContext"
 import {useProject} from "client/react/parts/projectContext"
 import {SetState} from "client/react/uiUtils/setState"
 import {StateStack} from "client/react/uiUtils/stateStack"
 import {UUID, zeroUUID} from "common/uuid"
 import {ProjectModel, ProjectShape} from "data/project"
-import {PropsWithChildren, createContext, useCallback, useContext, useMemo, useRef, useState} from "react"
+import {MutableRefObject, PropsWithChildren, createContext, useCallback, useContext, useMemo, useRef, useState} from "react"
 
 type ShapeStateMeta = {
 	type: "keyboard_move" | "mouse_move" | "initial"
@@ -44,7 +44,9 @@ const defaultModelDisplayContext = {
 	updateShapes: (updater: (shapes: ProjectShape[]) => ProjectShape[]) => {
 		void updater
 	},
-	getShapes: (): ProjectShape[] => []
+	getShapes: (): ProjectShape[] => [],
+	workbenchRef: null as unknown as MutableRefObject<WorkbenchContextValue | null>,
+	resetPosition: () => {/* nothing! */}
 }
 
 type MouseEventToInworldCoordsConverter = (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
@@ -68,7 +70,7 @@ export const ModelDisplayContextProvider = ({modelId, children}: PropsWithChildr
 	// TODO: save this in localstorage..?
 	const [isShowingDecomp, setShowDecomp] = useState(false)
 	const [isShowingShapes, setShowShapes] = useState(false)
-	const [isShowingGrid, setShowGrid] = useState(false)
+	const [isShowingGrid, setShowGrid] = useState(true)
 	const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 	const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 
@@ -113,6 +115,10 @@ export const ModelDisplayContextProvider = ({modelId, children}: PropsWithChildr
 	}, [setModel])
 
 	const getShapes = useCallback(() => shapesRef.current!, [shapesRef])
+	const workbenchRef = useRef<WorkbenchContextValue | null>(null)
+	const resetPosition = useCallback(() => {
+		workbenchRef?.current?.resetPosition()
+	}, [workbenchRef])
 
 	const value: ModelDisplayContextValue = {
 		isShowingDecomp,
@@ -132,7 +138,9 @@ export const ModelDisplayContextProvider = ({modelId, children}: PropsWithChildr
 		shapesStateStack,
 		roundToGrain,
 		updateShapes,
-		getShapes
+		getShapes,
+		workbenchRef,
+		resetPosition
 	}
 
 	return <ModelDisplayContext.Provider value={value}>{children}</ModelDisplayContext.Provider>
@@ -142,6 +150,7 @@ export const useModelDisplayContext = (): ModelDisplayContextValue => {
 	return useContext(ModelDisplayContext)
 }
 
+// TODO: now when we have workbench ref, we don't need this second hook
 export const useModelWorkbenchContext = (): ModelDisplayContextValue & {mouseEventToInworldCoords: MouseEventToInworldCoordsConverter} => {
 	const baseContext = useModelDisplayContext()
 	const {pointerEventToWorkbenchCoords} = useWorkbenchContext()

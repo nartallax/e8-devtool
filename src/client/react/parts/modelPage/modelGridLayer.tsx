@@ -16,25 +16,25 @@ export const ModelGridLayer = () => {
 			viewBox={`${-workbenchWidth / 2} ${-workbenchHeight / 2} ${workbenchWidth} ${workbenchHeight}`}>
 			<Lines
 				{...baseProps}
-				end={model.size.x}
+				end={model.size.y}
 				isThick
 				isHorisontal
 			/>
 			<Lines
 				{...baseProps}
-				end={model.size.y}
+				end={model.size.x}
 				isThick
 				isHorisontal={false}
 			/>
 			<Lines
 				{...baseProps}
-				end={model.size.x}
+				end={model.size.y}
 				step={0.1}
 				isHorisontal
 			/>
 			<Lines
 				{...baseProps}
-				end={model.size.y}
+				end={model.size.x}
 				step={0.1}
 				isHorisontal={false}
 			/>
@@ -59,7 +59,8 @@ type LinesProps = BaseProps & {
 const Lines = ({start = 0, end, step = 1, ...props}: LinesProps): React.ReactNode[] => {
 	const lines: React.ReactNode[] = []
 	const keyBase = `${props.isHorisontal ? "h" : "v"}-`
-	for(let value = start; value <= end / 2; value += step){
+	const limit = (end / 2) + 0.001 // that damn machine error on repeated float operations
+	for(let value = start; value <= limit; value += step){
 		lines.push(<Line key={`${keyBase}-${value}`} offset={value} {...props}/>
 		)
 		if(value !== 0){
