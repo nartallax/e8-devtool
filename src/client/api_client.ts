@@ -1,18 +1,15 @@
-import {showToast} from "client/component/toast/toast"
 import {Project, NamedId, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {Icon} from "generated/icons"
 import {ConfigFile} from "server/config"
 import {ApiClient} from "common/api_client"
 import {Tree} from "common/tree"
 import {XY} from "@nartallax/e8"
 
 export namespace Api {
-	const client = new ApiClient("/api/", "POST", err => showToast({
-		icon: Icon.exclamationTriangle,
-		text: err.message,
-		autoRemoveTimeMs: 15000
-	}))
+	const client = new ApiClient("/api/", "POST", err => {
+		console.error(err)
+		// TODO: toast
+	})
 
 	export const getProject = () => client.call<Project>({name: "getProject"})
 	export const saveAndProduce = (project: Project) => client.call({name: "saveAndProduce", body: [project]})
