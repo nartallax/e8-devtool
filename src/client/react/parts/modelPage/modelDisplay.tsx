@@ -8,6 +8,7 @@ import {Row} from "client/react/components/rowCol/rowCol"
 import {Sidebar, SidebarLayout} from "client/react/components/sidebarLayout/sidebarLayout"
 import {Workbench} from "client/react/components/workbench/workbench"
 import {CollisionGroupModal} from "client/react/parts/modelPage/collisionGroup/collisionGroupModal"
+import {LayerModal} from "client/react/parts/modelPage/layers/layerModal"
 import {ModelDecompLayer} from "client/react/parts/modelPage/modelDecompLayer"
 import {ModelDisplayContextProvider, useModelDisplayContext} from "client/react/parts/modelPage/modelDisplayContext"
 import {ModelGridLayer} from "client/react/parts/modelPage/modelGridLayer"
@@ -22,6 +23,9 @@ import {Icon} from "generated/icons"
 type Props = {
 	readonly modelId: UUID
 }
+
+// TODO: apply all the eslint and prettier formatting to all the project
+// (not this file in particular)
 
 export const ModelDisplay = ({modelId}: Props) => {
 	const {isLoaded} = useProjectContext()
@@ -80,7 +84,16 @@ const ModelSidebar = () => {
 				values={project.collisionGroups}
 				value={model.collisionGroupId}
 				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
+				// TODO: plural here
 				modal={onClose => <CollisionGroupModal onClose={onClose} value={model.collisionGroupId}/>}
+			/>
+			<NamedIdSelector
+				label="Layer"
+				values={project.layers}
+				value={model.layerId}
+				onChange={layerId => setModel(model => ({...model, layerId}))}
+				// TODO: plural here
+				modal={onClose => <LayerModal onClose={onClose} value={model.layerId} layerType='model'/>}
 			/>
 			<Checkbox label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
 			<NumberInput

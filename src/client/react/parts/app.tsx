@@ -6,7 +6,6 @@ import {ApiProvider} from "client/react/parts/apiContext"
 import {AtlasPage} from "client/react/parts/atlasPage/atlasPage"
 import {ConfigProvider} from "client/react/parts/configContext"
 import {InputBindPage} from "client/react/parts/inputBindPage/inputBindPage"
-import {LayerPage} from "client/react/parts/layerPage/layerPage"
 import {ModelPage} from "client/react/parts/modelPage/modelPage"
 import {ProjectProvider} from "client/react/parts/projectContext"
 import {TextureTreeProvider} from "client/react/parts/textureTreeContext"
@@ -27,11 +26,6 @@ export const App = () => {
 												text: "Models",
 												isDefault: true,
 												render: () => <ModelPage/>
-											},
-											{ // TODO: remove, make it a button on model editing
-												suffix: "/layers",
-												text: "Layers",
-												render: () => <LayerPage/>
 											},
 											{
 												suffix: "/inputs",
