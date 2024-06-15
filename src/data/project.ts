@@ -8,6 +8,9 @@ import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
  * this data structure only relevant to project manager,
  * and is not used anywhere in the actual engine runtime  */
 export interface Project {
+	// TODO: think about reorganizing this array to map-object
+	// and other arrays, why not
+	// maybe then abolish NamedId alltogeter
 	readonly models: readonly ProjectModel[]
 	readonly particles: readonly ProjectParticleDefinition[]
 	readonly modelTree: readonly Tree<UUID, NamedId>[]

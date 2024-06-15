@@ -21,29 +21,59 @@ import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectShape} from "data/project"
 import {Icon} from "generated/icons"
 import {useRef} from "react"
+import {SetState} from "client/ui_utils/react_types"
+import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 
 type Props = {
 	readonly modelId: UUID
 }
 
 export const ModelDisplay = ({modelId}: Props) => {
+	const [isShowingDecomp, setShowDecomp] = useLocalStorageState("modelDisplay.isShowingDecomp", false)
+	const [isShowingShapes, setShowShapes] = useLocalStorageState("modelDisplay.isShowingShapes", false)
+	const [isShowingGrid, setShowGrid] = useLocalStorageState("modelDisplay.isShowingGrid", true)
+	const [isShowingTexture, setShowTexture] = useLocalStorageState("modelDisplay.isShowingTexture", true)
+
 	return (
 		<ModelDisplayContextProvider modelId={modelId}>
 			<SidebarLayout>
 				<Sidebar>
-					<ModelSidebar/>
+					<ModelSidebar
+						isShowingDecomp={isShowingDecomp}
+						isShowingGrid={isShowingGrid}
+						isShowingShapes={isShowingShapes}
+						isShowingTexture={isShowingTexture}
+						setShowDecomp={setShowDecomp}
+						setShowGrid={setShowGrid}
+						setShowShapes={setShowShapes}
+						setShowTexture={setShowTexture}
+					/>
 				</Sidebar>
-				<ModelWorkbench/>
+				<ModelWorkbench
+					isShowingDecomp={isShowingDecomp}
+					isShowingGrid={isShowingGrid}
+					isShowingShapes={isShowingShapes}
+					isShowingTexture={isShowingTexture}
+				/>
 			</SidebarLayout>
 		</ModelDisplayContextProvider>
 	)
 }
 
-const ModelSidebar = () => {
+type SidebarProps = {
+	readonly isShowingDecomp: boolean
+	readonly setShowDecomp: SetState<boolean>
+	readonly isShowingShapes: boolean
+	readonly setShowShapes: SetState<boolean>
+	readonly isShowingGrid: boolean
+	readonly setShowGrid: SetState<boolean>
+	readonly isShowingTexture: boolean
+	readonly setShowTexture: SetState<boolean>
+}
+
+const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture}: SidebarProps) => {
 	const [project] = useProject()
-	// TODO: move isShowing... from context to state in parent control
-	// just to avoid re-rendering workbench stuff
-	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, isShowingShapes, setShowShapes, isShowingDecomp, setShowDecomp, isShowingGrid, setShowGrid, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
+	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
 
 	const startShapeDrawing = () => {
@@ -124,6 +154,7 @@ const ModelSidebar = () => {
 			<CheckboxField label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
 			<CheckboxField label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
 			<CheckboxField label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
+			<CheckboxField label="Show texture" value={isShowingTexture} onChange={setShowTexture}/>
 			<Row gap>
 				<TooltipIcon
 					icon={Icon.questionCircle}
@@ -157,8 +188,15 @@ const ModelSidebar = () => {
 	)
 }
 
-const ModelWorkbench = () => {
-	const {sizeMultiplier, model, isShowingShapes, isShowingDecomp, isShowingGrid, workbenchRef} = useModelDisplayContext()
+type WorkbenchProps = {
+	readonly isShowingDecomp: boolean
+	readonly isShowingShapes: boolean
+	readonly isShowingGrid: boolean
+	readonly isShowingTexture: boolean
+}
+
+const ModelWorkbench = ({isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture}: WorkbenchProps) => {
+	const {sizeMultiplier, model, workbenchRef} = useModelDisplayContext()
 
 	return (
 		<Workbench
@@ -169,8 +207,7 @@ const ModelWorkbench = () => {
 			minZoom={0.1}
 			initialZoom={0.25}>
 			{isShowingGrid && <ModelGridLayer/>}
-			{/* TODO: have a boolean for that one too */}
-			<ModelTextureLayer/>
+			{isShowingTexture && <ModelTextureLayer/>}
 			{isShowingDecomp && <ModelDecompLayer/>}
 			{isShowingShapes && <ModelShapeLayer/>}
 		</Workbench>
