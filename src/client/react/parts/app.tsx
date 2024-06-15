@@ -15,13 +15,13 @@ export const App = () => {
 	return (
 		// TODO: don't show anything, or show spinner, until all the data is loaded
 		<HotkeyContextProvider>
-			<GlobalHotkeyManager/>
 			<ApiProvider>
 				<RoutingContextProvider>
 					<TextureTreeProvider>
 						<ProjectProvider>
 							<ConfigProvider>
 								<Form>
+									<GlobalHotkeyManager/>
 									<TabsAndRouter
 										tabs={[
 											{

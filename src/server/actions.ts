@@ -1,4 +1,4 @@
-import {Project, makeBlankProject} from "data/project"
+import {NamedId, Project, TextureFile, makeBlankProject} from "data/project"
 import {Config} from "server/config"
 import {promises as Fs} from "fs"
 import {isEnoent} from "common/is_enoent"
@@ -8,10 +8,39 @@ import {projectToResourcePack} from "data/project_to_resourcepack/project_to_res
 import {projectToTypescript} from "data/project_to_ts"
 import {log} from "common/log"
 import {encodeResourcePack} from "@nartallax/e8"
+import {Tree, isTreeBranch} from "common/tree"
+import {getHashUUID} from "common/uuid"
+import {readdirAsTree} from "common/readdir_as_tree"
 
 export const getActions = (config: Config) => {
 	const getProject = async(): Promise<Project> => {
 		return JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
+	}
+
+	const getTextureTree = async(): Promise<Tree<TextureFile, NamedId>[]> => {
+		const fileTree = await readdirAsTree(config.textureDirectoryPath)
+
+		const convert = (tree: Tree<string, string>, parents: readonly string[]): Tree<TextureFile, NamedId> => {
+			if(isTreeBranch(tree)){
+				const newParents = [...parents, tree.value]
+				return {
+					children: tree.children.map(child => convert(child, newParents)),
+					value: {
+						id: getHashUUID(newParents.join("/")),
+						name: tree.value
+					}
+				}
+			} else {
+				const fullPath = [...parents, tree.value].join("/")
+				return {value: {
+					id: getHashUUID(fullPath),
+					fullPath,
+					name: tree.value
+				}}
+			}
+		}
+
+		return fileTree.map(tree => convert(tree, []))
 	}
 
 	const getProjectOrCreate = async(): Promise<Project> => {
@@ -70,7 +99,8 @@ export const getActions = (config: Config) => {
 		saveProject,
 		produceResourcePack,
 		produceTypescript,
-		produceEverything
+		produceEverything,
+		getTextureTree
 	}
 
 

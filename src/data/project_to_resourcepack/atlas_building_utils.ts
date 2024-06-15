@@ -1,10 +1,11 @@
 import {XY} from "@nartallax/e8"
+import {UUID} from "common/uuid"
 
 export interface SvgTextureFile {
 	readonly width: number
 	readonly height: number
 	readonly svg: string
-	readonly path: string
+	readonly id: UUID
 }
 
 

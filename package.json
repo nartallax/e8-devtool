@@ -96,7 +96,7 @@
       "source": "src/server/e8-devtool.ts",
       "context": "node",
       "isLibrary": true,
-      "optimize": true,
+      "optimize": false,
       "sourceMap": false,
       "outputFormat": "esmodule"
     },

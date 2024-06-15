@@ -5,12 +5,13 @@ import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
 import {Config} from "server/config"
-import {Atlas, InputBindSetDefinition, Model, ResourcePack} from "@nartallax/e8"
+import {Atlas, InputBindSetDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
 import {promises as Fs} from "fs"
 import * as Path from "path"
-import {XY} from "@nartallax/e8"
 import {UUID} from "crypto"
 import {omit} from "common/omit"
+import {getActions} from "server/actions"
+import {getForestLeavesAsArray} from "common/tree"
 
 /** Convert project into ResourcePack structure. */
 export async function projectToResourcePack(project: Project, config: Config): Promise<ResourcePack> {
@@ -23,7 +24,7 @@ export async function projectToResourcePack(project: Project, config: Config): P
 		pictures: [{extension: "svg", data: atlasSvg}]
 	}
 
-	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.path, texture]))
+	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.id, texture]))
 	const layers = namedIdsToIndexMap("layer", project.layers)
 	const collisionGroups = namedIdsToIndexMap("collision group", project.collisionGroups)
 	const inputGroups = namedIdsToIndexMap("input group", project.inputGroups)
@@ -51,7 +52,6 @@ export async function projectToResourcePack(project: Project, config: Config): P
 		binds: bindSet.binds.map(bind => ({
 			group: bind.group === null ? null : inputGroups(bind.group),
 			isHold: bind.isHold,
-			// TODO: unique here
 			defaultChords: bind.defaultChords
 				.map(chord => chord.chord)
 				.filter(chord => chord.length > 0)
@@ -72,11 +72,8 @@ export async function projectToResourcePack(project: Project, config: Config): P
 
 export async function projectToAtlasLayout(project: Project, config: Config): Promise<(SvgTextureFile & XY)[]> {
 	const allModels = getAllProjectModels(project)
-	const allTexturePaths = [...new Set(allModels.map(model => model.textureId))]
-	const allTextures = await readAllTextures(
-		allTexturePaths,
-		path => Path.resolve(config.textureDirectoryPath, path)
-	)
+	const allTextureIds = [...new Set(allModels.map(model => model.textureId))]
+	const allTextures = await readAllTextures(allTextureIds, config)
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that
 	return buildAtlasLayout(allTextures, 1)
@@ -105,14 +102,21 @@ function glueSvgsIntoAtlas(textures: readonly (SvgTextureFile & XY)[], sideLengt
 	return compoundSvg
 }
 
-async function readAllTextures(paths: readonly string[], resolvePath: (path: string) => string): Promise<SvgTextureFile[]> {
-	const result = new Array<SvgTextureFile>(paths.length)
-	await Promise.all(paths.map(async(path, index) => {
-		if(!path.toLowerCase().endsWith(".svg")){
-			throw new Error("Only svgs are supported; got " + path)
+async function readAllTextures(ids: UUID[], config: Config): Promise<SvgTextureFile[]> {
+	const result = new Array<SvgTextureFile>(ids.length)
+	const textureTree = await getActions(config).getTextureTree()
+	const textureFiles = getForestLeavesAsArray(textureTree)
+	const textureMap = new Map(textureFiles.map(file => [file.id, file.fullPath]))
+	await Promise.all(ids.map(async(id, index) => {
+		const path = textureMap.get(id)
+		if(!path){
+			throw new Error("Failed to resolve texture by ID: unknown UUID: " + id)
 		}
-		const fileContent = await Fs.readFile(resolvePath(path), "utf-8")
-		result[index] = {...optimizeSvg(fileContent, path), path}
+		if(!path.toLowerCase().endsWith(".svg")){
+			throw new Error("Only svgs are supported; got " + id)
+		}
+		const fileContent = await Fs.readFile(Path.resolve(config.textureDirectoryPath, path), "utf-8")
+		result[index] = {...optimizeSvg(fileContent, id), id}
 	}))
 	return result
 }

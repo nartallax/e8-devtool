@@ -2,12 +2,10 @@ import {Project, NamedId, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Config, ConfigFilePathless, stripCliArgsFromConfig, stripPathsFromConfigFile} from "server/config"
 import {Lock} from "common/lock"
-import {Tree, isTreeBranch} from "common/tree"
-import {readdirAsTree} from "common/readdir_as_tree"
+import {Tree} from "common/tree"
 import {projectToAtlasLayout} from "data/project_to_resourcepack/project_to_resourcepack"
 import {XY} from "@nartallax/e8"
 import {getActions} from "server/actions"
-import {getHashUUID} from "common/uuid"
 import {log} from "common/log"
 
 export function getApi(config: Config): Record<string, (...args: any[]) => unknown> {
@@ -21,29 +19,7 @@ export function getApi(config: Config): Record<string, (...args: any[]) => unkno
 		},
 
 		async getTextureFiles(): Promise<Tree<TextureFile, NamedId>[]> {
-			const fileTree = await readdirAsTree(config.textureDirectoryPath)
-
-			const convert = (tree: Tree<string, string>, parents: readonly string[]): Tree<TextureFile, NamedId> => {
-				if(isTreeBranch(tree)){
-					const newParents = [...parents, tree.value]
-					return {
-						children: tree.children.map(child => convert(child, newParents)),
-						value: {
-							id: getHashUUID(newParents.join("/")),
-							name: tree.value
-						}
-					}
-				} else {
-					const fullPath = [...parents, tree.value].join("/")
-					return {value: {
-						id: getHashUUID(fullPath),
-						fullPath,
-						name: tree.value
-					}}
-				}
-			}
-
-			return fileTree.map(tree => convert(tree, []))
+			return await actions.getTextureTree()
 		},
 
 		async projectToAtlasLayout(project: Project): Promise<(SvgTextureFile & XY)[]> {

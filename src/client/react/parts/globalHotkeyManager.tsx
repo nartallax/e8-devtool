@@ -15,11 +15,10 @@ export const GlobalHotkeyManager = () => {
 		ref: useRef(document.body),
 		shouldPick: useCallback((e: KeyboardEvent) => e.code === "KeyS" && e.ctrlKey, []),
 		onPress: useCallback(async(e: KeyboardEvent) => {
-			console.log(e)
 			e.preventDefault()
 			// TODO: toast
 			await Api.saveAndProduce(project)
-			console.log("yay saved!")
+			console.log("yay saved")
 		}, [project])
 	})
 

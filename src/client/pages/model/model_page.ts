@@ -5,8 +5,6 @@ import {askUserForString} from "client/component/modal/ask_user_for_string"
 import {Row} from "client/component/row_col/row_col"
 import {TreeView} from "client/component/tree_view/tree_view"
 import {TwoColumnLayout} from "client/component/two_column_layout/two_column_layout"
-import {ModelDisplay} from "client/pages/model/model_display/model_display"
-import {showModelModal} from "client/pages/model/model_modal"
 import {NamedId} from "data/project"
 import {isTreeBranch, isTreeLeaf} from "common/tree"
 import {UUID} from "crypto"
@@ -28,9 +26,7 @@ export const ModelPage = () => {
 						const model = makeEmptyProjectModel()
 						models.appendElement(model)
 						modelTree.prependElement({value: model.id})
-						const modelBox = modelContext.getBoxForKey(model.id)
 						selectedModelId.set(model.id)
-						return showModelModal(modelBox)
 					}
 				}),
 				Button({
@@ -80,12 +76,10 @@ export const ModelPage = () => {
 							return
 						}
 						(row.prop("value") as WBox<NamedId>).prop("name").set(newName)
-					} else {
-						await showModelModal(modelContext.getBoxForKey(tree.value))
 					}
 				}
 			})
 		],
-		backgroundChildren: [ModelDisplay({selectedModelId, modelContext})]
+		backgroundChildren: []
 	})
 }
