@@ -4,7 +4,7 @@ import * as css from "./model_display.module.scss"
 import {findPointInsertionIndex, shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
 import {useCallback, useEffect, useRef} from "react"
 import {addMouseDragHandler} from "common/mouse_drag"
-import {UUID, zeroUUID} from "common/uuid"
+import {UUID} from "common/uuid"
 import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 import {useHotkey} from "client/components/hotkey_context/hotkey_context"
 import React = require("react")
@@ -94,7 +94,7 @@ type MovingPointState = {
 	lastX: number
 	lastY: number
 	pointIndex: number
-	shapeId: UUID
+	shapeId: UUID | null
 }
 
 // TODO: refactor this clusterfuck
@@ -133,7 +133,7 @@ const ModelShapeNodes = () => {
 		startY: 0,
 		lastX: 0,
 		lastY: 0,
-		shapeId: zeroUUID,
+		shapeId: null,
 		pointIndex: -1
 	})
 

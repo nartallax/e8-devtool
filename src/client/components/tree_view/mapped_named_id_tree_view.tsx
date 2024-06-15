@@ -7,7 +7,11 @@ import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
 
-export type MappedNamedIdTreeProps<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
+export type NullableNamedId = Omit<NamedId, "id"> & {
+	id: UUID | null
+}
+
+export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
 	values: S[]
 	onChange?: (values: S[]) => void
 	toTree: (sourceValue: S) => T
@@ -26,7 +30,9 @@ export type MappedNamedIdTreeProps<L extends NamedId, B extends NamedId, T exten
 	// because we imply that user will need to input name, and we can't input more than one name at a time
 	// (and if we only make leafs, no need to wrap it with `{value: ...}`)
 	makeNewChild?: () => NoNameId<L>
-	selectedValue?: UUID
+	// called when user refuses to input name of new tree element
+	onLeafCreateCancel?: (id: UUID) => void
+	selectedValue?: UUID | null
 }
 
 type NoNameId<T> = Omit<T, "name" | "id">
@@ -37,7 +43,7 @@ export type MappedNamedIdTreeControls<L, B> = {
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, selectedValue, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -103,6 +109,10 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 		const id = node.value.id
 		if(id === newNode?.node.value.id){
 			setNewNode(null)
+
+			if(!isTreeBranch(node) && onLeafCreateCancel && !!id){
+				onLeafCreateCancel(id)
+			}
 		}
 	}
 
@@ -159,9 +169,9 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 			const value = makeNewChild()
 			const node: TreeLeaf<L> = {
 				value: {
-					...value,
 					name: "",
-					id: getRandomUUID()
+					id: getRandomUUID(),
+					...value
 				} as L
 			}
 			addRenameNode(node, [...path, 0])
@@ -177,9 +187,9 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 				{...props}
 				tree={tree}
 				controlRef={treeControls}
-				getLeafKey={({id}) => id}
+				getLeafKey={({id}) => id + ""}
 				getLeafLabel={({name}) => name}
-				getBranchKey={({id}) => id}
+				getBranchKey={({id}) => id + ""}
 				getBranchLabel={({name}) => name}
 				leafLabelValidators={validatorFactory}
 				branchLabelValidators={validatorFactory}
@@ -198,7 +208,7 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 	)
 }
 
-const labelValidatorFactory = <L extends NamedId, B extends NamedId>(tree: Tree<L, B>[]): ValidatorsMaybeFactory<string, TreePath> => (path: TreePath) => {
+const labelValidatorFactory = <L extends NullableNamedId, B extends NullableNamedId>(tree: Tree<L, B>[]): ValidatorsMaybeFactory<string, TreePath> => (path: TreePath) => {
 	const siblings = getTreeSiblings(tree, path)
 	const item = getTreeByPath(tree, path)
 	return [

@@ -5,6 +5,7 @@ import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useTextures} from "client/parts/texture_tree_context"
 import {UUID} from "common/uuid"
+import {TextureFile} from "data/project"
 import {useState} from "react"
 
 type Props = {
@@ -29,8 +30,8 @@ export const TexturesModal = ({value: initialValue, onClose}: Props) => {
 						toTree={x => x}
 						fromTree={x => x}
 						selectedValue={value}
-						onLeafClick={leaf => setValue(leaf.id)}
-						onLeafDoubleclick={leaf => onClose(leaf.id)}
+						onLeafClick={(leaf: TextureFile) => setValue(leaf.id)}
+						onLeafDoubleclick={(leaf: TextureFile) => onClose(leaf.id)}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>

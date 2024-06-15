@@ -1,5 +1,4 @@
 import {Tree} from "common/tree"
-import {getRandomUUID, zeroUUID} from "common/uuid"
 import {UUID} from "crypto"
 import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
 
@@ -85,19 +84,6 @@ export interface ProjectModel extends NamedId {
 export interface ProjectShape {
 	id: UUID
 	points: [x: number, y: number][]
-}
-
-export function makeBlankProjectModel(layerId: UUID, collisionGroupId: UUID): ProjectModel {
-	return {
-		id: getRandomUUID(),
-		layerId,
-		collisionGroupId,
-		name: "unnamed model",
-		size: {x: 1, y: 1},
-		textureId: zeroUUID,
-		isStatic: false,
-		shapes: []
-	}
 }
 
 // name is filename, like the last portion of the file path
