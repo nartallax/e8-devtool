@@ -1,7 +1,7 @@
 import {useModelWorkbenchContext} from "client/react/parts/modelPage/modelDisplayContext"
 import {cn} from "client/react/uiUtils/classname"
 import * as css from "./modelDisplay.module.scss"
-import {findPointInsertionIndex, shapeToSvgPathD} from "client/pages/model/model_display/model_display_data"
+import {findPointInsertionIndex, shapeToSvgPathD} from "client/react/parts/modelPage/model_display_data"
 import {useCallback, useEffect, useRef} from "react"
 import {addMouseDragHandler} from "common/mouse_drag"
 import {UUID, zeroUUID} from "common/uuid"

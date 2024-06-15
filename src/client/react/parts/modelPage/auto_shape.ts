@@ -1,4 +1,4 @@
-import {distanceFromPointToLine} from "client/pages/model/model_display/model_display_data"
+import {distanceFromPointToLine} from "client/react/parts/modelPage/model_display_data"
 import {Growable2DBitmap} from "common/bitmap/growable_2d_bitmap"
 import {XY} from "@nartallax/e8"
 

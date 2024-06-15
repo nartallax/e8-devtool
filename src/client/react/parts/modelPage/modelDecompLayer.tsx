@@ -3,7 +3,7 @@ import {useModelDisplayContext} from "client/react/parts/modelPage/modelDisplayC
 import {decomposeShapes} from "data/polygon_decomposition"
 import {useMemo} from "react"
 import * as css from "./modelDisplay.module.scss"
-import {shapeToSvgPathD} from "client/pages/model/model_display/model_display_data"
+import {shapeToSvgPathD} from "client/react/parts/modelPage/model_display_data"
 
 export const ModelDecompLayer = () => {
 	const {model, sizeMultiplier} = useModelDisplayContext()
