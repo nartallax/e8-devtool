@@ -1,5 +1,5 @@
 import {RouteDefinition, RouteMatchingResult, matchRoutes} from "client/components/router/parse_route"
-import {RoutingContext, useRoutingContext} from "client/components/router/routing_context"
+import {RoutingContextProvider, useRoutingContext} from "client/components/router/routing_context"
 import {Col} from "client/components/row_col/row_col"
 import {Vanisher} from "client/components/vanisher/vanisher"
 import {useEffect, useRef, useState} from "react"
@@ -34,12 +34,12 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 
 
 	return !routeMatch ? null : (
-		<RoutingContext.Provider value={{nonMatchedUrl: routeMatch.nonMatchedUrl, matchedUrl: routeMatch.matchedUrl}}>
+		<RoutingContextProvider nonMatchedUrl={routeMatch.nonMatchedUrl} matchedUrl={routeMatch.matchedUrl}>
 			<Col grow={1} shrink={1} alignSelf="stretch">
 				<Vanisher key={routeMatch.routePattern}>
 					{routeMatch.renderer(routeMatch.arguments)}
 				</Vanisher>
 			</Col>
-		</RoutingContext.Provider>
+		</RoutingContextProvider>
 	)
 }

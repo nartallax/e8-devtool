@@ -1,6 +1,6 @@
 import {Form} from "client/components/form/form"
 import {HotkeyContextProvider} from "client/components/hotkey_context/hotkey_context"
-import {RoutingContextProvider} from "client/components/router/routing_context"
+import {RootRoutingContextProvider} from "client/components/router/routing_context"
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
 import {ApiProvider} from "client/parts/api_context"
 import {AtlasPage} from "client/parts/atlas_page/atlas_page"
@@ -16,7 +16,7 @@ export const App = () => {
 		// TODO: don't show anything, or show spinner, until all the data is loaded
 		<HotkeyContextProvider>
 			<ApiProvider>
-				<RoutingContextProvider>
+				<RootRoutingContextProvider>
 					<TextureTreeProvider>
 						<ProjectProvider>
 							<ConfigProvider>
@@ -46,7 +46,7 @@ export const App = () => {
 							</ConfigProvider>
 						</ProjectProvider>
 					</TextureTreeProvider>
-				</RoutingContextProvider>
+				</RootRoutingContextProvider>
 			</ApiProvider>
 		</HotkeyContextProvider>
 	)

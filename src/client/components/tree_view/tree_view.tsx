@@ -68,7 +68,7 @@ export const TreeView = <L, B>({
 
 	return (
 		<TreeDragContextProvider
-			canBeChildOf={canBeChildOf}
+			canBeChildOf={canBeChildOf as TreeViewProps<unknown, unknown>["canBeChildOf"]}
 			tree={tree}
 			onDrag={onDrag}
 			rootRef={rootRef}

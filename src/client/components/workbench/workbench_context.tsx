@@ -1,29 +1,20 @@
-import {MutableRefObject, PropsWithChildren, createContext, useContext} from "react"
+import {XY} from "@nartallax/e8"
+import {defineContext} from "client/ui_utils/define_context"
+import {MutableRefObject} from "react"
 
-const defaultWorkbenchContext = {
-	width: 1,
-	height: 1,
-	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
-		void e
-		return {x: 0, y: 0}
-	},
-	resetPosition: () => {/* nothing! */}
+export type WorkbenchContextValue = {
+	readonly width: number
+	readonly height: number
+	readonly pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
+	readonly resetPosition: () => void
 }
 
-export type WorkbenchContextValue = typeof defaultWorkbenchContext
-
-const WorkbenchContext = createContext(defaultWorkbenchContext)
-
-type Props = WorkbenchContextValue & {
-	readonly contextRef?: MutableRefObject<WorkbenchContextValue | null>
-}
-
-export const WorkbenchContextProvider = ({width, height, pointerEventToWorkbenchCoords, resetPosition, children, contextRef}: PropsWithChildren<Props>) => {
-	const value: WorkbenchContextValue = {width, height, pointerEventToWorkbenchCoords, resetPosition}
-	if(contextRef){
-		contextRef.current = value
+export const [WorkbenchContextProvider, useWorkbenchContext] = defineContext({
+	name: "WorkbenchContext",
+	useValue: ({contextRef, ...value}: WorkbenchContextValue & {contextRef?: MutableRefObject<WorkbenchContextValue | null>}) => {
+		if(contextRef){
+			contextRef.current = value
+		}
+		return value
 	}
-	return <WorkbenchContext.Provider value={value}>{children}</WorkbenchContext.Provider>
-}
-
-export const useWorkbenchContext = (): WorkbenchContextValue => useContext(WorkbenchContext)
+})

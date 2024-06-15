@@ -1,5 +1,6 @@
+import {defineContext} from "client/ui_utils/define_context"
 import {UUID, getRandomUUID} from "common/uuid"
-import {PropsWithChildren, createContext, useContext, useEffect, useRef} from "react"
+import {useEffect, useRef} from "react"
 
 export type Validator<T> = (value: T) => string | null | undefined | void
 
@@ -28,32 +29,20 @@ type FormFieldVisualState = {
 	label: string
 }
 
-const formContextDefault = {
-	registerField: function(id: UUID, label: string, error: string | null) {
-		void label, error, id
-	},
-	unregisterField: (fieldId: UUID) => {
-		void fieldId
-	},
-	fields: new Map() as ReadonlyMap<UUID, FormFieldState>,
-	submit: async() => {},
-	isShowingErrors: false,
-	hasErrors: false
+type FormContextValue = {
+	readonly registerField: (id: UUID, label: string, error: string | null) => void
+	readonly unregisterField: (fieldId: UUID) => void
+	readonly fields: ReadonlyMap<UUID, FormFieldState>
+	readonly submit: () => Promise<void>
+	readonly isShowingErrors: boolean
+	readonly hasErrors: boolean
 }
 
-type FormContextValue = typeof formContextDefault
+export const [FormContextProvider, useFormContext] = defineContext({
+	name: "FormContext",
+	useValue: (value: FormContextValue) => value
+})
 
-const FormContext = createContext(formContextDefault)
-
-export const FormContextProvider = ({children, ...value}: PropsWithChildren<FormContextValue>) => {
-	return (
-		<FormContext.Provider value={value}>
-			{children}
-		</FormContext.Provider>
-	)
-}
-
-export const useFormContext = () => useContext(FormContext)
 export const useRegisterField = function<T>({label, value, validators}: FormFieldDescription<T>): FormInputVisualState {
 	const {registerField, unregisterField, isShowingErrors} = useFormContext()
 	const id = useRef<UUID>(getRandomUUID()).current

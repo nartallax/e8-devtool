@@ -1,10 +1,11 @@
 import {XY} from "@nartallax/e8"
+import {defineContext} from "client/ui_utils/define_context"
 import {SetState} from "client/ui_utils/react_types"
 import {ApiClient} from "common/api_client_base"
 import {Tree} from "common/tree"
 import {NamedId, Project, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {PropsWithChildren, createContext, useContext, useEffect, useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import {ConfigFile} from "server/config"
 
 class DevtoolApiClient extends ApiClient {
@@ -21,17 +22,14 @@ class DevtoolApiClient extends ApiClient {
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
 }
 
-const apiContextDefault = {
-	client: new DevtoolApiClient()
-}
-
-const ApiContext = createContext(apiContextDefault)
-
-export const ApiProvider = ({children}: PropsWithChildren) => {
-	const client = useRef(new DevtoolApiClient()).current
-
-	return <ApiContext.Provider value={{client}}>{children}</ApiContext.Provider>
-}
+const [_ApiProvider, useApiContext] = defineContext({
+	name: "ApiContext",
+	useValue: () => {
+		const client = useRef(new DevtoolApiClient()).current
+		return {client}
+	}
+})
+export const ApiProvider = _ApiProvider
 
 export function useApi<T, D>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>]
 export function useApi<T>(caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>]
@@ -41,7 +39,7 @@ export function useApi(...args: unknown[]): [unknown, SetState<unknown>] {
 	const deps = (args.length === 2 ? args[1] : args[2]) as unknown[]
 
 	const [result, setResult] = useState<unknown>(defaultValue)
-	const {client} = useContext(ApiContext)
+	const {client} = useApiContext()
 
 	useEffect(() => {
 		caller(client).then(
@@ -58,5 +56,5 @@ export function useApi(...args: unknown[]): [unknown, SetState<unknown>] {
 }
 
 export const useApiClient = (): DevtoolApiClient => {
-	return useContext(ApiContext).client
+	return useApiContext().client
 }

@@ -1,21 +1,19 @@
 import {useLocation} from "client/components/router/use_location"
-import {PropsWithChildren, createContext, useContext} from "react"
+import {defineContext} from "client/ui_utils/define_context"
+import {PropsWithChildren} from "react"
 
-const defaultRoutingContext = {
-	matchedUrl: new URL("/", window.location + ""),
-	nonMatchedUrl: new URL(window.location + "")
+type RoutingContextValue = {
+	nonMatchedUrl: URL
+	matchedUrl: URL
 }
 
-export const RoutingContext = createContext(defaultRoutingContext)
+export const [RoutingContextProvider, useRoutingContext] = defineContext({
+	name: "RoutingContext",
+	useValue: (value: RoutingContextValue) => value
+})
 
-export const RoutingContextProvider = ({children}: PropsWithChildren) => {
+export const RootRoutingContextProvider = ({children}: PropsWithChildren) => {
 	const nonMatchedUrl = useLocation()
 	const matchedUrl = new URL("/", window.location + "")
-	return (
-		<RoutingContext.Provider value={{nonMatchedUrl, matchedUrl}}>
-			{children}
-		</RoutingContext.Provider>
-	)
+	return <RoutingContextProvider nonMatchedUrl={nonMatchedUrl} matchedUrl={matchedUrl}>{children}</RoutingContextProvider>
 }
-
-export const useRoutingContext = () => useContext(RoutingContext)

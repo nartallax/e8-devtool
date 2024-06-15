@@ -88,7 +88,7 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 			onMouseDown={onPress}
 			onMouseUp={onRelease}>
 			{!!icon && <div className={cn(css.icon, icon)}/>}
-			{!!text && <div className={css.text}>{text}</div>}
+			{!!text && <div>{text}</div>}
 		</button>
 	)
 }

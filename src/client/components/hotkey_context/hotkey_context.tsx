@@ -1,5 +1,6 @@
+import {defineContext} from "client/ui_utils/define_context"
 import {nonNull} from "common/non_null"
-import {PropsWithChildren, RefObject, createContext, useCallback, useContext, useEffect, useRef} from "react"
+import {RefObject, useCallback, useEffect, useRef} from "react"
 
 type HotkeyHandler = {
 	/** Reference to element that will receive the hotkey
@@ -11,33 +12,27 @@ type HotkeyHandler = {
 	onPress: (e: KeyboardEvent) => void
 }
 
-const defaultHotkeyContext = {
-	handlers: new Set<HotkeyHandler>(),
-	rootHandler: (e: KeyboardEvent) => {
-		void e
-	}
-}
-
-const HotkeyContext = createContext(defaultHotkeyContext)
-
-export const HotkeyContextProvider = ({children}: PropsWithChildren) => {
-	const handlers = useRef(new Set<HotkeyHandler>()).current
-	const rootHandler = useCallback((e: KeyboardEvent) => {
-		const eligibleHandlers: HotkeyHandler[] = []
-		for(const handler of handlers){
-			if(handler.shouldPick!(e)){
-				eligibleHandlers.push(handler)
+export const [HotkeyContextProvider, useHotkeyContext] = defineContext({
+	name: "HotkeyContext",
+	useValue: () => {
+		const handlers = useRef(new Set<HotkeyHandler>()).current
+		const rootHandler = useCallback((e: KeyboardEvent) => {
+			const eligibleHandlers: HotkeyHandler[] = []
+			for(const handler of handlers){
+				if(handler.shouldPick!(e)){
+					eligibleHandlers.push(handler)
+				}
 			}
-		}
 
 
-		for(const handler of findBestHandlers(eligibleHandlers)){
-			handler.onPress(e)
-		}
-	}, [handlers])
+			for(const handler of findBestHandlers(eligibleHandlers)){
+				handler.onPress(e)
+			}
+		}, [handlers])
 
-	return <HotkeyContext.Provider value={{handlers, rootHandler}}>{children}</HotkeyContext.Provider>
-}
+		return {handlers, rootHandler}
+	}
+})
 
 const updateSet = (handlers: Set<HotkeyHandler>, handler: HotkeyHandler, rootHandler: (e: KeyboardEvent) => void) => {
 	if(!handler.shouldPick){
@@ -57,7 +52,7 @@ const updateSet = (handlers: Set<HotkeyHandler>, handler: HotkeyHandler, rootHan
 
 export const useHotkey = ({ref, shouldPick, onPress}: HotkeyHandler) => {
 	const handler = useRef({ref, shouldPick, onPress}).current
-	const {handlers, rootHandler} = useContext(HotkeyContext)
+	const {handlers, rootHandler} = useHotkeyContext()
 
 	useEffect(() => {
 		updateSet(handlers, handler, rootHandler)

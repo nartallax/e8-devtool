@@ -1,4 +1,4 @@
-import {useModelWorkbenchContext} from "client/parts/model_page/model_display/model_display_context"
+
 import {cn} from "client/ui_utils/classname"
 import * as css from "./model_display.module.scss"
 import {findPointInsertionIndex, shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
@@ -9,10 +9,11 @@ import {useWorkbenchContext} from "client/components/workbench/workbench_context
 import {useHotkey} from "client/components/hotkey_context/hotkey_context"
 import React = require("react")
 import {isRedoKeypress, isUndoKeypress} from "client/components/hotkey_context/hotkey_utils"
+import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 
 export const ModelShapeLayer = () => {
 	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
-	const {selectedShapeId, shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId} = useModelWorkbenchContext()
+	const {selectedShapeId, shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId} = useModelDisplayContext()
 
 	const addNodeAt = useCallback((e: MouseEvent | React.MouseEvent) => {
 		if(selectedShapeId === null){
@@ -72,7 +73,7 @@ export const ModelShapeLayer = () => {
 }
 
 const ModelShapePaths = () => {
-	const {model, sizeMultiplier, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelWorkbenchContext()
+	const {model, sizeMultiplier, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
 	return (
 		<>{model.shapes.map(shape => (
 			<path
@@ -98,7 +99,7 @@ type MovingPointState = {
 
 // TODO: refactor this clusterfuck
 const ModelShapeNodes = () => {
-	const {model, selectedShapeId, setSelectedShapeId, sizeMultiplier, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelWorkbenchContext()
+	const {model, selectedShapeId, setSelectedShapeId, sizeMultiplier, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelDisplayContext()
 	const rootRef = useRef<SVGGElement | null>(null)
 
 	useHotkey({
