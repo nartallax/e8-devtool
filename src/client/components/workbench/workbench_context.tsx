@@ -3,10 +3,10 @@ import {defineContext} from "client/ui_utils/define_context"
 import {MutableRefObject} from "react"
 
 export type WorkbenchContextValue = {
-	readonly width: number
-	readonly height: number
-	readonly pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
-	readonly resetPosition: () => void
+	width: number
+	height: number
+	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
+	resetPosition: () => void
 }
 
 export const [WorkbenchContextProvider, useWorkbenchContext] = defineContext({

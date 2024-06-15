@@ -1,6 +1,6 @@
 import {RefObject, useEffect, useState} from "react"
 
-type WH = {readonly width: number, readonly height: number}
+type WH = {width: number, height: number}
 
 const zeroRect: WH = {
 	height: 0,

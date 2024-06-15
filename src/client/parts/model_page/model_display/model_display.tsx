@@ -25,7 +25,7 @@ import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 
 type Props = {
-	readonly modelId: UUID
+	modelId: UUID
 }
 
 export const ModelDisplay = ({modelId}: Props) => {
@@ -61,14 +61,14 @@ export const ModelDisplay = ({modelId}: Props) => {
 }
 
 type SidebarProps = {
-	readonly isShowingDecomp: boolean
-	readonly setShowDecomp: SetState<boolean>
-	readonly isShowingShapes: boolean
-	readonly setShowShapes: SetState<boolean>
-	readonly isShowingGrid: boolean
-	readonly setShowGrid: SetState<boolean>
-	readonly isShowingTexture: boolean
-	readonly setShowTexture: SetState<boolean>
+	isShowingDecomp: boolean
+	setShowDecomp: SetState<boolean>
+	isShowingShapes: boolean
+	setShowShapes: SetState<boolean>
+	isShowingGrid: boolean
+	setShowGrid: SetState<boolean>
+	isShowingTexture: boolean
+	setShowTexture: SetState<boolean>
 }
 
 const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture}: SidebarProps) => {
@@ -189,10 +189,10 @@ const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingS
 }
 
 type WorkbenchProps = {
-	readonly isShowingDecomp: boolean
-	readonly isShowingShapes: boolean
-	readonly isShowingGrid: boolean
-	readonly isShowingTexture: boolean
+	isShowingDecomp: boolean
+	isShowingShapes: boolean
+	isShowingGrid: boolean
+	isShowingTexture: boolean
 }
 
 const ModelWorkbench = ({isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture}: WorkbenchProps) => {

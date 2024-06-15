@@ -6,16 +6,16 @@ import {SetState} from "client/ui_utils/react_types"
 import {TreeDragContextProvider} from "client/components/tree_view/tree_drag_context"
 
 export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
-	readonly controlRef?: MutableRefObject<TreeControls | null>
-	readonly onBranchLabelEdit?: (path: TreePath, newLabel: string) => void
-	readonly onBranchLabelEditCancel?: (path: TreePath) => void
-	readonly onLeafLabelEdit?: (path: TreePath, newLabel: string) => void
-	readonly onLeafLabelEditCancel?: (path: TreePath) => void
-	readonly onBranchDelete?: (path: TreePath) => void
-	readonly onLeafDelete?: (path: TreePath) => void
-	readonly onDrag?: (from: TreePath, to: TreePath) => void
+	controlRef?: MutableRefObject<TreeControls | null>
+	onBranchLabelEdit?: (path: TreePath, newLabel: string) => void
+	onBranchLabelEditCancel?: (path: TreePath) => void
+	onLeafLabelEdit?: (path: TreePath, newLabel: string) => void
+	onLeafLabelEditCancel?: (path: TreePath) => void
+	onBranchDelete?: (path: TreePath) => void
+	onLeafDelete?: (path: TreePath) => void
+	onDrag?: (from: TreePath, to: TreePath) => void
 	/** Allows to control if @param child can be dragged to be child of @param parent. Defaults to () => true.  */
-	readonly canBeChildOf?: (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => boolean
+	canBeChildOf?: (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => boolean
 }
 
 /** This object provides some external controls for tree view

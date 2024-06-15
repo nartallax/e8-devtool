@@ -1,6 +1,6 @@
 /** Error that signifies aborting of some currently ongoing operation */
 export class AbortError extends Error {
-	readonly isAbortError = true
+	isAbortError = true
 
 	constructor(message: string) {
 		super(message)

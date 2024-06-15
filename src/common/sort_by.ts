@@ -6,7 +6,7 @@ export function sortBy<T>(values: T[], getField: (value: T) => number | string):
 	})
 }
 
-export function copySortBy<T>(values: readonly T[], getField: (value: T) => number | string): T[] {
+export function copySortBy<T>(values: T[], getField: (value: T) => number | string): T[] {
 	const copy = [...values]
 	sortBy(copy, getField)
 	return copy

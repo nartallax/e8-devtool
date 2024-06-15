@@ -6,8 +6,8 @@ import {useEffect, useRef, useState} from "react"
 
 
 type Props = {
-	readonly routes: RouteDefinition[]
-	readonly onMatchedUrlUpdate?: (url: URL | null) => void
+	routes: RouteDefinition[]
+	onMatchedUrlUpdate?: (url: URL | null) => void
 }
 
 export const Router = ({routes, onMatchedUrlUpdate}: Props) => {

@@ -6,7 +6,7 @@ export class StateStack<T, M = never> {
 	 * It can be smaller than array length because of undo */
 	private statePointer = -1
 
-	constructor(private readonly maxStatesStored: number, initialState: T, initialStateMeta?: M) {
+	constructor(private maxStatesStored: number, initialState: T, initialStateMeta?: M) {
 		this.storeState(initialState, initialStateMeta)
 	}
 

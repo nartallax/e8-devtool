@@ -20,7 +20,7 @@ export const getActions = (config: Config) => {
 	const getTextureTree = async(): Promise<Tree<TextureFile, NamedId>[]> => {
 		const fileTree = await readdirAsTree(config.textureDirectoryPath)
 
-		const convert = (tree: Tree<string, string>, parents: readonly string[]): Tree<TextureFile, NamedId> => {
+		const convert = (tree: Tree<string, string>, parents: string[]): Tree<TextureFile, NamedId> => {
 			if(isTreeBranch(tree)){
 				const newParents = [...parents, tree.value]
 				return {

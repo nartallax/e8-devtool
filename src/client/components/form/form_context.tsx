@@ -30,12 +30,12 @@ type FormFieldVisualState = {
 }
 
 type FormContextValue = {
-	readonly registerField: (id: UUID, label: string, error: string | null) => void
-	readonly unregisterField: (fieldId: UUID) => void
-	readonly fields: ReadonlyMap<UUID, FormFieldState>
-	readonly submit: () => Promise<void>
-	readonly isShowingErrors: boolean
-	readonly hasErrors: boolean
+	registerField: (id: UUID, label: string, error: string | null) => void
+	unregisterField: (fieldId: UUID) => void
+	fields: ReadonlyMap<UUID, FormFieldState>
+	submit: () => Promise<void>
+	isShowingErrors: boolean
+	hasErrors: boolean
 }
 
 export const [FormContextProvider, useFormContext] = defineContext({

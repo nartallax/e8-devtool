@@ -6,14 +6,14 @@ import {pointerEventsToOffsetCoordsByRect} from "common/mouse_drag"
 import {WorkbenchContextProvider, WorkbenchContextValue} from "client/components/workbench/workbench_context"
 
 type Props = {
-	readonly minZoom?: number
-	readonly maxZoom?: number
-	readonly initialZoom?: number
-	readonly zoomSpeed?: number
+	minZoom?: number
+	maxZoom?: number
+	initialZoom?: number
+	zoomSpeed?: number
 	// that's internal space of workbench, not dimensions of external block
-	readonly width: number
-	readonly height: number
-	readonly contextRef?: MutableRefObject<WorkbenchContextValue | null>
+	width: number
+	height: number
+	contextRef?: MutableRefObject<WorkbenchContextValue | null>
 }
 
 export type WorkbenchPositionState = {x: number, y: number, zoom: number}

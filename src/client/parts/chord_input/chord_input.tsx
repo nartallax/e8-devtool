@@ -4,9 +4,9 @@ import * as css from "./chord_input.module.scss"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {
-	readonly value: Chord
-	readonly onChange: (value: Chord, isComplete: boolean) => void
-	readonly variant?: "default" | "inline"
+	value: Chord
+	onChange: (value: Chord, isComplete: boolean) => void
+	variant?: "default" | "inline"
 }
 
 export const chordToString = (chord: Chord) => chord.join("+")

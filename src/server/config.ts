@@ -7,34 +7,34 @@ import {promises as Fs} from "fs"
 import * as Path from "path"
 
 export interface ConfigFilePathless {
-	readonly host?: string
-	readonly port: number
+	host?: string
+	port: number
 	/** Approximate amount of pixels for one inworld unit.
 	 * This setting affects precision and some inferred values
 	 * Keep this around 100, and make the textures accordingly */
-	readonly inworldUnitPixelSize: number
+	inworldUnitPixelSize: number
 }
 
 export interface ConfigFile extends ConfigFilePathless {
-	readonly projectPath: string
+	projectPath: string
 	// TODO: let's move all this stuff into UI?
 	// this way we can have 1 less file, which is a good thing
 	// and stuff we can't move into UI, like host and port, we can move into CLI args
-	readonly resourcePackPath: string
-	readonly textureDirectoryPath: string
+	resourcePackPath: string
+	textureDirectoryPath: string
 	/** Path that contains classes related to entities */
-	readonly entityClassesDirectoryPath: string
-	readonly ts: ConfigTsNames & {
-		readonly path: string
+	entityClassesDirectoryPath: string
+	ts: ConfigTsNames & {
+		path: string
 	}
 }
 
 export interface ConfigTsNames {
-	readonly entityEnumName: string
-	readonly inputBindSetEnumName: string
-	readonly inputBindsNamespaceName: string
-	readonly loaderVariableName: string
-	readonly particleEnumName: string
+	entityEnumName: string
+	inputBindSetEnumName: string
+	inputBindsNamespaceName: string
+	loaderVariableName: string
+	particleEnumName: string
 }
 
 const configFilePathProps: DeepPartialFlags<ConfigFile> = {

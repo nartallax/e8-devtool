@@ -3,11 +3,11 @@ import {MutableRefObject, useRef} from "react"
 import * as css from "./text_input.module.scss"
 
 type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
-	readonly value: string
-	readonly onChange: (value: string) => void
-	readonly isDisabled?: boolean
-	readonly inputRef: MutableRefObject<HTMLInputElement | null>
-	readonly hasError?: boolean
+	value: string
+	onChange: (value: string) => void
+	isDisabled?: boolean
+	inputRef: MutableRefObject<HTMLInputElement | null>
+	hasError?: boolean
 }
 
 export const TextInputBase = ({value, onChange, isDisabled, inputRef: ref, hasError, ...props}: Props) => {

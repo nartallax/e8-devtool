@@ -35,7 +35,7 @@ function getSvgFromDom(dom: XmlJs.Element): XmlJs.Element {
 	return svg
 }
 
-const numericAttrs: readonly string[] = [
+const numericAttrs: string[] = [
 	"height", "width", "x", "y", "r", "rx", "ry", "cx", "cy"
 ]
 

@@ -8,8 +8,8 @@ import {Icon} from "generated/icons"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {
-	readonly id: UUID
-	readonly onLabelClick?: () => void
+	id: UUID
+	onLabelClick?: () => void
 }
 
 export const FormField = ({id, onLabelClick, children}: PropsWithChildren<Props>) => {

@@ -1,6 +1,6 @@
 import * as FernandezDecomp from "fernandez-polygon-decomposition"
 
-export function decomposeShapes(shapes: readonly (readonly (readonly [x: number, y: number])[])[]): [x: number, y: number][][] {
+export function decomposeShapes(shapes: [x: number, y: number][][]): [x: number, y: number][][] {
 
 	// it should be true by default, but just in case
 	FernandezDecomp.setRobustness(true)

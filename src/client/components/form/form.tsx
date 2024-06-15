@@ -3,7 +3,7 @@ import {UUID} from "common/uuid"
 import {PropsWithChildren, useCallback, useMemo, useState} from "react"
 
 type Props = {
-	readonly onSubmit?: () => void | Promise<void>
+	onSubmit?: () => void | Promise<void>
 }
 
 export const Form = ({children, onSubmit}: PropsWithChildren<Props>) => {

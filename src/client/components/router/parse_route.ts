@@ -10,8 +10,8 @@ type PathPartMatcher = {
 }
 
 export type ParsedRoute = {
-	readonly path: (string | PathPartMatcher)[]
-	readonly query: Record<string, string | QueryParamMatcher>
+	path: (string | PathPartMatcher)[]
+	query: Record<string, string | QueryParamMatcher>
 }
 
 export type RouteRenderer = (params: Record<string, string>) => React.ReactNode

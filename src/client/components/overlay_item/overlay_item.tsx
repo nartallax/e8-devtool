@@ -5,10 +5,10 @@ import * as css from "./overlay_item.module.scss"
 export type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right"
 
 type Props = Omit<React.ComponentProps<typeof RowCol>, "ref" | "position"> & {
-	readonly overlayCorner?: Corner
-	readonly anchorCorner?: Corner
-	readonly item: React.ReactNode
-	readonly isVisible: boolean
+	overlayCorner?: Corner
+	anchorCorner?: Corner
+	item: React.ReactNode
+	isVisible: boolean
 }
 
 const calcOffsetDimension = (isHorisontal: boolean, anchorCorner: Corner, overlayCorner: Corner): CSSProperties => {

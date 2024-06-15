@@ -79,7 +79,7 @@ export async function projectToAtlasLayout(project: Project, config: Config): Pr
 	return buildAtlasLayout(allTextures, 1)
 }
 
-function namedIdsToIndexMap(name: string, ids: readonly NamedId[]): (id: UUID) => number {
+function namedIdsToIndexMap(name: string, ids: NamedId[]): (id: UUID) => number {
 	const map = new Map<UUID, number>(ids.map(({id}, index) => [id, index]))
 	return id => {
 		const index = map.get(id)
@@ -90,7 +90,7 @@ function namedIdsToIndexMap(name: string, ids: readonly NamedId[]): (id: UUID) =
 	}
 }
 
-function glueSvgsIntoAtlas(textures: readonly (SvgTextureFile & XY)[], sideLength: number): string {
+function glueSvgsIntoAtlas(textures: (SvgTextureFile & XY)[], sideLength: number): string {
 	const compoundSvg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${sideLength} ${sideLength}" width="${sideLength}" height="${sideLength}">
 	${textures

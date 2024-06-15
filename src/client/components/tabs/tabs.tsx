@@ -12,7 +12,7 @@ type TabDefinition = {
 }
 
 type Props = {
-	readonly tabs: TabDefinition[]
+	tabs: TabDefinition[]
 }
 
 export const Tabs = ({tabs}: Props) => {

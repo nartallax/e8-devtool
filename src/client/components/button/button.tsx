@@ -5,19 +5,19 @@ import {cn} from "client/ui_utils/classname"
 import {useHotkey} from "client/components/hotkey_context/hotkey_context"
 
 type Props = {
-	readonly text?: string
-	readonly icon?: Icon
-	readonly onClick?: () => void
-	readonly clickRepeatTimeout?: number
-	readonly isDisabled?: boolean
-	readonly isError?: boolean
-	readonly hotkey?: (e: KeyboardEvent) => boolean
-	readonly variant?: "default" | "plain-icon" | "large-plain-icon" | "tab"
-	readonly type?: "submit" | "reset" | "button"
-	readonly isActive?: boolean
+	text?: string
+	icon?: Icon
+	onClick?: () => void
+	clickRepeatTimeout?: number
+	isDisabled?: boolean
+	isError?: boolean
+	hotkey?: (e: KeyboardEvent) => boolean
+	variant?: "default" | "plain-icon" | "large-plain-icon" | "tab"
+	type?: "submit" | "reset" | "button"
+	isActive?: boolean
 	/** If passed, user will be required to hold the button for some time until onClick is called.
 	This can be bypassed by holding shift when clicking */
-	readonly holdTimeUntilAction?: number
+	holdTimeUntilAction?: number
 }
 
 export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, isError, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0, type = "button"}: Props) => {

@@ -6,10 +6,10 @@ import * as css from "./value_selector.module.scss"
 import {useCallback} from "react"
 
 type Props<T> = FormInputProps<T> & {
-	readonly value: T
-	readonly getLabel: (value: T) => string
-	readonly onRequestValueChange: () => void
-	readonly isDisabled?: boolean
+	value: T
+	getLabel: (value: T) => string
+	onRequestValueChange: () => void
+	isDisabled?: boolean
 }
 
 export function ValueSelectorField<T>({value, onRequestValueChange, getLabel, isDisabled, ...props}: Props<T>) {

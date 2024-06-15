@@ -74,8 +74,8 @@ function convertClassPathsToImports(paths: string[], tsFilePath: string): string
 		.map((path, i) => `import * as _${i} from ${JSON.stringify(path)}`)
 }
 
-function getConstEnumCode(offset: string, name: string, comment: string, entries: readonly (readonly string[])[]): string {
-	const knownNames = new Map<string, readonly string[]>()
+function getConstEnumCode(offset: string, name: string, comment: string, entries: string[][]): string {
+	const knownNames = new Map<string, string[]>()
 
 	const entryStrings = entries.map((name, index) => {
 		const identifier = makeTsIdentifier(name)
@@ -98,7 +98,7 @@ function getCommentCode(content: string): string {
 }
 
 
-function makeTsIdentifier(parts: readonly string[], doCapitalize = false): string {
+function makeTsIdentifier(parts: string[], doCapitalize = false): string {
 	parts = parts.flatMap(part => part.split(" "))
 	let result = parts.map((part, i) => {
 		part = part

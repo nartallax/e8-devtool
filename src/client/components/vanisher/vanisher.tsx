@@ -4,14 +4,14 @@ import * as css from "./vanisher.module.scss"
 import {MinMaxableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
 
 type Props<K extends keyof CSSProperties = keyof CSSProperties> = {
-	readonly property?: K
-	readonly emptyValue?: CSSProperties[K]
-	readonly fullValue?: CSSProperties[K]
-	readonly width?: MinMaxableSize
-	readonly height?: MinMaxableSize
-	readonly position?: "relative" | "absolute" | "fixed" | "static"
-	readonly zeroInset?: boolean
-	readonly duration?: number
+	property?: K
+	emptyValue?: CSSProperties[K]
+	fullValue?: CSSProperties[K]
+	width?: MinMaxableSize
+	height?: MinMaxableSize
+	position?: "relative" | "absolute" | "fixed" | "static"
+	zeroInset?: boolean
+	duration?: number
 }
 
 /** Component that slowly appears when mounted and slowly disappears after unmounted */

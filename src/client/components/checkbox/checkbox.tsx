@@ -25,10 +25,10 @@ export const CheckboxField = ({value, onChange, isDisabled, ...props}: FieldProp
 }
 
 type Props = {
-	readonly value: boolean
-	readonly onChange: (value: boolean) => void
-	readonly isDisabled?: boolean
-	readonly hasError?: boolean
+	value: boolean
+	onChange: (value: boolean) => void
+	isDisabled?: boolean
+	hasError?: boolean
 }
 
 export const Checkbox = ({value, onChange, hasError, isDisabled}: Props) => {

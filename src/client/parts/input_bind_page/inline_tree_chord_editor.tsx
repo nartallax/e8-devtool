@@ -3,8 +3,8 @@ import {ChordInput, chordFromString, chordToString} from "client/parts/chord_inp
 import {useState} from "react"
 
 type Props = {
-	readonly initialValue: string
-	readonly onComplete: (value: string | null) => void
+	initialValue: string
+	onComplete: (value: string | null) => void
 }
 
 export const InlineTreeChordEditor = ({initialValue, onComplete}: Props) => {

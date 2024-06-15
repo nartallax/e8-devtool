@@ -4,16 +4,16 @@ type ApiHttpMethod = "GET" | "POST" | "PUT"
 type ApiResultType = "binary" | "json"
 
 interface ApiCallOptions {
-	readonly method?: ApiHttpMethod
-	readonly resultType?: ApiResultType
-	readonly name: string
-	readonly queryParams?: Record<string, string>
-	readonly body?: ArrayBuffer | unknown[]
+	method?: ApiHttpMethod
+	resultType?: ApiResultType
+	name: string
+	queryParams?: Record<string, string>
+	body?: ArrayBuffer | unknown[]
 }
 
 export class ApiClient {
 
-	constructor(readonly urlBase: string, readonly defaultMethod: ApiHttpMethod, readonly onApiError?: (err: ApiError) => void) {}
+	constructor(private urlBase: string, private defaultMethod: ApiHttpMethod, private onApiError?: (err: ApiError) => void) {}
 
 	private serializeBody(body: ArrayBuffer | unknown): ArrayBuffer | string {
 		if(body instanceof ArrayBuffer){

@@ -15,10 +15,10 @@ type NullableProps = PropsFor<UUID | null> & {
 }
 
 type PropsFor<T> = FormInputProps<T> & (GetLabelProps | ValuesProps) & {
-	readonly value: T
-	readonly onChange: (value: T) => void
-	readonly modal: (onClose: (newValue?: T) => void) => React.ReactNode
-	readonly absentValueLabel?: string
+	value: T
+	onChange: (value: T) => void
+	modal: (onClose: (newValue?: T) => void) => React.ReactNode
+	absentValueLabel?: string
 }
 
 type GetLabelProps = {
@@ -26,7 +26,7 @@ type GetLabelProps = {
 }
 
 type ValuesProps = {
-	values: readonly NamedId[]
+	values: NamedId[]
 }
 
 const isGetLabelProps = (props: unknown): props is GetLabelProps => !!props && typeof(props) === "object" && "getLabel" in props

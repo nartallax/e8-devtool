@@ -4,11 +4,11 @@ import {useEffect, useRef} from "react"
 import {TextInputBase} from "client/components/text_input/text_input_base"
 
 type Props = FormInputProps<string> & {
-	readonly value: string
-	readonly onChange: (value: string) => void
-	readonly isDisabled?: boolean
-	readonly placeholder?: string
-	readonly isAutofocused?: boolean
+	value: string
+	onChange: (value: string) => void
+	isDisabled?: boolean
+	placeholder?: string
+	isAutofocused?: boolean
 }
 
 export const TextInputField = ({value, onChange, isDisabled, placeholder, isAutofocused, ...props}: Props) => {

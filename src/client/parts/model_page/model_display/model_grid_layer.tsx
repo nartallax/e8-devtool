@@ -43,17 +43,17 @@ export const ModelGridLayer = () => {
 }
 
 type BaseProps = {
-	readonly isHorisontal: boolean
-	readonly isThick?: boolean
-	readonly sizeMultiplier: number
-	readonly workbenchWidth: number
-	readonly workbenchHeight: number
+	isHorisontal: boolean
+	isThick?: boolean
+	sizeMultiplier: number
+	workbenchWidth: number
+	workbenchHeight: number
 }
 
 type LinesProps = BaseProps & {
-	readonly start?: number
-	readonly end: number
-	readonly step?: number
+	start?: number
+	end: number
+	step?: number
 }
 
 const Lines = ({start = 0, end, step = 1, ...props}: LinesProps): React.ReactNode[] => {
@@ -72,9 +72,9 @@ const Lines = ({start = 0, end, step = 1, ...props}: LinesProps): React.ReactNod
 }
 
 type LineProps = BaseProps & {
-	readonly isHorisontal: boolean
-	readonly isThick?: boolean
-	readonly offset: number
+	isHorisontal: boolean
+	isThick?: boolean
+	offset: number
 }
 
 const Line = ({isHorisontal, isThick, sizeMultiplier, workbenchHeight, workbenchWidth, offset}: LineProps) => {

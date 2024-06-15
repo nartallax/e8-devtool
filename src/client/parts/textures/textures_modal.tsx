@@ -8,8 +8,8 @@ import {UUID} from "common/uuid"
 import {useState} from "react"
 
 type Props = {
-	readonly value: UUID
-	readonly onClose: (value?: UUID) => void
+	value: UUID
+	onClose: (value?: UUID) => void
 }
 
 export const TexturesModal = ({value: initialValue, onClose}: Props) => {

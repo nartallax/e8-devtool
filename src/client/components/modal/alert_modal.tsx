@@ -4,9 +4,9 @@ import {Col, Row} from "client/components/row_col/row_col"
 import * as css from "./modal.module.scss"
 
 type Props = {
-	readonly header: string
-	readonly body: React.ReactNode
-	readonly onClose: () => void
+	header: string
+	body: React.ReactNode
+	onClose: () => void
 }
 
 export const AlertModal = ({header, body, onClose}: Props) => {

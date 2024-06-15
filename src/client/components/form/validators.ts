@@ -20,7 +20,7 @@ export namespace Validators {
 			return null
 		}
 
-	export const isUnique = <T>({values}: {values: readonly T[]}): Validator<T> => {
+	export const isUnique = <T>({values}: {values: T[]}): Validator<T> => {
 		const set = new Set(values)
 		return value => {
 			if(set.has(value)){

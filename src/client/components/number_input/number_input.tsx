@@ -4,12 +4,12 @@ import {useRef} from "react"
 import {TextInputBase} from "client/components/text_input/text_input_base"
 
 type Props = FormInputProps<number> & {
-	readonly value: number
-	readonly onChange: (newValue: number) => void
-	readonly step?: number
-	readonly min?: number
-	readonly max?: number
-	readonly isDisabled?: boolean
+	value: number
+	onChange: (newValue: number) => void
+	step?: number
+	min?: number
+	max?: number
+	isDisabled?: boolean
 }
 
 const numberReg = /^-?\d+(?:\.\d+)?$/

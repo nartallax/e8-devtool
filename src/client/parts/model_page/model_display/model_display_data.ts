@@ -3,14 +3,14 @@ import {XY} from "@nartallax/e8"
 
 /** Find index in the array at which point should be inserted
  * Here we are trying to guess what's the user intention was and where he wants the point to be inserted */
-export function findPointInsertionIndex(points: readonly (readonly [number, number])[], point: XY): number {
+export function findPointInsertionIndex(points: [number, number][], point: XY): number {
 	if(points.length < 2){
 		return points.length
 	}
 	return findIndexByNearestLine(points, point)
 }
 
-function findIndexByNearestLine(points: readonly (readonly [number, number])[], point: XY): number {
+function findIndexByNearestLine(points: [number, number][], point: XY): number {
 	let minDistIndex = -1, minDist = Number.MAX_SAFE_INTEGER
 	for(const [a, b, index] of lines(points)){
 		const lineLength = Math.sqrt(((b[0] - a[0]) ** 2) + ((b[1] - a[1]) ** 2))
@@ -27,7 +27,7 @@ function findIndexByNearestLine(points: readonly (readonly [number, number])[], 
 }
 
 void findIndexByTwoNearestPoints
-function findIndexByTwoNearestPoints(points: readonly (readonly [number, number])[], point: XY): number {
+function findIndexByTwoNearestPoints(points: [number, number][], point: XY): number {
 	if(points.length < 2){
 		return points.length
 	}
@@ -49,11 +49,11 @@ function findIndexByTwoNearestPoints(points: readonly (readonly [number, number]
 	return insertIndex
 }
 
-function distance2Between(a: XY, b: readonly [number, number]): number {
+function distance2Between(a: XY, b: [number, number]): number {
 	return ((a.x - b[0]) ** 2) + ((a.y - b[1]) ** 2)
 }
 
-export function distanceFromPointToLine(linePointA: readonly [number, number], linePointB: readonly [number, number], point: XY, lineLength?: number): number {
+export function distanceFromPointToLine(linePointA: [number, number], linePointB: [number, number], point: XY, lineLength?: number): number {
 	const [x1, y1] = linePointA
 	const [x2, y2] = linePointB
 	lineLength ??= Math.sqrt(((x2 - x1) ** 2) + (y2 - y1) ** 2)
@@ -64,7 +64,7 @@ export function distanceFromPointToLine(linePointA: readonly [number, number], l
 	return Math.abs(((x2 - x1) * (y1 - y0)) - ((x1 - x0) * (y2 - y1))) / lineLength
 }
 
-function* lines(points: readonly (readonly [number, number])[]): IterableIterator<[readonly [number, number], readonly[number, number], number]> {
+function* lines(points: [number, number][]): IterableIterator<[[number, number], [number, number], number]> {
 	let prevIndex = points.length - 1
 	for(let i = 0; i < points.length; i++){
 		yield[points[prevIndex]!, points[i]!, i]
@@ -72,7 +72,7 @@ function* lines(points: readonly (readonly [number, number])[]): IterableIterato
 	}
 }
 
-export function shapeToSvgPathD(points: readonly (readonly [number, number])[], sizeMultiplier: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
+export function shapeToSvgPathD(points: [number, number][], sizeMultiplier: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
 	if(points.length === 0){
 		return ""
 	} else if(points.length === 1){

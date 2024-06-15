@@ -11,7 +11,7 @@ Useful for values like padding/margin/borders etc.
 1. side name - equivalent to `true` on this side and 0 for others
 2. defaultable size value - use that value for all sizes
 3. tuple of two/tuple of four - as in css, vertical-horisontal or top-right-bottom-left*/
-type Sides<T> = "vertical" | "horisontal" | "top" | "bottom" | "left" | "right" | T | readonly [T, T] | readonly [T, T, T, T]
+type Sides<T> = "vertical" | "horisontal" | "top" | "bottom" | "left" | "right" | T | [T, T] | [T, T, T, T]
 
 export type DefaultableSideSize = Sides<DefaultableSize>
 

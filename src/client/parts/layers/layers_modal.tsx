@@ -14,9 +14,9 @@ import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
-	readonly value: UUID
-	readonly onClose: (value?: UUID) => void
-	readonly layerType: LayerType
+	value: UUID
+	onClose: (value?: UUID) => void
+	layerType: LayerType
 }
 
 export const LayersModal = ({value: initialValue, onClose, layerType}: Props) => {

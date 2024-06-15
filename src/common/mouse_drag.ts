@@ -40,7 +40,7 @@ export function isTouchEvent(e: MouseEvent | TouchEvent | React.MouseEvent | Rea
 }
 
 export type MouseDragHandlerParams = {
-	readonly element: HTMLElement | SVGElement | Window
+	element: HTMLElement | SVGElement | Window
 	/** start() is called before first onMove
 	 * it can return false; it means that the move will not start */
 	start?: (e: MouseEvent | TouchEvent) => boolean | undefined | void
@@ -48,14 +48,14 @@ export type MouseDragHandlerParams = {
 	onMove(e: MouseEvent | TouchEvent): void
 	onClick?: (e: MouseEvent | TouchEvent) => void
 	/** If true, onMove will be invoked when down event happen */
-	readonly downIsMove?: boolean
+	downIsMove?: boolean
 	/** If true, onMove will be invoked when up event happen */
-	readonly upIsMove?: boolean
+	upIsMove?: boolean
 	/** Distance in pixels that cursor should pass in down state before start and onmove is called */
-	readonly distanceBeforeMove?: number
+	distanceBeforeMove?: number
 	/** Expected movement direction.
 	 * If after `distanceBeforeMove` is passed the direction of movement is not this - drag won't happen */
-	readonly constraintDirection?: "horisontal" | "vertical"
+	constraintDirection?: "horisontal" | "vertical"
 }
 
 export interface MouseDragHandlers {

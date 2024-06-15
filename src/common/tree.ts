@@ -22,7 +22,7 @@ export function areTreePathsEqual(a: TreePath, b: TreePath): boolean {
 }
 
 export interface TreeLeaf<T>{
-	readonly value: T
+	value: T
 }
 
 export function isTreeLeaf<T, B>(x: Tree<T, B>): x is TreeLeaf<T> {
@@ -30,19 +30,19 @@ export function isTreeLeaf<T, B>(x: Tree<T, B>): x is TreeLeaf<T> {
 }
 
 export interface TreeBranch<T, B>{
-	readonly value: B
-	readonly children: readonly Tree<T, B>[]
+	value: B
+	children: Tree<T, B>[]
 }
 
 export function isTreeBranch<T, B>(x: Tree<T, B>): x is TreeBranch<T, B> {
 	return "children" in x
 }
 
-export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[readonly TreeBranch<T, B>[], T]> {
+export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[TreeBranch<T, B>[], T]> {
 	return getTreeLeavesInternal(tree, [])
 }
 
-export const getForestLeavesAsArray = <T, B>(forest: readonly Tree<T, B>[], result: T[] = []): T[] => {
+export const getForestLeavesAsArray = <T, B>(forest: Tree<T, B>[], result: T[] = []): T[] => {
 	for(const tree of forest){
 		if(isTreeBranch(tree)){
 			getForestLeavesAsArray(tree.children, result)
@@ -53,7 +53,7 @@ export const getForestLeavesAsArray = <T, B>(forest: readonly Tree<T, B>[], resu
 	return result
 }
 
-function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[readonly TreeBranch<T, B>[], T]> {
+function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[TreeBranch<T, B>[], T]> {
 	if(isTreeLeaf(tree)){
 		yield[parents, tree.value]
 	} else {
@@ -65,7 +65,7 @@ function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B
 	}
 }
 
-export function findTreeNodePath<T, B>(trees: readonly Tree<T, B>[], isThisIt: (value: T | B) => boolean): TreePath | undefined {
+export function findTreeNodePath<T, B>(trees: Tree<T, B>[], isThisIt: (value: T | B) => boolean): TreePath | undefined {
 	for(let i = 0; i < trees.length; i++){
 		const node = trees[i]!
 		if(isThisIt(node.value)){
@@ -81,7 +81,7 @@ export function findTreeNodePath<T, B>(trees: readonly Tree<T, B>[], isThisIt: (
 	return undefined
 }
 
-export function findOneLeafInTrees<T, B>(trees: readonly Tree<T, B>[], isThisIt: (value: T) => boolean): TreeLeaf<T> | undefined {
+export function findOneLeafInTrees<T, B>(trees: Tree<T, B>[], isThisIt: (value: T) => boolean): TreeLeaf<T> | undefined {
 	for(const tree of trees){
 		const result = findOneLeaf(tree, isThisIt)
 		if(result !== undefined){
@@ -129,7 +129,7 @@ export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T) => R): 
 	return {children: newChildren, value: tree.value}
 }
 
-function resolveTreeIndicesToTrees<T, B>(trees: readonly Tree<T, B>[], indices: number[]): Tree<T, B>[] {
+function resolveTreeIndicesToTrees<T, B>(trees: Tree<T, B>[], indices: number[]): Tree<T, B>[] {
 	const result: Tree<T, B>[] = []
 	for(let i = 0; i < indices.length; i++){
 		const index = indices[i]!
@@ -149,7 +149,7 @@ function resolveTreeIndicesToTrees<T, B>(trees: readonly Tree<T, B>[], indices: 
 	return result
 }
 
-export function getTreeByPath<T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B> {
+export function getTreeByPath<T, B>(trees: Tree<T, B>[], path: TreePath): Tree<T, B> {
 	for(let i = 0; i < path.length; i++){
 		const currentKey = path[i]!
 		const nextTree = trees[currentKey]
@@ -167,7 +167,7 @@ export function getTreeByPath<T, B>(trees: readonly Tree<T, B>[], path: TreePath
 	throw new Error("Path does not point to tree node.")
 }
 
-export const updateTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath, updater: (tree: Tree<T, B>) => Tree<T, B>): Tree<T, B>[] => {
+export const updateTreeByPath = <T, B>(trees: Tree<T, B>[], path: TreePath, updater: (tree: Tree<T, B>) => Tree<T, B>): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Could not update tree by zero-length path")
 	}
@@ -194,7 +194,7 @@ const updateChildAt = <T, B>(parent: TreeBranch<T, B>, child: Tree<T, B>, index:
 }
 
 export const updateBranchByPath = <T, B>(
-	trees: readonly Tree<T, B>[], path: TreePath, updater: (tree: TreeBranch<T, B>) => Tree<T, B>
+	trees: Tree<T, B>[], path: TreePath, updater: (tree: TreeBranch<T, B>) => Tree<T, B>
 ) => updateTreeByPath(trees, path, branch => {
 	if(!isTreeBranch(branch)){
 		throw new Error("Expected to have branch, but got leaf")
@@ -203,7 +203,7 @@ export const updateBranchByPath = <T, B>(
 })
 
 export const updateLeafByPath = <T, B>(
-	trees: readonly Tree<T, B>[], path: TreePath, updater: (tree: TreeLeaf<T>) => Tree<T, B>
+	trees: Tree<T, B>[], path: TreePath, updater: (tree: TreeLeaf<T>) => Tree<T, B>
 ) => updateTreeByPath(trees, path, leaf => {
 	if(isTreeBranch(leaf)){
 		throw new Error("Expected to have leaf, but got branch")
@@ -211,7 +211,7 @@ export const updateLeafByPath = <T, B>(
 	return updater(leaf)
 })
 
-export const getLeafByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): TreeLeaf<T> => {
+export const getLeafByPath = <T, B>(trees: Tree<T, B>[], path: TreePath): TreeLeaf<T> => {
 	const lastNode = getTreeByPath(trees, path)
 	if(isTreeBranch(lastNode)){
 		throw new Error("Path points to a branch, not leaf")
@@ -219,7 +219,7 @@ export const getLeafByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath
 	return lastNode
 }
 
-export const getBranchByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): TreeBranch<T, B> => {
+export const getBranchByPath = <T, B>(trees: Tree<T, B>[], path: TreePath): TreeBranch<T, B> => {
 	const lastNode = getTreeByPath(trees, path)
 	if(!isTreeBranch(lastNode)){
 		throw new Error("Path points to a leaf, not branch")
@@ -227,7 +227,7 @@ export const getBranchByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePa
 	return lastNode
 }
 
-export const deleteFromTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
+export const deleteFromTreeByPath = <T, B>(trees: Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Could not delete tree by zero-length path")
 	}
@@ -243,7 +243,7 @@ export const deleteFromTreeByPath = <T, B>(trees: readonly Tree<T, B>[], path: T
 	})
 }
 
-export const addTreeByPath = <T, B>(trees: readonly Tree<T, B>[], newTree: Tree<T, B>, path: TreePath): Tree<T, B>[] => {
+export const addTreeByPath = <T, B>(trees: Tree<T, B>[], newTree: Tree<T, B>, path: TreePath): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Could not add tree by zero-length path")
 	}
@@ -270,7 +270,7 @@ const updateMovePath = (from: TreePath, to: TreePath): TreePath => {
 	return to
 }
 
-export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
+export const moveTreeByPath = <T, B>(trees: Tree<T, B>[], from: TreePath, to: TreePath): Tree<T, B>[] => {
 	const tree = getTreeByPath(trees, from)
 	to = updateMovePath(from, to)
 
@@ -278,7 +278,7 @@ export const moveTreeByPath = <T, B>(trees: readonly Tree<T, B>[], from: TreePat
 	return addTreeByPath(trees, tree, to)
 }
 
-export const getTreeSiblings = <T, B>(trees: readonly Tree<T, B>[], path: TreePath): readonly Tree<T, B>[] => {
+export const getTreeSiblings = <T, B>(trees: Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Wrong path")
 	}

@@ -5,10 +5,10 @@ import {ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/comp
 import {TreePath} from "common/tree"
 
 type Props = {
-	readonly initialValue: string
-	readonly onComplete: (newValue: string | null) => void
-	readonly treePath: TreePath
-	readonly validators?: ValidatorsMaybeFactory<string, TreePath>
+	initialValue: string
+	onComplete: (newValue: string | null) => void
+	treePath: TreePath
+	validators?: ValidatorsMaybeFactory<string, TreePath>
 }
 
 export const InlineTreeElementEditor = ({initialValue, onComplete, validators, treePath}: Props) => {

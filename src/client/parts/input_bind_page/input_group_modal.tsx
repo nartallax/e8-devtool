@@ -11,8 +11,8 @@ import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
-	readonly value: UUID | null
-	readonly onClose: (newValue?: UUID | null) => void
+	value: UUID | null
+	onClose: (newValue?: UUID | null) => void
 }
 
 const nullGroup: ProjectInputGroup = {

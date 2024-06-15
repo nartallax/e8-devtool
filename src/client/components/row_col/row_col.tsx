@@ -4,24 +4,24 @@ import {CSSProperties, PropsWithChildren, RefObject} from "react"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {
-	readonly padding?: DefaultableSideSize
-	readonly margin?: DefaultableSideSize
-	readonly shrink?: number | boolean
-	readonly grow?: number | boolean
+	padding?: DefaultableSideSize
+	margin?: DefaultableSideSize
+	shrink?: number | boolean
+	grow?: number | boolean
 	/** Shorthand for align="stretch" */
-	readonly stretch?: boolean
+	stretch?: boolean
 	/** Shorthand for alignSelf="stretch" */
-	readonly stretchSelf?: boolean
-	readonly justify?: "start" | "center" | "space-between" | "end"
-	readonly align?: "start" | "center" | "end" | "stretch"
-	readonly alignSelf?: "start" | "center" | "end" | "stretch"
-	readonly width?: MinMaxableSize
-	readonly height?: MinMaxableSize
-	readonly gap?: DefaultableSize
-	readonly border?: DefaultableSideSize
-	readonly ref?: RefObject<HTMLDivElement>
-	readonly position?: "static" | "relative" | "absolute" | "fixed"
-	readonly className?: string
+	stretchSelf?: boolean
+	justify?: "start" | "center" | "space-between" | "end"
+	align?: "start" | "center" | "end" | "stretch"
+	alignSelf?: "start" | "center" | "end" | "stretch"
+	width?: MinMaxableSize
+	height?: MinMaxableSize
+	gap?: DefaultableSize
+	border?: DefaultableSideSize
+	ref?: RefObject<HTMLDivElement>
+	position?: "static" | "relative" | "absolute" | "fixed"
+	className?: string
 }
 
 const defaultBorder = "var(--default-border-width)"
@@ -55,7 +55,7 @@ export const Col = ({children, ref, className, ...props}: PropsWithChildren<Prop
 	return <div className={cn(css.col, className)} style={propsToStyle(props)} ref={ref}>{children}</div>
 }
 
-export const RowCol = ({children, direction = "row", ...props}: PropsWithChildren<Props & {readonly direction?: "row" | "col"}>) => {
+export const RowCol = ({children, direction = "row", ...props}: PropsWithChildren<Props & {direction?: "row" | "col"}>) => {
 	if(direction === "row"){
 		return <Row {...props}>{children}</Row>
 	} else {

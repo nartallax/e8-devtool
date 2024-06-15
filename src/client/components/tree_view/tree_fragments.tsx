@@ -14,47 +14,47 @@ import {ValidatorsMaybeFactory} from "client/components/form/validators"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
-	readonly getBranchKey?: (branch: B) => string
+	getBranchKey?: (branch: B) => string
 	// eslint-disable-next-line react/no-unused-prop-types
-	readonly getLeafKey: (leaf: L) => string
-	readonly getBranchLabel?: (branch: B) => string
-	readonly getBranchSublabel?: (leaf: B) => string
-	readonly getLeafLabel: (leaf: L) => string
-	readonly getLeafSublabel?: (leaf: L) => React.ReactNode
-	readonly onLeafClick?: (leaf: L, path: TreePath) => void
-	readonly onLeafDoubleclick?: (leaf: L) => void
-	readonly onAddChild?: (parentPath: TreePath) => void
-	readonly squares?: SquareName[]
+	getLeafKey: (leaf: L) => string
+	getBranchLabel?: (branch: B) => string
+	getBranchSublabel?: (leaf: B) => string
+	getLeafLabel: (leaf: L) => string
+	getLeafSublabel?: (leaf: L) => React.ReactNode
+	onLeafClick?: (leaf: L, path: TreePath) => void
+	onLeafDoubleclick?: (leaf: L) => void
+	onAddChild?: (parentPath: TreePath) => void
+	squares?: SquareName[]
 	// eslint-disable-next-line react/no-unused-prop-types
-	readonly path: TreePath
-	readonly inlineEditPath: TreePath | null
-	readonly canEditBranchLabel: boolean
-	readonly canEditLeafLabel: boolean
-	readonly onLabelEditComplete: (path: TreePath, tree: Tree<L, B>, newLabel: string | null) => void
-	readonly setInlineEditPath: SetState<TreePath | null>
-	readonly onNodeDelete: (path: TreePath, tree: Tree<L, B>) => void
-	readonly canDeleteLeaf: boolean
-	readonly canDeleteBranch: boolean
-	readonly leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
-	readonly branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
-	readonly selectedPath?: TreePath
-	readonly InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>}) => React.ReactNode
+	path: TreePath
+	inlineEditPath: TreePath | null
+	canEditBranchLabel: boolean
+	canEditLeafLabel: boolean
+	onLabelEditComplete: (path: TreePath, tree: Tree<L, B>, newLabel: string | null) => void
+	setInlineEditPath: SetState<TreePath | null>
+	onNodeDelete: (path: TreePath, tree: Tree<L, B>) => void
+	canDeleteLeaf: boolean
+	canDeleteBranch: boolean
+	leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
+	branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
+	selectedPath?: TreePath
+	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>}) => React.ReactNode
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
 
 type BranchProps<L, B> = BaseProps<L, B> & {
-	readonly branch: TreeBranch<L, B>
+	branch: TreeBranch<L, B>
 }
 
 type RowProps<L, B> = BaseProps<L, B> & {
-	readonly row: Tree<L, B>
-	readonly isExpanded?: boolean
-	readonly onExpandChange?: () => void
+	row: Tree<L, B>
+	isExpanded?: boolean
+	onExpandChange?: () => void
 }
 
 export type TreeBranchChildrenProps<L, B> = BaseProps<L, B> & {
-	readonly tree: readonly Tree<L, B>[]
+	tree: Tree<L, B>[]
 }
 
 const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
@@ -210,7 +210,7 @@ const shouldHandleRowClick = (e: React.MouseEvent): boolean => {
 	return !(e.target instanceof HTMLElement) || (!isInButton(e.target) && e.target.tagName !== "INPUT")
 }
 
-const TreeRowSquares = ({squares, endsWith}: {readonly squares: SquareName[], readonly endsWith?: "expander" | "horisontal"}) => {
+const TreeRowSquares = ({squares, endsWith}: {squares: SquareName[], endsWith?: "expander" | "horisontal"}) => {
 	return (
 		<div className={css.branchSquareContainer}>
 			{squares.map((square, i) => {

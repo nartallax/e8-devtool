@@ -12,10 +12,10 @@ export type RouteTab = {
 }
 
 type Props = {
-	readonly tabs: RouteTab[]
-	readonly historyActionType?: "push" | "replace"
-	readonly matchedUrl?: URL
-	readonly isAutoRoutingToDefaultEnabled?: boolean
+	tabs: RouteTab[]
+	historyActionType?: "push" | "replace"
+	matchedUrl?: URL
+	isAutoRoutingToDefaultEnabled?: boolean
 }
 
 export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, isAutoRoutingToDefaultEnabled = false}: Props) => {

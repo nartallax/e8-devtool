@@ -3,11 +3,11 @@ import {Tree, TreeBranch, TreePath} from "common/tree"
 import {RefObject, useCallback, useRef} from "react"
 
 type TreeDragContextValue<T, B> = {
-	readonly onDrag?: (from: TreePath, to: TreePath) => void
-	readonly rootRef?: RefObject<HTMLElement | null>
-	readonly tree: readonly Tree<T, B>[]
-	readonly canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
-	readonly canDrag?: boolean
+	onDrag?: (from: TreePath, to: TreePath) => void
+	rootRef?: RefObject<HTMLElement | null>
+	tree: Tree<T, B>[]
+	canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
+	canDrag?: boolean
 }
 
 const [_TreeDragContextProvider, _useTreeDragContext] = defineContext({

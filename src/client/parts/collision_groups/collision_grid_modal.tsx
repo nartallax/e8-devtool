@@ -10,12 +10,12 @@ import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_
 import {Checkbox} from "client/components/checkbox/checkbox"
 
 type Props = {
-	readonly onClose: () => void
+	onClose: () => void
 }
 
 type PairMap = Map<UUID, Set<UUID>>
 
-const buildPairMap = (groups: readonly ProjectCollisionGroup[], pairs: readonly (readonly [UUID, UUID])[]) => {
+const buildPairMap = (groups: ProjectCollisionGroup[], pairs: [UUID, UUID][]) => {
 	const result = new Map<UUID, Set<UUID>>(groups.map(group => [group.id, new Set()]))
 
 	for(const [a, b] of pairs){
@@ -111,9 +111,9 @@ export const CollisionGridModal = ({onClose}: Props) => {
 }
 
 type CheckboxProps = {
-	readonly pair: [UUID, UUID]
-	readonly map: PairMap
-	readonly onChange: (pair: [UUID, UUID], isEnabled: boolean) => void
+	pair: [UUID, UUID]
+	map: PairMap
+	onChange: (pair: [UUID, UUID], isEnabled: boolean) => void
 }
 
 const PairCheckbox = ({pair, map, onChange}: CheckboxProps) => {

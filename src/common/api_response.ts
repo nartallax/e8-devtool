@@ -1,5 +1,5 @@
 export class ApiError extends Error {
-	readonly isApiError = true
+	isApiError = true
 
 	constructor(message: string) {
 		super(message)

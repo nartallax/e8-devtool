@@ -6,7 +6,7 @@ import {useState} from "react"
 type Tab = RouteTab & {render: RouteRenderer}
 
 type Props = {
-	readonly tabs: Tab[]
+	tabs: Tab[]
 }
 
 export const TabsAndRouter = ({tabs}: Props) => {

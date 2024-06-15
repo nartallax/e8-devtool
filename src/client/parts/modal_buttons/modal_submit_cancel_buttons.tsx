@@ -4,7 +4,7 @@ import {Row} from "client/components/row_col/row_col"
 import {Icon} from "generated/icons"
 
 type Props = {
-	readonly onCancel: () => void
+	onCancel: () => void
 }
 
 export const ModalSubmitCancelButtons = ({onCancel}: Props) => {

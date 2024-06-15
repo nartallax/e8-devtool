@@ -5,12 +5,12 @@ import * as css from "./overlay_item.module.scss"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {
-	readonly tooltipCorner?: Corner
-	readonly iconCorner?: Corner
-	readonly icon?: Icon
-	readonly variant?: "default" | "error"
-	readonly isHidden?: boolean
-	readonly isPreWrapped?: boolean
+	tooltipCorner?: Corner
+	iconCorner?: Corner
+	icon?: Icon
+	variant?: "default" | "error"
+	isHidden?: boolean
+	isPreWrapped?: boolean
 }
 
 export const TooltipIcon = ({tooltipCorner, iconCorner, icon, variant = "default", isHidden, children, isPreWrapped}: PropsWithChildren<Props>) => {

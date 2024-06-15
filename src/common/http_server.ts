@@ -12,30 +12,30 @@ import * as MimeTypes from "mime-types"
 
 interface StaticRoute {
 	/** URL (in case of proxy) or path (in case of filesystem directory) is expected */
-	readonly url: string
+	url: string
 	/** True here will enable client-side cacheing of any resources in the directory */
-	readonly isCacheable?: boolean
+	isCacheable?: boolean
 	/** Sometimes it's not possible to understand the mime type from URL/path alone
 	 * (for example, in case of smart stuff about routing mime type should be text/html, but URL path will lack extension)
 	 * To account for those cases, this property exists
 	 *
 	 * If absent, default is application/octet-stream, which is completely unsuggestive for most of the http clients */
-	readonly defaultMimeType?: string
+	defaultMimeType?: string
 }
 
 interface HttpServerOptions {
-	readonly port: number
+	port: number
 	/** Host is mandatory to avoid accidently exposing localhost the server to outside world */
-	readonly host: string
+	host: string
 	/** Map of request path prefixes -> description of route */
-	readonly static: Readonly<Record<string, StaticRoute>>
+	static: Readonly<Record<string, StaticRoute>>
 	/** Part of path that precedes all of the API calls */
-	readonly apiRoot: string
-	readonly apiMethods: {
-		readonly [name: string]: (...args: unknown[]) => (unknown | Promise<unknown>)
+	apiRoot: string
+	apiMethods: {
+		[name: string]: (...args: unknown[]) => (unknown | Promise<unknown>)
 	}
-	readonly inputSizeLimit: number
-	readonly readTimeoutSeconds: number
+	inputSizeLimit: number
+	readTimeoutSeconds: number
 }
 
 if(Math.random() > 1){
@@ -46,9 +46,9 @@ if(Math.random() > 1){
 /** A generic HTTP server.
  * Can serve static from url or path, and also call APIs. */
 export class HttpServer {
-	private readonly server: Http.Server
+	private server: Http.Server
 
-	constructor(private readonly opts: HttpServerOptions) {
+	constructor(private opts: HttpServerOptions) {
 		this.server = new Http.Server((req, res) => this.processRequest(req, res))
 	}
 

@@ -15,8 +15,8 @@ import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
-	readonly bind: ProjectInputBind
-	readonly onClose: (updatedBind?: ProjectInputBind) => void
+	bind: ProjectInputBind
+	onClose: (updatedBind?: ProjectInputBind) => void
 }
 
 export const InputBindModal = ({bind, onClose}: Props) => {

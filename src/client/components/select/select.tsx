@@ -12,9 +12,9 @@ export type SelectOption<T> = {
 }
 
 type Props<T> = FormInputProps<T | null> & {
-	readonly options: SelectOption<T>[]
-	readonly value: T | null
-	readonly onChange: (value: T) => void
+	options: SelectOption<T>[]
+	value: T | null
+	onChange: (value: T) => void
 }
 
 export function SelectField<T>({options, value, onChange: setValue, ...props}: Props<T>) {

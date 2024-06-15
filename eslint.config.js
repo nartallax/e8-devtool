@@ -268,7 +268,8 @@ let result = tseslint.config(
 		"react/no-will-update-set-state": ["error"],
 		"react/prefer-es6-class": ["error"],
 		"react/prefer-exact-props": ["error"],
-		"react/prefer-read-only-props": ["warn"],
+		// good in theory, but in practice just adds clutter
+		"react/prefer-read-only-props": ["off"],
 		"react/prefer-stateless-function": ["warn"],
 		"react/prop-types": ["error"],
 		"react/require-default-props": ["off"],

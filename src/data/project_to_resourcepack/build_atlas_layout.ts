@@ -20,7 +20,7 @@ function decodeXY(xy: number): XY {
 /** Add coordinates to the input rectangles in a way that they tile an area close to square as good as possible
  * Order of elements is preserved
  * @param cellSize discretization step. All size values will be round up to this step. */
-export function buildAtlasLayout<I extends Rect>(rawInput: readonly I[], cellSize: number): (I & XY)[] {
+export function buildAtlasLayout<I extends Rect>(rawInput: I[], cellSize: number): (I & XY)[] {
 	const corners: Set<number> = new Set([encodeXY(0, 0)])
 	const input = rawInput.map(rect => ({
 		...rect,

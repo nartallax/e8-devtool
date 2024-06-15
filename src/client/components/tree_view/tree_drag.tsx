@@ -113,7 +113,7 @@ export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, row
 }
 
 
-const getDragDestination = <T, B>(tree: readonly Tree<T, B>[], event: MouseEvent | TouchEvent): DragDestination<T, B> | null => {
+const getDragDestination = <T, B>(tree: Tree<T, B>[], event: MouseEvent | TouchEvent): DragDestination<T, B> | null => {
 	const searchResult = getRowPath(event)
 	if(!searchResult){
 		return null
