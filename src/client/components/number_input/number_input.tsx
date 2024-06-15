@@ -1,8 +1,7 @@
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {FormField} from "client/components/form/form_field"
 import {useRef} from "react"
-import * as css from "./number_input.module.scss"
-import {cn} from "client/ui_utils/classname"
+import {TextInputBase} from "client/components/text_input/text_input_base"
 
 type Props = FormInputProps<number> & {
 	readonly value: number
@@ -75,17 +74,13 @@ export const NumberInput = ({value, onChange, step = 0.0001, min = Number.NEGATI
 
 	return (
 		<FormField id={id} onLabelClick={() => ref.current?.focus()}>
-			<input
-				ref={ref}
-				className={cn(css.numberInput, {[css.hasError!]: hasError})}
-				type="text"
-				defaultValue={stringify(value, step)}
-				disabled={isDisabled}
-				onPaste={handleChange}
-				onBlur={onBlur}
-				onKeyDown={handleChange}
-				onKeyUp={handleChange}
+			<TextInputBase
+				value={stringify(value, step)}
 				onChange={handleChange}
+				inputRef={ref}
+				isDisabled={isDisabled}
+				hasError={hasError}
+				onBlur={onBlur}
 			/>
 		</FormField>
 	)

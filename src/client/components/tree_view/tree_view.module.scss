@@ -1,194 +1,217 @@
 .treeView {
-	border: var(--default-border);
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-	border-radius: var(--default-border-radius);
-	background-color: var(--color-foreground);
-	flex: 1 1 0;
-	overflow: auto;
-	position: relative;
+  border: var(--default-border);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: var(--default-border-radius);
+  background-color: var(--color-foreground);
+  flex: 1 1 0;
+  overflow: auto;
+  position: relative;
 
-	--row-size: 2rem;
-	--branch-radius: 0.4rem;
-	--branch-width: 2px;
-	--branch-border: var(--branch-width) solid var(--color-guiding-lines);
-	--drag-dest-y: -100000px;
-	
-	&.dragContainer {
-		overflow-x: hidden;
-		&::after {
-			content: ' ';
-			height: 10px;
-			background: rgba(128, 128, 128, 0.5);
-			border-radius: 5px;
-			width: 200px;
-			transform: translate(-100px, -5px);
+  --row-size: 2rem;
+  --branch-radius: 0.5rem;
+  --branch-width: 2px;
+  --branch-border: var(--branch-width) solid var(--color-guiding-lines);
+  --drag-dest-y: -100000px;
 
-			position: absolute;
-			top: var(--drag-dest-y);
-			left: 50%;
-		}
-	}
+  &.dragContainer {
+    overflow-x: hidden;
+    &::after {
+      content: " ";
+      height: 10px;
+      background: rgba(128, 128, 128, 0.5);
+      border-radius: 5px;
+      width: 200px;
+      transform: translate(-100px, -5px);
+
+      position: absolute;
+      top: var(--drag-dest-y);
+      left: 50%;
+    }
+  }
 }
 
 .treeRow {
-	height: var(--row-size);
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: flex-start;
-	background-color: var(--color-foreground);
+  height: var(--row-size);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--color-foreground);
 
-	&:hover {
-		background-color: var(--color-interactive);
-	}
+  &:hover {
+    background-color: var(--color-interactive);
+  }
 
-	&.isExpanded .branchExpander {
-		transform: translateX(1px) rotate(90deg);
-	}
+  &.isExpanded .branchExpander {
+    transform: translateX(1px) rotate(90deg);
+  }
 
-	&.isSelected {
-		background-color: var(--color-interactive);
-	}
+  &.isSelected {
+    background-color: var(--color-interactive);
+  }
 
-	.rowLabel {
-		flex: 1 1 0;
-		min-width: 0;
-		text-overflow: ellipsis;
-		overflow: hidden;
+  .rowLabel {
+    flex: 1 1 0;
+    min-width: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
 
-		.rowSublabel {
-			opacity: 0.75;
-			margin-left: 0.5rem;
-		}
-	}
+    .rowSublabel {
+      opacity: 0.75;
+      margin-left: 0.5rem;
+    }
+  }
 
-	.rowButtons {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		justify-content: flex-end;
-		flex: 0 0 auto;
-	}
+  .rowButtons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+  }
 
-	&.draggedRow {
-		transform: translate(-50%, -50%) scale(0.5);
-		opacity: 0.5;
-		position: relative;
-		pointer-events: none;
-		top: var(--drag-offset-y);
-		left: var(--drag-offset-x);
-	}
+  &.draggedRow {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.5;
+    position: relative;
+    pointer-events: none;
+    top: var(--drag-offset-y);
+    left: var(--drag-offset-x);
+  }
 }
 
-.branchExpander, .branchSplit, .branchCorner, .branchEmpty, .branchVertical, .branchHorisontal {
-	height: var(--row-size);
-	width: var(--row-size);
-	position: relative;
+.branchExpander,
+.branchSplit,
+.branchCorner,
+.branchEmpty,
+.branchVertical,
+.branchHorisontal {
+  height: var(--row-size);
+  width: var(--row-size);
+  position: relative;
 }
 
-.branchSplit, .branchCorner, .branchVertical, .branchHorisontal {
-	&::before, &::after {
-		border: var(--branch-border);
-		position: absolute;
-	}
+.branchSplit,
+.branchCorner,
+.branchVertical,
+.branchHorisontal {
+  &::before,
+  &::after {
+    border: var(--branch-border);
+    position: absolute;
+  }
 }
 
 .branchExpander {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 .branchSplit {
-	&::before {
-		content: '';
-		top: 0;
-		bottom: 0;
-		left: 50%;
-		border-width: 0 0 0 var(--branch-width);
-	}
+  &::before {
+    content: "";
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-width: 0 0 0 var(--branch-width);
+  }
 
-	&::after {
-		content: '';
-		top: 0;
-		bottom: 50%;
-		left: 50%;
-		right: -25%;
-		border-width: 0 0 var(--branch-width) 0;
-		border-radius: 0 0 0 var(--branch-radius);
-	}
+  &::after {
+    content: "";
+    top: 0;
+    bottom: 50%;
+    left: 50%;
+    right: -25%;
+    border-width: 0 0 var(--branch-width) 0;
+    border-radius: 0 0 0 var(--branch-radius);
+  }
 }
 
 .branchCorner {
-	&::before {
-		content: '';
-		top: -15%;
-		bottom: 50%;
-		left: 50%;
-		right: -25%;
-		border-width: 0 0 var(--branch-width) var(--branch-width);
-		border-radius: 0 0 0 var(--branch-radius);
-	}
+  &::before {
+    content: "";
+    top: -15%;
+    bottom: 50%;
+    left: 50%;
+    right: -25%;
+    border-width: 0 0 var(--branch-width) var(--branch-width);
+    border-radius: 0 0 0 var(--branch-radius);
+  }
 }
 
 .branchVertical {
-	&::before {
-		content: '';
-		top: 0;
-		bottom: 0;
-		left: 50%;
-		border-width: 0 0 0 var(--branch-width);
-	}
+  &::before {
+    content: "";
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-width: 0 0 0 var(--branch-width);
+  }
 }
 
 .branchHorisontal {
-	&::before {
-		content: '';
-		bottom: 50%;
-		left: 0;
-		right: 0;
-		border-width: 0 0 var(--branch-width) 0;
-	}
+  &::before {
+    content: "";
+    bottom: 50%;
+    left: 0;
+    right: 0;
+    border-width: 0 0 var(--branch-width) 0;
+  }
 }
 
 .treeChildrenWrap {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .branchSquareContainer {
-	display: flex;
-	flex-direction: row;
-	flex: 0 0 auto;
-	margin-right: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
 }
 
 .inlineEditor {
-	background: transparent;
-	border: 0;
-	color: var(--font-color);
-	display: block;
-	flex: 1 1 0;
-	margin-right: 0.25rem;
+  background: transparent;
+  border: 0;
+  color: var(--font-color);
+  display: block;
+  flex: 1 1 0;
+  margin-right: 0.25rem;
 }
 
 .shake {
-	transform: translateX(0px);
-	animation-name: shake;
-	animation-duration: 0.3s;
-	animation-iteration-count: 1;
+  transform: translateX(0px);
+  animation-name: shake;
+  animation-duration: 0.3s;
+  animation-iteration-count: 1;
 }
 
 @keyframes shake {
-	0%  { transform: translateX(0px) }
-	10% { transform: translateX(-5px) }
-	30% { transform: translateX(5px) }
-	50% { transform: translateX(-5px) }
-	70% { transform: translateX(5px) }
-	90% { transform: translateX(-5px) }
-	100%  { transform: translateX(0px) }
+  0% {
+    transform: translateX(0px);
+  }
+  10% {
+    transform: translateX(-5px);
+  }
+  30% {
+    transform: translateX(5px);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+  70% {
+    transform: translateX(5px);
+  }
+  90% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
 }

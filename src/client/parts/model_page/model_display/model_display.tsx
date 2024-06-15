@@ -26,9 +26,6 @@ type Props = {
 	readonly modelId: UUID
 }
 
-// TODO: apply all the eslint and prettier formatting to all the project
-// (not this file in particular)
-
 export const ModelDisplay = ({modelId}: Props) => {
 	const {isLoaded} = useProjectContext()
 	if(!isLoaded){
@@ -104,7 +101,6 @@ const ModelSidebar = () => {
 				values={project.collisionGroups}
 				value={model.collisionGroupId}
 				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
-				// TODO: plural here
 				modal={onClose => <CollisionGroupsModal onClose={onClose} value={model.collisionGroupId}/>}
 			/>
 			<NamedIdSelector
@@ -112,7 +108,6 @@ const ModelSidebar = () => {
 				values={project.layers}
 				value={model.layerId}
 				onChange={layerId => setModel(model => ({...model, layerId}))}
-				// TODO: plural here
 				modal={onClose => <LayersModal onClose={onClose} value={model.layerId} layerType='model'/>}
 			/>
 			<Checkbox label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>

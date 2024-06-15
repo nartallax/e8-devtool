@@ -1,97 +1,101 @@
 .button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s;
+  cursor: pointer;
 
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	transition: background-color 0.15s;
-	cursor: pointer;
+  &.defaultVariant {
+    background-color: var(--color-interactive);
+    border: var(--default-border);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--default-border-radius);
+  }
 
-	&.defaultVariant {
-		background-color: var(--color-interactive);
-		border: var(--default-border);
-		padding: 0.25rem 0.5rem;
-		border-radius: var(--default-border-radius);
-	}
+  &.largePlainIconVariant,
+  &.plainIconVariant {
+    background-color: transparent;
+    padding: 0.25rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    text-align: center;
+    border-radius: var(--default-border-radius);
+  }
 
-	&.largePlainIconVariant,
-	&.plainIconVariant {
-		background-color: transparent;
-		padding: 0.3rem;
-		width: 1.7rem;
-		height: 1.7rem;
-		text-align: center;
-		border-radius: var(--default-border-radius);
-	}
+  &.largePlainIconVariant {
+    width: 2.3rem;
+    height: 2.3rem;
 
-	&.largePlainIconVariant {
-		width: 2rem;
-		height: 2rem;
+    .icon {
+      font-size: 1.5rem;
+    }
+  }
 
-		.icon {
-			font-size: 1.25rem;
-		}
-	}
+  &.tabVariant {
+    background-color: var(--color-interactive);
+    border: var(--default-border);
+    padding: 0.25rem 0.5rem;
+    margin-top: 0.25rem;
+    border-radius: var(--default-border-radius) var(--default-border-radius) 0 0;
+    border-bottom: 0;
+    transition: padding-bottom 0.15s linear, margin-top 0.15s linear,
+      background-color 0.25s;
 
-	&.tabVariant {
-		background-color: var(--color-interactive);
-		border: var(--default-border);
-		padding: 0.25rem 0.5rem;
-		margin-top: 0.25rem;
-		border-radius: var(--default-border-radius) var(--default-border-radius) 0 0;
-		border-bottom: 0;
-		transition: padding-bottom 0.15s linear, margin-top 0.15s linear, background-color 0.25s;
+    &.isActive {
+      padding-bottom: 0.5rem;
+      // setting it to 0.01 instead of 0 helps with rounding error that can happen during animation
+      margin-top: 0.01rem;
+      background-color: var(--color-interactive-focus);
+    }
+  }
 
-		&.isActive {
-			padding-bottom: 0.5rem;
-			margin-top: 0;
-			background-color: var(--color-interactive-focus);
-		}
-	}
+  &:focus,
+  &:hover {
+    background-color: var(--color-interactive-focus);
+  }
 
-	&:focus, &:hover {
-		background-color: var(--color-interactive-focus);
-	}
+  &:active {
+    background-color: var(--color-interactive-active);
+  }
 
-	&:active {
-		background-color: var(--color-interactive-active);
-	}
+  &[disabled] {
+    background-color: var(--color-interactive-disabled);
+    color: var(--color-font-disabled);
+  }
 
-	&[disabled]{
-		background-color: var(--color-interactive-disabled);
-		color: var(--color-font-disabled);
-	}
+  &.isPressed {
+    background: radial-gradient(
+      circle at center,
+      #aaa 0,
+      #aaa 50%,
+      transparent 50%,
+      transparent 100%
+    );
+    animation-name: growingcircle;
+    animation-duration: var(--holdTimeUntilAction);
+    animation-iteration-count: 1;
+    animation-timing-function: ease-out;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+  }
 
-	&.isPressed {
-		background: radial-gradient(circle at center, #aaa 0, #aaa 50%, transparent 50%, transparent 100%);
-		animation-name: growingcircle;
-		animation-duration: var(--holdTimeUntilAction);
-		animation-iteration-count: 1;
-		animation-timing-function: ease-out;
-		background-repeat: no-repeat;
-		background-position: 50% 50%;
-	}
-	
-	&.isError {
-		color: var(--color-error);
-	}
+  &.isError {
+    color: var(--color-error);
+  }
 
-	.icon {
-		display: inline;
-	}
-
-	.text {
-		font-size: 1rem;
-	}
+  .icon {
+    display: inline;
+  }
 }
 
 @keyframes growingcircle {
   0% {
-	background-size: 0% 0%;
+    background-size: 0% 0%;
   }
-  
+
   100% {
-	background-size: 200% 200%;
+    background-size: 200% 200%;
   }
 }

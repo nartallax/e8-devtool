@@ -283,8 +283,9 @@ let result = tseslint.config(
 		"react/style-prop-object": ["error"],
 		"react/void-dom-elements-no-children": ["error"],
 		"react-hooks/rules-of-hooks": ["error"],
-    	"react-hooks/exhaustive-deps": ["warn"],
+    "react-hooks/exhaustive-deps": ["warn"],
 		"react/destructuring-assignment": ["error"],
+		"react/display-name": ["off"],
 
 	}
 }

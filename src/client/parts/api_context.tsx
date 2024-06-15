@@ -7,7 +7,6 @@ import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {PropsWithChildren, createContext, useContext, useEffect, useRef, useState} from "react"
 import {ConfigFile} from "server/config"
 
-// TODO: why TF we have two API clients
 class DevtoolApiClient extends ApiClient {
 	constructor() {
 		super("/api/", "POST")
@@ -56,4 +55,8 @@ export function useApi(...args: unknown[]): [unknown, SetState<unknown>] {
 	}, deps)
 
 	return [result, setResult]
+}
+
+export const useApiClient = (): DevtoolApiClient => {
+	return useContext(ApiContext).client
 }

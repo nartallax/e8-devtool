@@ -51,12 +51,6 @@ export const useWorkbenchInput = ({setBenchState, rootRef, pointerEventToWorkben
 			distanceBeforeMove: 2,
 			element: root,
 			start: e => {
-				// TODO: overlays...?
-				// if(e.target !== container && !hasParent(e.target, contentPlain)){
-				// // this prevents drag from start on overlay items
-				// // which is usually the right thing to do
-				// 	return false
-				// }
 				setBenchState(({x, y, zoom}) => {
 					startCursorPos = pointerEventToWorkbenchCoords(e)
 					startCenterPos = {x, y}
