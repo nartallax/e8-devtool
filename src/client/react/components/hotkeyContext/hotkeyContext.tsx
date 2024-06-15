@@ -5,6 +5,7 @@ type HotkeyHandler = {
 	/** Reference to element that will receive the hotkey
 	Only used for determining priority of calling the handlers */
 	ref: RefObject<HTMLElement | SVGElement>
+	// TODO: why is this optional? wtf
 	shouldPick?: (e: KeyboardEvent) => boolean
 	onPress: (e: KeyboardEvent) => void
 }
@@ -27,6 +28,7 @@ export const HotkeyContextProvider = ({children}: PropsWithChildren) => {
 				eligibleHandlers.push(handler)
 			}
 		}
+
 
 		for(const handler of findBestHandlers(eligibleHandlers)){
 			handler.onPress(e)

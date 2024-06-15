@@ -6,6 +6,7 @@ import {PropsWithChildren, createContext, useContext, useState} from "react"
 const projectContextDefault = {
 	project: makeBlankProject(),
 	setProject: null as unknown as SetState<Project>,
+	// TODO: remove this; this should be handled on app level
 	isLoaded: false
 }
 
