@@ -1,0 +1,42 @@
+.toast {
+  max-width: 25rem;
+  min-height: 4rem;
+  border-radius: var(--default-border-radius);
+  border: var(--default-border);
+  background-color: var(--color-foreground);
+  padding: 0.5 1rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.toastIcon {
+  font-size: 3rem;
+
+  &.isStepRotating {
+    animation: spinner 0.5s steps(8, end) infinite;
+  }
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toastList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.25rem;
+}

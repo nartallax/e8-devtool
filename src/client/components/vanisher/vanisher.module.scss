@@ -1,11 +1,15 @@
 .vanisher {
-	flex: 1 1 auto;
-	align-self: stretch;
-	display: flex;
-	flex-direction: column;
+  flex: 1 1 auto;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
 
-	&.vanishing {
-		position: absolute;
-		pointer-events: none;
-	}
+  &.noStretch {
+    align-self: auto;
+  }
+
+  &.vanishing {
+    position: absolute;
+    pointer-events: none;
+  }
 }

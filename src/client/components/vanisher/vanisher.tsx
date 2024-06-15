@@ -2,6 +2,7 @@ import {CSSProperties, PropsWithChildren, useLayoutEffect, useRef, useState} fro
 
 import * as css from "./vanisher.module.scss"
 import {MinMaxableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
+import {cn} from "client/ui_utils/classname"
 
 type Props<K extends keyof CSSProperties = keyof CSSProperties> = {
 	property?: K
@@ -10,8 +11,10 @@ type Props<K extends keyof CSSProperties = keyof CSSProperties> = {
 	width?: MinMaxableSize
 	height?: MinMaxableSize
 	position?: "relative" | "absolute" | "fixed" | "static"
+	retainPosition?: boolean
 	zeroInset?: boolean
 	duration?: number
+	noStretch?: boolean
 }
 
 /** Component that slowly appears when mounted and slowly disappears after unmounted */
@@ -24,7 +27,9 @@ export const Vanisher = ({
 	height,
 	position = "static",
 	zeroInset = false,
-	duration = 250
+	duration = 250,
+	retainPosition = false,
+	noStretch = false
 }: PropsWithChildren<Props>) => {
 	const ref = useRef<HTMLDivElement>(null)
 	const [isVisible, setIsVisible] = useState(false)
@@ -58,12 +63,17 @@ export const Vanisher = ({
 			if(!el || !parent){
 				return
 			}
+			const nextSibling = el.nextSibling
 
 			const posParent = findNearestPositionedParent(el)
-			storeOnscreenLocation(posParent, el)
+			storeOnscreenLocation(posParent, el, retainPosition)
 
 			requestAnimationFrame(() => {
-				parent.appendChild(el)
+				if(nextSibling){
+					parent.insertBefore(el, nextSibling)
+				} else {
+					parent.appendChild(el)
+				}
 				requestAnimationFrame(() => {
 					el.style.setProperty(property, emptyValue + "")
 				})
@@ -71,16 +81,16 @@ export const Vanisher = ({
 
 			setTimeout(() => el.remove(), duration)
 		}
-	}, [property, emptyValue, duration])
+	}, [property, emptyValue, duration, retainPosition])
 
 	return (
-		<div className={css.vanisher} ref={ref} style={style}>
+		<div className={cn(css.vanisher, {[css.noStretch!]: noStretch})} ref={ref} style={style}>
 			{children}
 		</div>
 	)
 }
 
-const storeOnscreenLocation = (parent: HTMLElement, el: HTMLElement): void => {
+const storeOnscreenLocation = (parent: HTMLElement, el: HTMLElement, retainPosition: boolean): void => {
 	const childRect = el.getBoundingClientRect()
 	const parentRect = parent.getBoundingClientRect()
 	el.style.left = (childRect.left - parentRect.left) + "px"
@@ -88,7 +98,9 @@ const storeOnscreenLocation = (parent: HTMLElement, el: HTMLElement): void => {
 	el.style.width = childRect.width + "px"
 	el.style.height = childRect.height + "px"
 	el.classList.add(css.vanishing!)
-	el.style.position = "" // it may be set to "static" for example, which will break slow-fade
+	if(!retainPosition){
+		el.style.position = "absolute"
+	}
 }
 
 const findNearestPositionedParent = (el: HTMLElement): HTMLElement => {

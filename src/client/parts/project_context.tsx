@@ -6,7 +6,7 @@ import {Project, makeBlankProject} from "data/project"
 export const [ProjectProvider, useProjectContext] = defineContext({
 	name: "ProjectContext",
 	useValue: () => {
-		const [project, setProject, isLoaded] = useApi(makeBlankProject(), api => api.getProject(), [])
+		const [project, setProject, {isLoaded}] = useApi(makeBlankProject(), api => api.getProject(), [])
 		return {project, setProject, isLoaded}
 	}
 })

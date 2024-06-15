@@ -2,6 +2,8 @@ import {Form} from "client/components/form/form"
 import {HotkeyContextProvider} from "client/components/hotkey_context/hotkey_context"
 import {RootRoutingContextProvider} from "client/components/router/routing_context"
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
+import {ToastProvider} from "client/components/toast/toast_context"
+import {ToastDisplay} from "client/components/toast/toast_list"
 import {ApiProvider} from "client/parts/api_context"
 import {AtlasPage} from "client/parts/atlas_page/atlas_page"
 import {ConfigProvider, useConfigContext} from "client/parts/config_context"
@@ -21,21 +23,23 @@ export const App = () => {
 }
 
 const Providers = ({children}: PropsWithChildren) => (
-	<HotkeyContextProvider>
-		<ApiProvider>
-			<RootRoutingContextProvider>
-				<TextureTreeProvider>
-					<ProjectProvider>
-						<ConfigProvider>
-							<Form>
-								{children}
-							</Form>
-						</ConfigProvider>
-					</ProjectProvider>
-				</TextureTreeProvider>
-			</RootRoutingContextProvider>
-		</ApiProvider>
-	</HotkeyContextProvider>
+	<ToastProvider>
+		<HotkeyContextProvider>
+			<ApiProvider>
+				<RootRoutingContextProvider>
+					<TextureTreeProvider>
+						<ProjectProvider>
+							<ConfigProvider>
+								<Form>
+									{children}
+								</Form>
+							</ConfigProvider>
+						</ProjectProvider>
+					</TextureTreeProvider>
+				</RootRoutingContextProvider>
+			</ApiProvider>
+		</HotkeyContextProvider>
+	</ToastProvider>
 )
 
 const Content = () => {
@@ -70,6 +74,7 @@ const Content = () => {
 					}
 				]}
 			/>
+			<ToastDisplay/>
 		</>
 	)
 }
