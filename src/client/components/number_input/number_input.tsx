@@ -1,7 +1,7 @@
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {FormField} from "client/components/form/form_field"
 import {useRef} from "react"
-import {TextInputBase} from "client/components/text_input/text_input_base"
+import {TextInput} from "client/components/text_input/text_input"
 
 type Props = FormInputProps<number> & {
 	value: number
@@ -74,7 +74,7 @@ export const NumberInputField = ({value, onChange, step = 0.0001, min = Number.N
 
 	return (
 		<FormField id={id} onLabelClick={() => ref.current?.focus()}>
-			<TextInputBase
+			<TextInput
 				value={stringify(value, step)}
 				onChange={handleChange}
 				inputRef={ref}

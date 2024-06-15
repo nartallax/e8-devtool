@@ -26,7 +26,6 @@ export type TreeControls = {
 	setInlineEditPath: SetState<TreePath | null>
 }
 
-// TODO: search?
 export const TreeView = <L, B>({
 	onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, onBranchLabelEditCancel, onLeafLabelEditCancel,
 	controlRef, tree, ...props

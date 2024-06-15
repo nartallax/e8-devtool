@@ -1,8 +1,9 @@
 import {Validators, ValidatorsMaybeFactory} from "client/components/form/validators"
 import {Row} from "client/components/row_col/row_col"
+import {SearchInput} from "client/components/text_input/search_input"
 import {TreeControls, TreeView, TreeViewProps} from "client/components/tree_view/tree_view"
 import {AbortError} from "client/ui_utils/abort_error"
-import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath} from "common/tree"
+import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -33,6 +34,7 @@ export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends Nullable
 	// called when user refuses to input name of new tree element
 	onLeafCreateCancel?: (id: UUID) => void
 	selectedValue?: UUID | null
+	isSearchable?: boolean
 }
 
 type NoNameId<T> = Omit<T, "name" | "id">
@@ -43,7 +45,7 @@ export type MappedNamedIdTreeControls<L, B> = {
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, isSearchable, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -178,14 +180,52 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		}
 	}, [makeNewChild, addRenameNode])
 
+	const [searchText, setSearchText] = useState("")
+	const [filteredTree, isForceExpanded] = useMemo(() => {
+		if(!searchText){
+			return [tree, false]
+		}
+		const text = searchText.toLowerCase()
+
+		let leafCount = 0
+		const resultTree = filterForestLeaves(tree, leaf => {
+			if(leaf.name.toLowerCase().indexOf(text) >= 0){
+				leafCount++
+				return true
+			}
+			return false
+		})
+
+		// if we have found more than 50 leaves - expanding will be chaos, so let's not
+		// no strong theory behind this value, just something that feels right
+		return [resultTree, leafCount < 50]
+	}, [searchText, tree])
+
+	const onSearchAccept = () => {
+		const firstLeaf = getFirstTreeLeaf(filteredTree)
+		if(!firstLeaf){
+			return
+		}
+		if(props.onLeafDoubleclick){
+			props.onLeafDoubleclick(firstLeaf)
+		}
+	}
+
 	return (
 		<>
 			{!!buttons && <Row justify="start" gap>
 				{buttons(mappedControls)}
 			</Row>}
+			{!!isSearchable && <SearchInput
+				onChange={setSearchText}
+				inputWaitTime={250}
+				isAutofocused
+				onAccept={onSearchAccept}
+			/>}
 			<TreeView
 				{...props}
-				tree={tree}
+				isEverythingExpanded={isForceExpanded}
+				tree={filteredTree}
 				controlRef={treeControls}
 				getLeafKey={({id}) => id + ""}
 				getLeafLabel={({name}) => name}

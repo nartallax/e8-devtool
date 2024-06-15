@@ -38,8 +38,13 @@ export function isTreeBranch<T, B>(x: Tree<T, B>): x is TreeBranch<T, B> {
 	return "children" in x
 }
 
-export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[TreeBranch<T, B>[], T]> {
-	return getTreeLeavesInternal(tree, [])
+export function getFirstTreeLeaf<T, B>(forest: Tree<T, B>[]): T | null {
+	for(const tree of forest){
+		for(const [, leaf] of getTreeLeaves(tree)){
+			return leaf
+		}
+	}
+	return null
 }
 
 export const getForestLeavesAsArray = <T, B>(forest: Tree<T, B>[], result: T[] = []): T[] => {
@@ -51,6 +56,10 @@ export const getForestLeavesAsArray = <T, B>(forest: Tree<T, B>[], result: T[] =
 		}
 	}
 	return result
+}
+
+export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[TreeBranch<T, B>[], T]> {
+	return getTreeLeavesInternal(tree, [])
 }
 
 function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[TreeBranch<T, B>[], T]> {
@@ -105,6 +114,10 @@ export function findOneLeaf<T, B>(tree: Tree<T, B>, isThisIt: (value: T) => bool
 	return undefined
 }
 
+export function filterForestLeaves<T, B>(forest: Tree<T, B>[], shouldKeepLeaf: (value: T) => boolean): Tree<T, B>[] {
+	return forest.map(tree => filterTreeLeaves(tree, shouldKeepLeaf)).filter(nonNull)
+}
+
 export function filterTreeLeaves<T, B>(tree: Tree<T, B>, shouldKeepLeaf: (value: T) => boolean): Tree<T, B> | null {
 	if(isTreeLeaf(tree)){
 		if(!shouldKeepLeaf(tree.value)){
@@ -117,7 +130,7 @@ export function filterTreeLeaves<T, B>(tree: Tree<T, B>, shouldKeepLeaf: (value:
 		.map(x => filterTreeLeaves(x, shouldKeepLeaf))
 		.filter(nonNull)
 
-	return {children: newChildren, value: tree.value}
+	return newChildren.length === 0 ? null : {children: newChildren, value: tree.value}
 }
 
 export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T) => R): Tree<R, B> {

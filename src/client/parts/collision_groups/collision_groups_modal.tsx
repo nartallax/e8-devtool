@@ -56,7 +56,7 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 				header="This collision group is in use"
 				body={getDeletionConflictMessage(conflictingModels)}
 				onClose={() => setConflictingModels([])}
-			   />}
+			/>}
 					<MappedNamedIdTreeView
 						selectedValue={value}
 						onLeafClick={leaf => setValue(leaf.id)}

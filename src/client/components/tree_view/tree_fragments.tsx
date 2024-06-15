@@ -38,6 +38,8 @@ type BaseProps<L, B> = {
 	leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
 	branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
 	selectedPath?: TreePath
+	// eslint-disable-next-line react/no-unused-prop-types
+	isEverythingExpanded?: boolean
 	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>}) => React.ReactNode
 }
 
@@ -57,18 +59,19 @@ export type TreeBranchChildrenProps<L, B> = BaseProps<L, B> & {
 	tree: Tree<L, B>[]
 }
 
-const TreeBranch = <T, B>({branch, ...props}: BranchProps<T, B>) => {
+const TreeBranch = <T, B>({branch, isEverythingExpanded, ...props}: BranchProps<T, B>) => {
 	const [isExpanded, setExpanded] = useState(false)
+	const isEffectiveExpanded = isExpanded || isEverythingExpanded
 
 	return (
 		<>
 			<TreeRow
 				row={branch}
 				{...props}
-				isExpanded={isExpanded}
+				isExpanded={isEffectiveExpanded}
 				onExpandChange={() => setExpanded(exp => !exp)}
 			/>
-			{!!isExpanded && <div className={css.treeChildrenWrap}>
+			{!!isEffectiveExpanded && <div className={css.treeChildrenWrap}>
 				<TreeBranchChildren
 					{...props}
 					squares={props.squares ?? []}
@@ -127,7 +130,7 @@ const TreeRow = <T, B>({
 			icon={Icon.plus}
 			onClick={() => onAddChild(path)}
 			key="add-child"
-		             />)
+		/>)
 	}
 
 	const canEdit = !!(isTreeBranch(row) ? canEditBranchLabel : canEditLeafLabel)
@@ -137,7 +140,7 @@ const TreeRow = <T, B>({
 			icon={Icon.pencil}
 			onClick={() => setInlineEditPath(path)}
 			key="edit"
-		             />)
+		/>)
 	}
 
 	const canDelete = !!(isTreeBranch(row) ? canDeleteBranch : canDeleteLeaf)
@@ -147,7 +150,8 @@ const TreeRow = <T, B>({
 			icon={Icon.close}
 			onClick={() => onNodeDelete(path, row)}
 			holdTimeUntilAction={500}
-			key="delete"/>)
+			key="delete"
+		/>)
 	}
 
 	const buttonsEl = buttons.length === 0 ? null : <div className={css.rowButtons}>{buttons}</div>

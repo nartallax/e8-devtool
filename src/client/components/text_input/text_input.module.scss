@@ -1,10 +1,28 @@
-.textInputBase {
+.textInputBaseWrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  gap: 0.25rem;
   border: var(--default-border);
   border-radius: var(--default-border-radius);
   background-color: var(--color-interactive);
-  transition: background-color 0.15s;
+}
+
+.textInputIcon {
+  color: var(--color-font);
+  font-size: 1.25rem;
+  line-height: 1em;
   padding: 0.25rem;
+}
+
+.textInputBase {
+  border-radius: var(--default-border-radius);
+  background-color: var(--color-interactive);
+  transition: background-color 0.15s;
   flex: 1 1 0;
+  padding: 0.25rem;
   min-width: 3rem;
   line-height: 1.5rem;
 

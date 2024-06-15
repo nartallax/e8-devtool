@@ -56,7 +56,7 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 						header="This layer is in use"
 						body={getDeletionConflictMessage(deletionConflictModels)}
 						onClose={() => setDeletionConflictModels([])}
-					   />}
+					/>}
 					<MappedNamedIdTreeView
 						selectedValue={value}
 						onLeafClick={leaf => leaf.type === layerType && setValue(leaf.id)}

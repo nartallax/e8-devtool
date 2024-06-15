@@ -14,7 +14,7 @@ export const ToastDisplay = () => {
 					&& <div className={cn(css.toastIcon, toast.icon, {
 						[css.isStepRotating!]: toast.isStepRotating
 					})}
-					   />}
+					/>}
 						<div>{toast.text}</div>
 					</div>
 				</Vanisher>

@@ -166,7 +166,7 @@ let result = tseslint.config(
 		"react/jsx-child-element-spacing": ["warn"],
 		"react/jsx-closing-bracket-location": ["warn", {
 			"nonEmpty": "after-props",
-			"selfClosing": "tag-aligned"
+			"selfClosing": "line-aligned"
 		}],
 		// it's too stupid for cases like `cond && <div>\ntext\n</div>`
 		"react/jsx-closing-tag-location": ["off"],

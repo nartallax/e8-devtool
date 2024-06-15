@@ -37,7 +37,7 @@ export const Modal = ({header, onClose, contentWidth, contentHeight, children}: 
 									variant="plain-icon"
 									onClick={onClose}
 									hotkey={e => e.key === "Escape"}
-								              />}
+								/>}
 							</div>
 							<div className={css.modalBody} style={bodyStyle}>
 								{children}

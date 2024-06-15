@@ -89,6 +89,7 @@ export const ModelSelector = () => {
 		<CentralColumn>
 			{alertText && <AlertModal header="Error" body={alertText} onClose={() => setAlertText("")}/>}
 			<MappedNamedIdTreeView
+				isSearchable
 				values={project.modelTree}
 				toTree={node => mapTreeLeaves(node, id => ({id, name: modelMap.get(id)!.name}))}
 				fromTree={node => mapTreeLeaves(node, namedId => namedId.id)}
