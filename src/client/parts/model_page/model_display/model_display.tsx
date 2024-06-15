@@ -15,7 +15,7 @@ import {ModelShapeLayer} from "client/parts/model_page/model_display/model_shape
 import {ModelTextureLayer} from "client/parts/model_page/model_display/model_texture_layer"
 import {TexturesModal} from "client/parts/textures/textures_modal"
 import {NamedIdSelector} from "client/parts/named_id_selector/named_id_selector"
-import {useProject, useProjectContext} from "client/parts/project_context"
+import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
 import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectShape} from "data/project"
@@ -27,11 +27,6 @@ type Props = {
 }
 
 export const ModelDisplay = ({modelId}: Props) => {
-	const {isLoaded} = useProjectContext()
-	if(!isLoaded){
-		return null
-	}
-
 	return (
 		<ModelDisplayContextProvider modelId={modelId}>
 			<SidebarLayout>

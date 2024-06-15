@@ -4,50 +4,72 @@ import {RootRoutingContextProvider} from "client/components/router/routing_conte
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
 import {ApiProvider} from "client/parts/api_context"
 import {AtlasPage} from "client/parts/atlas_page/atlas_page"
-import {ConfigProvider} from "client/parts/config_context"
+import {ConfigProvider, useConfigContext} from "client/parts/config_context"
 import {GlobalHotkeyManager} from "client/parts/global_hotkey_manager"
 import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
 import {ModelPage} from "client/parts/model_page/model_page"
-import {ProjectProvider} from "client/parts/project_context"
-import {TextureTreeProvider} from "client/parts/texture_tree_context"
+import {ProjectProvider, useProjectContext} from "client/parts/project_context"
+import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
+import {PropsWithChildren} from "react"
 
 export const App = () => {
 	return (
-		// TODO: don't show anything, or show spinner, until all the data is loaded
-		<HotkeyContextProvider>
-			<ApiProvider>
-				<RootRoutingContextProvider>
-					<TextureTreeProvider>
-						<ProjectProvider>
-							<ConfigProvider>
-								<Form>
-									<GlobalHotkeyManager/>
-									<TabsAndRouter
-										tabs={[
-											{
-												suffix: "/models",
-												text: "Models",
-												isDefault: true,
-												render: () => <ModelPage/>
-											},
-											{
-												suffix: "/inputs",
-												text: "Inputs",
-												render: () => <InputBindPage/>
-											},
-											{
-												suffix: "/atlas",
-												text: "Atlas",
-												render: () => <AtlasPage/>
-											}
-										]}
-									/>
-								</Form>
-							</ConfigProvider>
-						</ProjectProvider>
-					</TextureTreeProvider>
-				</RootRoutingContextProvider>
-			</ApiProvider>
-		</HotkeyContextProvider>
+		<Providers>
+			<Content/>
+		</Providers>
+	)
+}
+
+const Providers = ({children}: PropsWithChildren) => (
+	<HotkeyContextProvider>
+		<ApiProvider>
+			<RootRoutingContextProvider>
+				<TextureTreeProvider>
+					<ProjectProvider>
+						<ConfigProvider>
+							<Form>
+								{children}
+							</Form>
+						</ConfigProvider>
+					</ProjectProvider>
+				</TextureTreeProvider>
+			</RootRoutingContextProvider>
+		</ApiProvider>
+	</HotkeyContextProvider>
+)
+
+const Content = () => {
+	const {isLoaded: isTexturesLoaded} = useTextures()
+	const {isLoaded: isProjectLoaded} = useProjectContext()
+	const {isLoaded: isConfigLoaded} = useConfigContext()
+
+	if(!isTexturesLoaded || !isProjectLoaded || !isConfigLoaded){
+		return null
+	}
+
+	return (
+		<>
+			<GlobalHotkeyManager/>
+			<TabsAndRouter
+				tabs={[
+					{
+						suffix: "/models",
+						text: "Models",
+						isDefault: true,
+						render: () => <ModelPage/>
+					},
+					{
+						suffix: "/inputs",
+						text: "Inputs",
+						render: () => <InputBindPage/>
+					},
+					{
+						suffix: "/atlas",
+						text: "Atlas",
+						render: () => <AtlasPage/>
+					}
+				]}
+			/>
+		</>
 	)
 }

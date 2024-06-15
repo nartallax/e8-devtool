@@ -8,7 +8,7 @@ import {useCallback, useMemo} from "react"
 export const [TextureTreeProvider, useTextures] = defineContext({
 	name: "TextureTreeContext",
 	useValue: () => {
-		const [textureTree] = useApi([] as Tree<TextureFile, NamedId>[], api => api.getTextureFiles(), [])
+		const [textureTree,, {isLoaded}] = useApi([] as Tree<TextureFile, NamedId>[], api => api.getTextureFiles(), [])
 		const textureFiles = useMemo(() => getForestLeavesAsArray(textureTree), [textureTree])
 		const textureMap = useMemo(() => new Map(textureFiles.map(file => [file.id, file.fullPath])), [textureFiles])
 		const apiClient = useApiClient()
@@ -19,6 +19,6 @@ export const [TextureTreeProvider, useTextures] = defineContext({
 			}
 			return apiClient.getTextureUrl(path)
 		}, [textureMap, apiClient])
-		return {textureTree, textureFiles, getTextureUrl}
+		return {textureTree, textureFiles, getTextureUrl, isLoaded}
 	}
 })

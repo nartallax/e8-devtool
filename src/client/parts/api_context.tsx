@@ -31,20 +31,30 @@ const [_ApiProvider, useApiContext] = defineContext({
 })
 export const ApiProvider = _ApiProvider
 
-export function useApi<T, D>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>]
-export function useApi<T>(caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>]
-export function useApi(...args: unknown[]): [unknown, SetState<unknown>] {
+type MiscUseApiResult = {
+	isLoaded: boolean
+	isError: boolean
+}
+
+export function useApi<T, D>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>, MiscUseApiResult]
+export function useApi<T>(caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>, MiscUseApiResult]
+export function useApi(...args: unknown[]): [unknown, SetState<unknown>, MiscUseApiResult] {
 	const defaultValue = args.length === 2 ? null : args[0]
 	const caller = (args.length === 2 ? args[0] : args[1]) as (api: DevtoolApiClient) => Promise<unknown>
 	const deps = (args.length === 2 ? args[1] : args[2]) as unknown[]
 
 	const [result, setResult] = useState<unknown>(defaultValue)
+	const [miscResult, setMiscResult] = useState<MiscUseApiResult>({isLoaded: false, isError: false})
 	const {client} = useApiContext()
 
 	useEffect(() => {
 		caller(client).then(
-			callResult => setResult(callResult),
+			callResult => {
+				setResult(callResult)
+				setMiscResult({isLoaded: true, isError: false})
+			},
 			error => {
+				setMiscResult({isLoaded: true, isError: true})
 				console.error(error)
 				// FIXME: toaster here?
 			}
@@ -52,7 +62,7 @@ export function useApi(...args: unknown[]): [unknown, SetState<unknown>] {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, deps)
 
-	return [result, setResult]
+	return [result, setResult, miscResult]
 }
 
 export const useApiClient = (): DevtoolApiClient => {
