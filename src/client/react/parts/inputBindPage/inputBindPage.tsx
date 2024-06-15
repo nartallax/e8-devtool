@@ -52,11 +52,14 @@ export const InputBindPage = () => {
 					return !group ? null : `(${group.name})`
 				}}
 				onLeafDoubleclick={bind => setEditedBind(bind)}
-				buttons={(controls: MappedNamedIdTreeControls<ProjectInputBind, ProjectInputBindSet>) => (<Button
-					text="Add bind set"
-					icon={Icon.filePlus}
-					onClick={() => controls.addRenameBranch({binds: []})}/>
-				)}/>
+				buttons={(controls: MappedNamedIdTreeControls<ProjectInputBind, ProjectInputBindSet>) => (
+					<Button
+						text="Add bind set"
+						icon={Icon.filePlus}
+						onClick={() => controls.addRenameBranch({binds: []})}
+					/>
+				)}
+			/>
 		</CentralColumn>
 	)
 }

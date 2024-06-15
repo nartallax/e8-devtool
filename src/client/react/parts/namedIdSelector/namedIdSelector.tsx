@@ -4,10 +4,20 @@ import {UUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useState} from "react"
 
-type Props = FormInputProps<UUID | null> & (GetLabelProps | ValuesProps) & {
-	readonly value: UUID | null
-	readonly onChange: (value: UUID | null) => void
-	readonly modal: (onClose: (newValue?: UUID | null) => void) => React.ReactNode
+type Props = NullableProps | NonNullableProps
+
+type NonNullableProps = PropsFor<UUID> & {
+	isNullable?: false
+}
+
+type NullableProps = PropsFor<UUID | null> & {
+	isNullable: true
+}
+
+type PropsFor<T> = FormInputProps<T> & (GetLabelProps | ValuesProps) & {
+	readonly value: T
+	readonly onChange: (value: T) => void
+	readonly modal: (onClose: (newValue?: T) => void) => React.ReactNode
 	readonly absentValueLabel?: string
 }
 
@@ -22,14 +32,16 @@ type ValuesProps = {
 const isGetLabelProps = (props: unknown): props is GetLabelProps => !!props && typeof(props) === "object" && "getLabel" in props
 const isValuesProps = (props: unknown): props is ValuesProps => !!props && typeof(props) === "object" && "values" in props
 
-export const NamedIdSelector = ({value, onChange, modal, absentValueLabel = "<none>", ...props}: Props) => {
+export const NamedIdSelector = ({value, onChange, modal, absentValueLabel = "<none>", isNullable, ...props}: Props) => {
 	const [isOpen, setOpen] = useState(false)
 	const onClose = useCallback((newValue?: UUID | null) => {
 		setOpen(false)
 		if(newValue !== undefined){
-			onChange(newValue)
+			if(isNullable || newValue !== null){
+				onChange(newValue!)
+			}
 		}
-	}, [onChange])
+	}, [onChange, isNullable])
 
 	const values = isValuesProps(props) ? props.values : null
 	const getLabel = isGetLabelProps(props) ? props.getLabel : null
@@ -52,9 +64,10 @@ export const NamedIdSelector = ({value, onChange, modal, absentValueLabel = "<no
 			{!!isOpen && modal(onClose)}
 			<ValueSelector
 				{...props}
-				value={value}
+				value={value!}
 				onRequestValueChange={() => setOpen(true)}
-				getLabel={resolver}/>
+				getLabel={resolver}
+			/>
 		</>
 	)
 }

@@ -77,23 +77,30 @@ export const CollisionGridModal = ({onClose}: Props) => {
 					<div className={css.rows}>
 						<div className={css.row} key='labels'>
 							{project.collisionGroups.map(group =>
-								(<div className={css.topLabelContainer} key={group.id}>
-									<div className={css.topLabel}>
-										{group.name}
+								(
+									<div className={css.topLabelContainer} key={group.id}>
+										<div className={css.topLabel}>
+											{group.name}
+										</div>
 									</div>
-								</div>))}
+								))}
 						</div>
-						{project.collisionGroups.map(groupA => (<div className={css.row} key={groupA.id}>
-							<div key='name'>
-								{groupA.name}
+						{project.collisionGroups.map(groupA => (
+							<div className={css.row} key={groupA.id}>
+								<div key='name'>
+									{groupA.name}
+								</div>
+								{project.collisionGroups.map(groupB =>
+									(
+										<PairCheckbox
+											key={groupB.id}
+											onChange={onChange}
+											map={pairMap}
+											pair={[groupA.id, groupB.id]}
+										/>
+									))}
 							</div>
-							{project.collisionGroups.map(groupB =>
-								(<PairCheckbox
-									key={groupB.id}
-									onChange={onChange}
-									map={pairMap}
-									pair={[groupA.id, groupB.id]}/>))}
-						</div>))}
+						))}
 					</div>
 				</Col>
 				<ModalSubmitCancelButtons onCancel={onClose}/>
@@ -116,6 +123,7 @@ const PairCheckbox = ({pair, map, onChange}: CheckboxProps) => {
 			className={css.checkbox}
 			type="checkbox"
 			checked={!!isChecked}
-			onChange={() => onChange(pair, !isChecked)}/>
+			onChange={() => onChange(pair, !isChecked)}
+		/>
 	)
 }

@@ -43,7 +43,8 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 						}))}
 						buttons={controls => <Button text="Add input group" icon={Icon.plus} onClick={() => controls.addRenameLeaf({})}/>}
 						onLeafClick={group => setCurrentValue(group.id)}
-						onLeafDoubleclick={leaf => onClose(leaf.id === zeroUUID ? null : leaf.id)}/>
+						onLeafDoubleclick={leaf => onClose(leaf.id === zeroUUID ? null : leaf.id)}
+					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
 			</Form>

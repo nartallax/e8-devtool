@@ -7,12 +7,14 @@ import {TooltipIcon} from "client/react/components/overlayItem/tooltipIcon"
 import {Row} from "client/react/components/rowCol/rowCol"
 import {Sidebar, SidebarLayout} from "client/react/components/sidebarLayout/sidebarLayout"
 import {Workbench} from "client/react/components/workbench/workbench"
+import {CollisionGroupModal} from "client/react/parts/modelPage/collisionGroup/collisionGroupModal"
 import {ModelDecompLayer} from "client/react/parts/modelPage/modelDecompLayer"
 import {ModelDisplayContextProvider, useModelDisplayContext} from "client/react/parts/modelPage/modelDisplayContext"
 import {ModelGridLayer} from "client/react/parts/modelPage/modelGridLayer"
 import {ModelShapeLayer} from "client/react/parts/modelPage/modelShapesLayer"
 import {ModelTextureLayer} from "client/react/parts/modelPage/modelTextureLayer"
-import {useProjectContext} from "client/react/parts/projectContext"
+import {NamedIdSelector} from "client/react/parts/namedIdSelector/namedIdSelector"
+import {useProject, useProjectContext} from "client/react/parts/projectContext"
 import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectShape} from "data/project"
 import {Icon} from "generated/icons"
@@ -41,6 +43,7 @@ export const ModelDisplay = ({modelId}: Props) => {
 }
 
 const ModelSidebar = () => {
+	const [project] = useProject()
 	// TODO: move isShowing... from context to state in parent control
 	// just to avoid re-rendering workbench stuff
 	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, isShowingShapes, setShowShapes, isShowingDecomp, setShowDecomp, isShowingGrid, setShowGrid, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
@@ -72,6 +75,13 @@ const ModelSidebar = () => {
 
 	return (
 		<>
+			<NamedIdSelector
+				label="Collision"
+				values={project.collisionGroups}
+				value={model.collisionGroupId}
+				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
+				modal={onClose => <CollisionGroupModal onClose={onClose} value={model.collisionGroupId}/>}
+			/>
 			<Checkbox label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
 			<NumberInput
 				label="Width"

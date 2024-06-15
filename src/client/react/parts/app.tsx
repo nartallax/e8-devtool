@@ -4,7 +4,6 @@ import {RoutingContextProvider} from "client/react/components/router/routingCont
 import {TabsAndRouter} from "client/react/components/tabs/tabsAndRouter"
 import {ApiProvider} from "client/react/parts/apiContext"
 import {AtlasPage} from "client/react/parts/atlasPage/atlasPage"
-import {CollisionGroupPage} from "client/react/parts/collisionGroupPage/collisionGroupPage"
 import {ConfigProvider} from "client/react/parts/configContext"
 import {InputBindPage} from "client/react/parts/inputBindPage/inputBindPage"
 import {LayerPage} from "client/react/parts/layerPage/layerPage"
@@ -34,11 +33,6 @@ export const App = () => {
 												text: "Layers",
 												render: () => <LayerPage/>
 											},
-											{ // TODO: remove, make it a button on model editing
-												suffix: "/collision_groups",
-												text: "Collisions",
-												render: () => <CollisionGroupPage/>
-											},
 											{
 												suffix: "/inputs",
 												text: "Inputs",
@@ -49,7 +43,8 @@ export const App = () => {
 												text: "Atlas",
 												render: () => <AtlasPage/>
 											}
-										]}/>
+										]}
+									/>
 								</Form>
 							</ConfigProvider>
 						</ProjectProvider>

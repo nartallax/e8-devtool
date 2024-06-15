@@ -35,18 +35,21 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 				<Col gap grow stretch>
 					<Checkbox label="Is hold action" value={isHold} onChange={setIsHold}/>
 					<NamedIdSelector
+						isNullable
 						label="Group"
 						values={project.inputGroups}
 						value={groupId}
 						onChange={setGroupId}
-						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}/>
+						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}
+					/>
 					<MappedNamedIdTreeView
 						values={chords}
 						toTree={chord => ({value: {id: chord.id, name: chordToString(chord.chord)}})}
 						fromTree={({value}) => ({id: value.id, chord: chordFromString(value.name)})}
 						InlineEditor={InlineTreeChordEditor}
 						onChange={setChords}
-						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf({})}/>}/>
+						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf({})}/>}
+					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
 			</Form>
