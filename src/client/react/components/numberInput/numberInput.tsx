@@ -1,6 +1,6 @@
 import {FormInputProps, useRegisterField} from "client/react/components/form/formContext"
 import {FormField} from "client/react/components/form/formField"
-import {useRef, useState} from "react"
+import {useRef} from "react"
 import * as css from "./numberInput.module.scss"
 import {cn} from "client/react/uiUtils/classname"
 
@@ -47,10 +47,9 @@ const stringify = (x: number, step: number): string => {
 }
 
 export const NumberInput = ({value, onChange, step = 0.0001, min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY, isDisabled = false, ...props}: Props) => {
-	const [strValue, setStrValue] = useState(value + "")
-
 	const {id, hasError} = useRegisterField({value, ...props})
 	const ref = useRef<HTMLInputElement | null>(null)
+
 	const handleChange = () => {
 		const input = ref.current
 		if(!input){
@@ -59,23 +58,19 @@ export const NumberInput = ({value, onChange, step = 0.0001, min = Number.NEGATI
 
 		let value = parse(input.value)
 		if(value === null){
-			setStrValue(input.value || "0")
 			return
 		}
 
 		value = Math.max(min, Math.min(max, value))
 		value = Math.round(value / step) * step
-		const parsedOldValue = parse(strValue)
-		if(parsedOldValue !== null && parsedOldValue !== value){
-			setStrValue(stringify(value, step))
-		} else {
-			setStrValue(input.value)
-		}
 		onChange(value)
 	}
 
 	const onBlur = () => {
-		setStrValue(stringify(value, step))
+		const input = ref.current
+		if(input){
+			input.value = stringify(value, step)
+		}
 	}
 
 	return (
@@ -84,7 +79,7 @@ export const NumberInput = ({value, onChange, step = 0.0001, min = Number.NEGATI
 				ref={ref}
 				className={cn(css.numberInput, {[css.hasError!]: hasError})}
 				type="text"
-				value={strValue}
+				defaultValue={stringify(value, step)}
 				disabled={isDisabled}
 				onPaste={handleChange}
 				onBlur={onBlur}

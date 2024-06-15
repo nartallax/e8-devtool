@@ -15,6 +15,7 @@ type Props = FormInputProps<string> & {
 export const TextInput = ({value, onChange, isDisabled, placeholder, isAutofocused, ...props}: Props) => {
 	const {id, hasError} = useRegisterField({value, ...props})
 	const ref = useRef<HTMLInputElement | null>(null)
+
 	const handleChange = () => {
 		const input = ref.current
 		if(input){

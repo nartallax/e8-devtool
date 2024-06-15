@@ -7,11 +7,11 @@ import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
 
-type Props<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
+export type MappedNamedIdTreeProps<L extends NamedId, B extends NamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
 	readonly values: readonly S[]
-	readonly onChange: (values: readonly S[]) => void
+	readonly onChange?: (values: readonly S[]) => void
 	readonly toTree: (sourceValue: S) => T
-	readonly fromTree: (tree: T) => S
+	readonly fromTree?: (tree: T) => S
 	// on..Delete handlers only exist for some special cases
 	// for example, validations - they can throw AbortError, and it will be handled
 	// simple deletion could be performed without them
@@ -37,7 +37,7 @@ export type MappedNamedIdTreeControls<L, B> = {
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, selectedValue, ...props}: Props<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, selectedValue, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -61,8 +61,12 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 	const validatorFactory = useMemo(() => labelValidatorFactory(tree), [tree])
 
 	const treeControls = useRef<TreeControls | null>(null)
+	const canUpdateValues = !!onChange && !!fromTree
 
 	const updateByTree = (newTree: readonly Tree<L, B>[]) => {
+		if(!canUpdateValues){
+			throw new Error("Cannot update source values.")
+		}
 		onChange(newTree.map(tree => fromTree(tree as T)))
 	}
 
@@ -180,15 +184,16 @@ export const MappedNamedIdTreeView = <L extends NamedId, B extends NamedId, T ex
 				leafLabelValidators={validatorFactory}
 				branchLabelValidators={validatorFactory}
 				canBeChildOf={wrappedCanBeChildOf}
-				onDrag={!canBeChildOf ? undefined : (from, to) => updateByTree(moveTreeByPath(tree, from, to))}
-				onBranchLabelEdit={editName}
-				onLeafLabelEdit={editName}
+				onDrag={!canBeChildOf || !canUpdateValues ? undefined : (from, to) => updateByTree(moveTreeByPath(tree, from, to))}
+				onBranchLabelEdit={!canUpdateValues ? undefined : editName}
+				onLeafLabelEdit={!canUpdateValues ? undefined : editName}
 				onLeafLabelEditCancel={cancelEditName}
 				onBranchLabelEditCancel={cancelEditName}
 				onLeafDelete={deleteNode}
 				onBranchDelete={deleteNode}
-				onAddChild={onAddChild}
-				selectedPath={selectedPath}/>
+				onAddChild={!canUpdateValues ? undefined : onAddChild}
+				selectedPath={selectedPath}
+			/>
 		</>
 	)
 }

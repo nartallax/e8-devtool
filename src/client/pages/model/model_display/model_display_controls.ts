@@ -66,7 +66,7 @@ export const ModelDisplayControls = (state: ModelDisplayLayersState) => {
 				text: "Auto",
 				onClick: async() => {
 					const model = state.model.get()
-					const texUrl = Api.getTextureUrl(model.texturePath)
+					const texUrl = Api.getTextureUrl(model.textureId)
 					let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, state.sizeMultiplier)
 					points = points.map(point => state.roundToGrain(point))
 					const shape: ProjectShape = {id: getRandomUUID(), points: points.map(p => [p.x, p.y])}

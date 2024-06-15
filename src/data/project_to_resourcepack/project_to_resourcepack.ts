@@ -28,7 +28,7 @@ export async function projectToResourcePack(project: Project, config: Config): P
 	const collisionGroups = namedIdsToIndexMap("collision group", project.collisionGroups)
 	const inputGroups = namedIdsToIndexMap("input group", project.inputGroups)
 	const models = allModels.map((model): Model => {
-		const texture = textureByPath.get(model.texturePath)!
+		const texture = textureByPath.get(model.textureId)!
 		return {
 			size: [model.size.x, model.size.y],
 			texture: {
@@ -72,7 +72,7 @@ export async function projectToResourcePack(project: Project, config: Config): P
 
 export async function projectToAtlasLayout(project: Project, config: Config): Promise<(SvgTextureFile & XY)[]> {
 	const allModels = getAllProjectModels(project)
-	const allTexturePaths = [...new Set(allModels.map(model => model.texturePath))]
+	const allTexturePaths = [...new Set(allModels.map(model => model.textureId))]
 	const allTextures = await readAllTextures(
 		allTexturePaths,
 		path => Path.resolve(config.textureDirectoryPath, path)

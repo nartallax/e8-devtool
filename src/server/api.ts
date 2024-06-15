@@ -7,7 +7,7 @@ import {readdirAsTree} from "common/readdir_as_tree"
 import {projectToAtlasLayout} from "data/project_to_resourcepack/project_to_resourcepack"
 import {XY} from "@nartallax/e8"
 import {getActions} from "server/actions"
-import {getRandomUUID} from "common/uuid"
+import {getHashUUID} from "common/uuid"
 import {log} from "common/log"
 
 export function getApi(config: Config): Record<string, (...args: any[]) => unknown> {
@@ -29,14 +29,15 @@ export function getApi(config: Config): Record<string, (...args: any[]) => unkno
 					return {
 						children: tree.children.map(child => convert(child, newParents)),
 						value: {
-							id: getRandomUUID(),
+							id: getHashUUID(newParents.join("/")),
 							name: tree.value
 						}
 					}
 				} else {
+					const fullPath = [...parents, tree.value].join("/")
 					return {value: {
-						id: getRandomUUID(),
-						fullPath: [...parents, tree.value].join("/"),
+						id: getHashUUID(fullPath),
+						fullPath,
 						name: tree.value
 					}}
 				}

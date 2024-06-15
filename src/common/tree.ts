@@ -42,6 +42,17 @@ export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[readonl
 	return getTreeLeavesInternal(tree, [])
 }
 
+export const getForestLeavesAsArray = <T, B>(forest: readonly Tree<T, B>[], result: T[] = []): T[] => {
+	for(const tree of forest){
+		if(isTreeBranch(tree)){
+			getForestLeavesAsArray(tree.children, result)
+		} else {
+			result.push(tree.value)
+		}
+	}
+	return result
+}
+
 function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[readonly TreeBranch<T, B>[], T]> {
 	if(isTreeLeaf(tree)){
 		yield[parents, tree.value]

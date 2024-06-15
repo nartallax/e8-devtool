@@ -1,10 +1,11 @@
 import {useModelDisplayContext} from "client/react/parts/modelPage/modelDisplayContext"
-import {Api} from "client/api_client"
 import * as css from "./modelDisplay.module.scss"
 import {useState} from "react"
+import {useTextures} from "client/react/parts/textureTreeContext"
 
 export const ModelTextureLayer = () => {
 	const {model, sizeMultiplier} = useModelDisplayContext()
+	const {getTextureUrl} = useTextures()
 	const [naturalSize, setNaturalSize] = useState({width: 1, height: 1})
 
 	const widthRatio = (sizeMultiplier / naturalSize.width) * model.size.x
@@ -13,7 +14,7 @@ export const ModelTextureLayer = () => {
 	return (
 		<img
 			className={css.workbenchLayer}
-			src={Api.getTextureUrl(model.texturePath)}
+			src={getTextureUrl(model.textureId)}
 			style={{
 				width: naturalSize.width,
 				height: naturalSize.height,

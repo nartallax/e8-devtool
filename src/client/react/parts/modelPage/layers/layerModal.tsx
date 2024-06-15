@@ -45,7 +45,7 @@ export const LayerModal = ({value: initialValue, onClose, layerType}: Props) => 
 
 	return (
 		<Modal
-			header="Collision groups"
+			header="Layers"
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>

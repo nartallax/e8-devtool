@@ -1,4 +1,3 @@
-import {Api} from "client/api_client"
 import {buildObjectShapeByImage} from "client/pages/model/model_display/auto_shape"
 import {Button} from "client/react/components/button/button"
 import {Checkbox} from "client/react/components/checkbox/checkbox"
@@ -14,11 +13,14 @@ import {ModelDisplayContextProvider, useModelDisplayContext} from "client/react/
 import {ModelGridLayer} from "client/react/parts/modelPage/modelGridLayer"
 import {ModelShapeLayer} from "client/react/parts/modelPage/modelShapesLayer"
 import {ModelTextureLayer} from "client/react/parts/modelPage/modelTextureLayer"
+import {TexturesModal} from "client/react/parts/modelPage/texturesModal/texturesModal"
 import {NamedIdSelector} from "client/react/parts/namedIdSelector/namedIdSelector"
 import {useProject, useProjectContext} from "client/react/parts/projectContext"
+import {useTextures} from "client/react/parts/textureTreeContext"
 import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectShape} from "data/project"
 import {Icon} from "generated/icons"
+import {useRef} from "react"
 
 type Props = {
 	readonly modelId: UUID
@@ -41,7 +43,6 @@ export const ModelDisplay = ({modelId}: Props) => {
 				</Sidebar>
 				<ModelWorkbench/>
 			</SidebarLayout>
-
 		</ModelDisplayContextProvider>
 	)
 }
@@ -51,6 +52,7 @@ const ModelSidebar = () => {
 	// TODO: move isShowing... from context to state in parent control
 	// just to avoid re-rendering workbench stuff
 	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, isShowingShapes, setShowShapes, isShowingDecomp, setShowDecomp, isShowingGrid, setShowGrid, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
+	const {getTextureUrl} = useTextures()
 
 	const startShapeDrawing = () => {
 		const shape: ProjectShape = {id: getRandomUUID(), points: []}
@@ -60,7 +62,7 @@ const ModelSidebar = () => {
 	}
 
 	const addAutoShape = async() => {
-		const texUrl = Api.getTextureUrl(model.texturePath)
+		const texUrl = getTextureUrl(model.textureId)
 		let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, sizeMultiplier)
 		points = points.map(point => roundToGrain(point))
 		const shape: ProjectShape = {id: getRandomUUID(), points: points.map(p => [p.x, p.y])}
@@ -69,16 +71,34 @@ const ModelSidebar = () => {
 		setSelectedShapeId(shape.id)
 	}
 
+	const lastNonInfiniteModelSize = useRef(model.size)
 	const setModelSize = (x: number, y: number) => {
-		const {x: oldX, y: oldY} = model.size
+		const {x: oldX, y: oldY} = lastNonInfiniteModelSize.current
 		const multX = x / oldX
 		const multY = y / oldY
+
+		// avoid to just collapse all the shapes into single dot at 0,0
+		if(multX > 0 && multY > 0 && Number.isFinite(multX) && Number.isFinite(multY) && (multX !== 1 || multY !== 1)){
+			lastNonInfiniteModelSize.current = {x, y}
+			updateShapes(shapes => shapes.map(shape => ({...shape, points: shape.points.map(([x, y]) => {
+				const {x: newX, y: newY} = roundToGrain({x: x * multX, y: y * multY})
+				return [newX, newY]
+			})})))
+		}
 		setModel(model => ({...model, size: {x, y}}))
-		updateShapes(shapes => shapes.map(shape => ({...shape, points: shape.points.map(([x, y]) => [x * multX, y * multY])})))
 	}
+
+	const {textureFiles} = useTextures()
 
 	return (
 		<>
+			<NamedIdSelector
+				label="Texture"
+				values={textureFiles}
+				value={model.textureId}
+				onChange={textureId => setModel(model => ({...model, textureId}))}
+				modal={onClose => <TexturesModal onClose={onClose} value={model.textureId}/>}
+			/>
 			<NamedIdSelector
 				label="Collision"
 				values={project.collisionGroups}

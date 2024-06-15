@@ -8,6 +8,7 @@ import {UUID, zeroUUID} from "common/uuid"
 import {useWorkbenchContext} from "client/react/components/workbench/workbenchContext"
 import {useHotkey} from "client/react/components/hotkeyContext/hotkeyContext"
 import React = require("react")
+import {isRedoKeypress, isUndoKeypress} from "client/react/components/hotkeyContext/hotkeyUtils"
 
 export const ModelShapeLayer = () => {
 	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
@@ -102,11 +103,7 @@ const ModelShapeNodes = () => {
 
 	useHotkey({
 		ref: rootRef,
-		shouldPick: useCallback((e: KeyboardEvent) => {
-			const isNormalUndo = e.code === "KeyZ" && e.ctrlKey
-			const isMacosUndo = e.code === "KeyZ" && e.metaKey && !e.shiftKey
-			return (isNormalUndo || isMacosUndo) && shapesStateStack.canUndo()
-		}, [shapesStateStack]),
+		shouldPick: useCallback((e: KeyboardEvent) => isUndoKeypress(e) && shapesStateStack.canUndo(), [shapesStateStack]),
 		onPress: useCallback(() => {
 			updateShapes(() => shapesStateStack.undo())
 		}, [shapesStateStack, updateShapes])
@@ -114,11 +111,7 @@ const ModelShapeNodes = () => {
 
 	useHotkey({
 		ref: rootRef,
-		shouldPick: useCallback((e: KeyboardEvent) => {
-			const isNormalRedo = e.code === "KeyY" && e.ctrlKey
-			const isMacosRedo = e.code === "KeyZ" && e.metaKey && e.shiftKey
-			return (isNormalRedo || isMacosRedo) && shapesStateStack.canRedo()
-		}, [shapesStateStack]),
+		shouldPick: useCallback((e: KeyboardEvent) => isRedoKeypress(e) && shapesStateStack.canRedo(), [shapesStateStack]),
 		onPress: useCallback(() => {
 			updateShapes(() => shapesStateStack.redo())
 		}, [shapesStateStack, updateShapes])
