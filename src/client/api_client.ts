@@ -1,7 +1,7 @@
 import {Project, NamedId, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {ConfigFile} from "server/config"
-import {ApiClient} from "common/api_client"
+import {ApiClient} from "common/api_client_base"
 import {Tree} from "common/tree"
 import {XY} from "@nartallax/e8"
 

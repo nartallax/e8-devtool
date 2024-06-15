@@ -3,6 +3,9 @@ import {SetState} from "client/react/uiUtils/setState"
 import {Project, makeBlankProject} from "data/project"
 import {PropsWithChildren, createContext, useContext, useState} from "react"
 
+// TODO: for all contexts, default should be null, typecasted to a type
+// and custom useContext hooks should check for null and throw
+// (maybe this even should be a helper function...?)
 const projectContextDefault = {
 	project: makeBlankProject(),
 	setProject: null as unknown as SetState<Project>,

@@ -22,6 +22,8 @@ export interface Project {
 	/** Couples of groups that should be colliding. */
 	readonly collisionGroupPairs: readonly (readonly [UUID, UUID])[]
 	readonly layers: readonly ProjectLayerDefinition[]
+	// TODO: redo input binds. make bind group optional/multiple; it'll act as selector
+	// this will also make binds more tree-like, which is good
 	readonly inputBinds: readonly ProjectInputBindSet[]
 }
 
