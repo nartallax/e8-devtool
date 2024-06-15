@@ -1,6 +1,6 @@
 import {Button} from "client/components/button/button"
-import {Checkbox} from "client/components/checkbox/checkbox"
-import {NumberInput} from "client/components/number_input/number_input"
+import {CheckboxField} from "client/components/checkbox/checkbox"
+import {NumberInputField} from "client/components/number_input/number_input"
 import {TooltipIcon} from "client/components/overlay_item/tooltip_icon"
 import {Row} from "client/components/row_col/row_col"
 import {Sidebar, SidebarLayout} from "client/parts/layouts/sidebar_layout"
@@ -105,8 +105,8 @@ const ModelSidebar = () => {
 				onChange={layerId => setModel(model => ({...model, layerId}))}
 				modal={onClose => <LayersModal onClose={onClose} value={model.layerId} layerType='model'/>}
 			/>
-			<Checkbox label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
-			<NumberInput
+			<CheckboxField label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
+			<NumberInputField
 				label="Width"
 				value={model.size.x}
 				min={0}
@@ -114,16 +114,16 @@ const ModelSidebar = () => {
 				step={0.01}
 				onChange={x => setModelSize(x, model.size.y)}
 			/>
-			<NumberInput
+			<NumberInputField
 				label="Height"
 				value={model.size.y}
 				min={0}
 				step={0.01}
 				onChange={y => setModelSize(model.size.x, y)}
 			/>
-			<Checkbox label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
-			<Checkbox label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
-			<Checkbox label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
+			<CheckboxField label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
+			<CheckboxField label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
+			<CheckboxField label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
 			<Row gap>
 				<TooltipIcon
 					icon={Icon.questionCircle}

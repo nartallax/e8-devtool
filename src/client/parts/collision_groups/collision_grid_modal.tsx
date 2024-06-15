@@ -7,6 +7,7 @@ import {ProjectCollisionGroup} from "data/project"
 import {Col} from "client/components/row_col/row_col"
 import {Form} from "client/components/form/form"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
+import {Checkbox} from "client/components/checkbox/checkbox"
 
 type Props = {
 	readonly onClose: () => void
@@ -116,14 +117,9 @@ type CheckboxProps = {
 }
 
 const PairCheckbox = ({pair, map, onChange}: CheckboxProps) => {
-	const isChecked = map.get(pair[0])?.has(pair[1])
-	// TODO: use <Checkbox> here?
 	return (
-		<input
-			className={css.checkbox}
-			type="checkbox"
-			checked={!!isChecked}
-			onChange={() => onChange(pair, !isChecked)}
-		/>
+		<div className={css.checkboxContainer}>
+			<Checkbox value={!!map.get(pair[0])?.has(pair[1])} onChange={isChecked => onChange(pair, isChecked)}/>
+		</div>
 	)
 }

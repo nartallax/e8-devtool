@@ -1,5 +1,5 @@
 import {FormInputProps} from "client/components/form/form_context"
-import {ValueSelector} from "client/components/value_selector/value_selector"
+import {ValueSelectorField} from "client/components/value_selector/value_selector"
 import {UUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useState} from "react"
@@ -62,7 +62,7 @@ export const NamedIdSelector = ({value, onChange, modal, absentValueLabel = "<no
 	return (
 		<>
 			{!!isOpen && modal(onClose)}
-			<ValueSelector
+			<ValueSelectorField
 				{...props}
 				value={value!}
 				onRequestValueChange={() => setOpen(true)}

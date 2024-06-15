@@ -4,6 +4,7 @@ import {useConfig} from "client/parts/config_context"
 import {useProject} from "client/parts/project_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {StateStack} from "client/ui_utils/state_stack"
+import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {UUID} from "common/uuid"
 import {ProjectModel, ProjectShape} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -23,10 +24,9 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		}
 
 		const {inworldUnitPixelSize} = useConfig()
-		// TODO: save this in localstorage..?
-		const [isShowingDecomp, setShowDecomp] = useState(false)
-		const [isShowingShapes, setShowShapes] = useState(false)
-		const [isShowingGrid, setShowGrid] = useState(true)
+		const [isShowingDecomp, setShowDecomp] = useLocalStorageState("modelDisplay.isShowingDecomp", false)
+		const [isShowingShapes, setShowShapes] = useLocalStorageState("modelDisplay.isShowingShapes", false)
+		const [isShowingGrid, setShowGrid] = useLocalStorageState("modelDisplay.isShowingGrid", true)
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 

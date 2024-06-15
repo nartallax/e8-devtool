@@ -11,7 +11,7 @@ type Props = FormInputProps<string> & {
 	readonly isAutofocused?: boolean
 }
 
-export const TextInput = ({value, onChange, isDisabled, placeholder, isAutofocused, ...props}: Props) => {
+export const TextInputField = ({value, onChange, isDisabled, placeholder, isAutofocused, ...props}: Props) => {
 	const {id, hasError} = useRegisterField({value, ...props})
 	const ref = useRef<HTMLInputElement | null>(null)
 

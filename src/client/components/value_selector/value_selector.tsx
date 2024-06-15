@@ -12,7 +12,7 @@ type Props<T> = FormInputProps<T> & {
 	readonly isDisabled?: boolean
 }
 
-export function ValueSelector<T>({value, onRequestValueChange, getLabel, isDisabled, ...props}: Props<T>) {
+export function ValueSelectorField<T>({value, onRequestValueChange, getLabel, isDisabled, ...props}: Props<T>) {
 	const {id} = useRegisterField({value, ...props})
 	const requestChangeIfNotDisabled = useCallback(() => {
 		if(!isDisabled){

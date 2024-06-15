@@ -17,8 +17,7 @@ type Props<T> = FormInputProps<T | null> & {
 	readonly onChange: (value: T) => void
 }
 
-// eslint-disable-next-line react/function-component-definition
-export function Select<T>({options, value, onChange: setValue, ...props}: Props<T>) {
+export function SelectField<T>({options, value, onChange: setValue, ...props}: Props<T>) {
 	const ref = useRef<HTMLSelectElement | null>(null)
 
 	// option values could be anything, possibly non-string and even non-serializable

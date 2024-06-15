@@ -1,5 +1,5 @@
 import {Button} from "client/components/button/button"
-import {Checkbox} from "client/components/checkbox/checkbox"
+import {CheckboxField} from "client/components/checkbox/checkbox"
 import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
@@ -33,7 +33,7 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 			contentHeight={["300px", "50vh", "800px"]}>
 			<Form onSubmit={() => onClose({...bind, isHold, group: groupId, defaultChords: chords})}>
 				<Col gap grow stretch>
-					<Checkbox label="Is hold action" value={isHold} onChange={setIsHold}/>
+					<CheckboxField label="Is hold action" value={isHold} onChange={setIsHold}/>
 					<NamedIdSelector
 						isNullable
 						label="Group"

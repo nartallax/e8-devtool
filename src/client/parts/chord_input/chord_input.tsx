@@ -12,8 +12,7 @@ type Props = {
 export const chordToString = (chord: Chord) => chord.join("+")
 export const chordFromString = (str: string) => str.split("+") as Chord
 
-// TODO: consolidate names; SmthInput vs SmthInputField - latter assumes that there is label, validation and stuff
-// this naming convention is nowhere to be found right now
+
 export const ChordInput = ({value, onChange, variant = "default"}: Props) => {
 	const ref = useRef<HTMLInputElement | null>(null)
 
