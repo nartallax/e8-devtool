@@ -271,7 +271,8 @@ let result = tseslint.config(
 		// good in theory, but in practice just adds clutter
 		"react/prefer-read-only-props": ["off"],
 		"react/prefer-stateless-function": ["warn"],
-		"react/prop-types": ["error"],
+		// this is for raw js
+		"react/prop-types": ["off"],
 		"react/require-default-props": ["off"],
 		"react/require-optimization": ["off"],
 		"react/require-render-return": ["error"],

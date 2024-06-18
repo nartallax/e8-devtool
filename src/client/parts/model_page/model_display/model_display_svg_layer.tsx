@@ -1,14 +1,15 @@
-import {PropsWithChildren} from "react"
+import {PropsWithChildren, forwardRef} from "react"
 import * as css from "./model_display.module.scss"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 
-export const ModelDisplaySvgLayer = ({children}: PropsWithChildren<React.SVGAttributes<SVGSVGElement>>) => {
+export const ModelDisplaySvgLayer = forwardRef<SVGSVGElement, PropsWithChildren<React.SVGAttributes<SVGSVGElement>>>(({children}, ref) => {
 	const {model} = useModelDisplayContext()
 	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
 
 	return (
 		<svg
+			ref={ref}
 			className={css.workbenchLayer}
 			width={workbenchWidth + "px"}
 			height={workbenchHeight + "px"}
@@ -16,4 +17,4 @@ export const ModelDisplaySvgLayer = ({children}: PropsWithChildren<React.SVGAttr
 			{children}
 		</svg>
 	)
-}
+})

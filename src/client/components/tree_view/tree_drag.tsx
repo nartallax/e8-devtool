@@ -70,6 +70,7 @@ export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, row
 		}
 
 		const handlers = addMouseDragHandler({
+			// TODO: don't add drag handlers to each row, add them only to the root
 			element: el,
 			distanceBeforeMove: 3,
 			start: () => {

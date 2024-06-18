@@ -12,6 +12,15 @@ type ShapeStateMeta = {
 	type: "keyboard_move" | "mouse_move" | "initial"
 }
 
+type MovingPointState = {
+	startX: number
+	startY: number
+	lastX: number
+	lastY: number
+	pointIndex: number
+	shapeId: UUID
+}
+
 export const [ModelDisplayContextProvider, useModelDisplayContext] = defineContext({
 	name: "ModelDisplayContext",
 	useValue: ({modelId}: {modelId: UUID}) => {
@@ -25,6 +34,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		const {inworldUnitPixelSize} = useConfig()
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
+		const movingPointStateRef = useRef<MovingPointState | null>(null)
 
 		const setModel = useCallback((modelOrCallback: ProjectModel | ((oldValue: ProjectModel) => ProjectModel)) => {
 			setProject(project => {
@@ -90,7 +100,8 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			getShapes,
 			workbenchRef,
 			resetPosition,
-			mouseEventToInworldCoords
+			mouseEventToInworldCoords,
+			movingPointStateRef
 		}
 	}
 })
