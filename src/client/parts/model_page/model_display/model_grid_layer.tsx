@@ -1,19 +1,13 @@
-import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import * as css from "./model_display.module.scss"
+import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
 
 export const ModelGridLayer = () => {
-	const {model, sizeMultiplier} = useModelDisplayContext()
-	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
-	const baseProps = {workbenchHeight, workbenchWidth, sizeMultiplier}
+	const {model} = useModelDisplayContext()
+	const baseProps = {width: model.size.x, height: model.size.y}
 
-	// TODO: refactor this SVG wrapper into separate component? it was copypasted at least twice
 	return (
-		<svg
-			className={css.workbenchLayer}
-			width={workbenchWidth + "px"}
-			height={workbenchHeight + "px"}
-			viewBox={`${-workbenchWidth / 2} ${-workbenchHeight / 2} ${workbenchWidth} ${workbenchHeight}`}>
+		<ModelDisplaySvgLayer>
 			<Lines
 				{...baseProps}
 				end={model.size.y}
@@ -38,16 +32,15 @@ export const ModelGridLayer = () => {
 				step={0.1}
 				isHorisontal={false}
 			/>
-		</svg>
+		</ModelDisplaySvgLayer>
 	)
 }
 
 type BaseProps = {
 	isHorisontal: boolean
 	isThick?: boolean
-	sizeMultiplier: number
-	workbenchWidth: number
-	workbenchHeight: number
+	width: number
+	height: number
 }
 
 type LinesProps = BaseProps & {
@@ -77,30 +70,29 @@ type LineProps = BaseProps & {
 	offset: number
 }
 
-const Line = ({isHorisontal, isThick, sizeMultiplier, workbenchHeight, workbenchWidth, offset}: LineProps) => {
-	// TODO: ew.
-	const thickness = isThick ? 0.01 * sizeMultiplier : 0.005 * sizeMultiplier
-	const centralMultiplier = offset === 0 ? 1.1 : 1
+const Line = ({isHorisontal, isThick, height, width, offset}: LineProps) => {
+	const thickness = isThick ? 0.01 : 0.005
+	const centralBump = offset === 0 ? 0.1 : 0
 	if(isHorisontal){
 		return (
 			<rect
 				className={css.gridLine}
-				width={(workbenchWidth * centralMultiplier) + thickness}
+				width={width + centralBump + thickness}
 				height={thickness}
 				transform={`translate(0, -${thickness / 2})`}
-				x={-((workbenchWidth * centralMultiplier) + thickness) / 2}
-				y={offset * sizeMultiplier}
+				x={-(width + centralBump + thickness) / 2}
+				y={offset}
 			/>
 		)
 	} else {
 		return (
 			<rect
 				className={css.gridLine}
-				height={(workbenchHeight * centralMultiplier) + thickness}
+				height={height + centralBump + thickness}
 				width={thickness}
 				transform={`translate(-${thickness / 2}, 0)`}
-				y={-((workbenchHeight * centralMultiplier) + thickness) / 2}
-				x={offset * sizeMultiplier}
+				y={-(height + centralBump + thickness) / 2}
+				x={offset}
 			/>
 		)
 	}
