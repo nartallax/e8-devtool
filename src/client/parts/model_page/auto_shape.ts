@@ -7,10 +7,10 @@ import {XY} from "@nartallax/e8"
 // no reason to set higher than 3, won't work properly if set lower than 3
 const resMult = 3
 
-export async function buildObjectShapeByImage(imgUrl: string, widthUnits: number, heightUnits: number, sizeMultiplier: number): Promise<XY[]> {
+export async function buildObjectShapeByImage(imgUrl: string, widthUnits: number, heightUnits: number, unitPixelSize: number): Promise<XY[]> {
 	const img = await loadImage(imgUrl)
-	const widthPx = widthUnits * sizeMultiplier / 2
-	const heightPx = heightUnits * sizeMultiplier / 2
+	const widthPx = widthUnits * unitPixelSize / 2
+	const heightPx = heightUnits * unitPixelSize / 2
 	const bitmap = imgToBitmap(img, widthPx, heightPx)
 	const upscaledBitmap = bitmap.upscale(resMult)
 	let points = addPointsAtEdge(upscaledBitmap, widthPx * resMult, heightPx * resMult)

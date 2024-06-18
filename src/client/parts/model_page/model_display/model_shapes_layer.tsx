@@ -1,18 +1,17 @@
-
 import {cn} from "client/ui_utils/classname"
 import * as css from "./model_display.module.scss"
 import {findPointInsertionIndex, shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
 import {useCallback, useEffect, useRef} from "react"
 import {addMouseDragHandler} from "common/mouse_drag"
 import {UUID} from "common/uuid"
-import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 import {useHotkey} from "client/components/hotkey_context/hotkey_context"
 import React = require("react")
 import {isRedoKeypress, isUndoKeypress} from "client/components/hotkey_context/hotkey_utils"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
+import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
+import {useConfig} from "client/parts/config_context"
 
 export const ModelShapeLayer = () => {
-	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
 	const {selectedShapeId, shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId} = useModelDisplayContext()
 
 	const addNodeAt = useCallback((e: MouseEvent | React.MouseEvent) => {
@@ -60,31 +59,28 @@ export const ModelShapeLayer = () => {
 	}, [addNodeAt, drawNodeAt])
 
 	return (
-		<svg
-			onMouseDown={onMouseDown}
-			className={css.workbenchLayer}
-			width={workbenchWidth + "px"}
-			height={workbenchHeight + "px"}
-			viewBox={`${-workbenchWidth / 2} ${-workbenchHeight / 2} ${workbenchWidth} ${workbenchHeight}`}>
+		<ModelDisplaySvgLayer onMouseDown={onMouseDown}>
 			<ModelShapePaths/>
 			<ModelShapeNodes/>
-		</svg>
+		</ModelDisplaySvgLayer>
 	)
 }
 
 const ModelShapePaths = () => {
-	const {model, sizeMultiplier, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
+	const {model, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
+	const {inworldUnitPixelSize} = useConfig()
 	return (
-		<>{model.shapes.map(shape => (
-			<path
-				key={shape.id}
-				className={cn(css.shapePath, {[css.isSelected!]: selectedShapeId === shape.id})}
-				// TODO: ew. can't we do it better somehow? in CSS at least.
-				strokeWidth={0.005 * sizeMultiplier}
-				d={shapeToSvgPathD(shape.points, sizeMultiplier, shape.id, currentlyDrawnShapeId)}
-				onMouseDown={e => setSelectedShapeId(id => id === shape.id && !isAddDeleteEvent(e) ? null : shape.id)}
-			/>
-		))}</>
+		<>
+			{model.shapes.map(shape => (
+				<path
+					key={shape.id}
+					className={cn(css.shapePath, {[css.isSelected!]: selectedShapeId === shape.id})}
+					strokeWidth={0.005}
+					d={shapeToSvgPathD(shape.points, inworldUnitPixelSize, shape.id, currentlyDrawnShapeId)}
+					onMouseDown={e => setSelectedShapeId(id => id === shape.id && !isAddDeleteEvent(e) ? null : shape.id)}
+				/>
+			))}
+		</>
 	)
 }
 
@@ -99,7 +95,8 @@ type MovingPointState = {
 
 // TODO: refactor this clusterfuck
 const ModelShapeNodes = () => {
-	const {model, selectedShapeId, setSelectedShapeId, sizeMultiplier, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelDisplayContext()
+	const {model, selectedShapeId, setSelectedShapeId, shapesStateStack, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, getShapes, updateShapes, mouseEventToInworldCoords} = useModelDisplayContext()
+	const {inworldUnitPixelSize} = useConfig()
 	const rootRef = useRef<SVGGElement | null>(null)
 
 	useHotkey({
@@ -142,7 +139,7 @@ const ModelShapeNodes = () => {
 		shouldPick: useCallback((e: KeyboardEvent) => (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") && selectedPointState.current.pointIndex >= 0,
 			[selectedPointState]),
 		onPress: useCallback(e => {
-			const step = 1 / sizeMultiplier
+			const step = 1 / inworldUnitPixelSize
 			const shape = getShapes().find(shape => shape.id === selectedPointState.current.shapeId)!
 			let [x, y] = shape.points[selectedPointState.current.pointIndex]!
 			switch(e.code){
@@ -163,7 +160,7 @@ const ModelShapeNodes = () => {
 				shapesStateStack.undo()
 			}
 			shapesStateStack.storeState(getShapes(), {type: "keyboard_move"})
-		}, [shapesStateStack, updateShapes, getShapes, sizeMultiplier])
+		}, [shapesStateStack, updateShapes, getShapes, inworldUnitPixelSize])
 	})
 
 	// TODO: make a hook out of this ffs
@@ -260,21 +257,19 @@ const ModelShapeNodes = () => {
 					{shape.points.map(([x, y], i) => (
 						<g
 							key={i}
-							// TODO: size mult is used here for points, but embedded in <path>'s d attr - let's make this consistent
-							transform={`translate(${x * sizeMultiplier}, ${y * sizeMultiplier})`}
 							data-shape-id={shape.id}
 							data-point-index={i}>
 							<circle
 								className={css.dot}
-								cx={0}
-								cy={0}
-								r={0.0025 * sizeMultiplier}
+								cx={x}
+								cy={y}
+								r={0.0025}
 							/>
 							<circle
 								className={css.mover}
-								cx={0}
-								cy={0}
-								r={0.03 * sizeMultiplier}
+								cx={x}
+								cy={y}
+								r={0.03}
 							/>
 						</g>
 					))}

@@ -1,4 +1,3 @@
-import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {useMemo, useRef} from "react"
@@ -7,12 +6,14 @@ import {shapeToSvgPathD} from "client/parts/model_page/model_display/model_displ
 import {getRandomUUID} from "common/uuid"
 import {useToastContext} from "client/components/toast/toast_context"
 import {Icon} from "generated/icons"
+import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
+import {useConfig} from "client/parts/config_context"
 
 const decompErrorToastId = getRandomUUID()
 
 export const ModelDecompLayer = () => {
-	const {model, sizeMultiplier} = useModelDisplayContext()
-	const {width: workbenchWidth, height: workbenchHeight} = useWorkbenchContext()
+	const {model} = useModelDisplayContext()
+	const {inworldUnitPixelSize} = useConfig()
 	const {addToast, removeToast} = useToastContext()
 
 	// this is required to avoid update-on-render situation
@@ -41,20 +42,15 @@ export const ModelDecompLayer = () => {
 	}, [shapes, addToast, removeToast])
 
 	return (
-		<svg
-			className={css.workbenchLayer}
-			width={workbenchWidth + "px"}
-			height={workbenchHeight + "px"}
-			viewBox={`${-workbenchWidth / 2} ${-workbenchHeight / 2} ${workbenchWidth} ${workbenchHeight}`}>
+		<ModelDisplaySvgLayer>
 			{decomp.map((points, index) => (
 				<path
 					key={index}
 					className={css.decompPath}
-					// TODO: ew. can't we do it better somehow? in CSS at least.
-					strokeWidth={0.005 * sizeMultiplier}
-					d={shapeToSvgPathD(points, sizeMultiplier)}
+					strokeWidth={0.005}
+					d={shapeToSvgPathD(points, inworldUnitPixelSize)}
 				/>
 			))}
-		</svg>
+		</ModelDisplaySvgLayer>
 	)
 }

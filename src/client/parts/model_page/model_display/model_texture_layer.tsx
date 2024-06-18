@@ -2,14 +2,16 @@ import {useModelDisplayContext} from "client/parts/model_page/model_display/mode
 import * as css from "./model_display.module.scss"
 import {useState} from "react"
 import {useTextures} from "client/parts/texture_tree_context"
+import {useConfig} from "client/parts/config_context"
 
 export const ModelTextureLayer = () => {
-	const {model, sizeMultiplier} = useModelDisplayContext()
+	const {model} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
+	const {inworldUnitPixelSize} = useConfig()
 	const [naturalSize, setNaturalSize] = useState({width: 1, height: 1})
 
-	const widthRatio = (sizeMultiplier / naturalSize.width) * model.size.x
-	const heightRatio = (sizeMultiplier / naturalSize.height) * model.size.y
+	const widthRatio = (inworldUnitPixelSize / naturalSize.width) * model.size.x
+	const heightRatio = (inworldUnitPixelSize / naturalSize.height) * model.size.y
 
 	return (
 		<img

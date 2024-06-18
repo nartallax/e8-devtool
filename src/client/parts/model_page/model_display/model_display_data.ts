@@ -72,16 +72,16 @@ function* lines(points: [number, number][]): IterableIterator<[[number, number],
 	}
 }
 
-export function shapeToSvgPathD(points: [number, number][], sizeMultiplier: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
+export function shapeToSvgPathD(points: [number, number][], inworldUnitPixelSize: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
 	if(points.length === 0){
 		return ""
 	} else if(points.length === 1){
 		const [x, y] = points[0]!
-		const step = 1 / sizeMultiplier
-		return `M ${x * sizeMultiplier} ${y * sizeMultiplier} h ${step} v ${step} h ${-step} z`
+		const step = 1 / inworldUnitPixelSize
+		return `M ${x} ${y} h ${step} v ${step} h ${step} z`
 	} else {
 		let result = points
-			.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x * sizeMultiplier} ${y * sizeMultiplier}`)
+			.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`)
 			.join(" ")
 		if(currentlyDrawnShapeId === null || currentlyDrawnShapeId !== shapeId){
 			result += " z"

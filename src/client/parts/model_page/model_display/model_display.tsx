@@ -23,6 +23,7 @@ import {Icon} from "generated/icons"
 import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
+import {useConfig} from "client/parts/config_context"
 
 type Props = {
 	modelId: UUID
@@ -73,7 +74,8 @@ type SidebarProps = {
 
 const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture}: SidebarProps) => {
 	const [project] = useProject()
-	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, sizeMultiplier, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
+	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
+	const {inworldUnitPixelSize} = useConfig()
 	const {getTextureUrl} = useTextures()
 
 	const startShapeDrawing = () => {
@@ -85,7 +87,8 @@ const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingS
 
 	const addAutoShape = async() => {
 		const texUrl = getTextureUrl(model.textureId)
-		let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, sizeMultiplier)
+		const resolution = inworldUnitPixelSize * 10 // this allows for better quality
+		let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, resolution)
 		points = points.map(point => roundToGrain(point))
 		const shape: ProjectShape = {id: getRandomUUID(), points: points.map(p => [p.x, p.y])}
 		updateShapes(shapes => [...shapes, shape])
@@ -196,16 +199,17 @@ type WorkbenchProps = {
 }
 
 const ModelWorkbench = ({isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture}: WorkbenchProps) => {
-	const {sizeMultiplier, model, workbenchRef} = useModelDisplayContext()
+	const {model, workbenchRef} = useModelDisplayContext()
+	const {inworldUnitPixelSize} = useConfig()
 
 	return (
 		<Workbench
 			contextRef={workbenchRef}
-			width={model.size.x * sizeMultiplier}
-			height={model.size.y * sizeMultiplier}
-			maxZoom={10}
-			minZoom={0.1}
-			initialZoom={0.25}>
+			width={model.size.x * inworldUnitPixelSize}
+			height={model.size.y * inworldUnitPixelSize}
+			maxZoom={100}
+			minZoom={1}
+			initialZoom={4}>
 			{isShowingGrid && <ModelGridLayer/>}
 			{isShowingTexture && <ModelTextureLayer/>}
 			{isShowingDecomp && <ModelDecompLayer/>}

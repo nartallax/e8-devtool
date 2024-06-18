@@ -26,10 +26,6 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 
-		// tbh I don't exactly remember what it is and why can't we just use inworldUnitPixelSize
-		// TODO: investigate
-		const sizeMultiplier = Math.max(1000, inworldUnitPixelSize * 10)
-
 		const setModel = useCallback((modelOrCallback: ProjectModel | ((oldValue: ProjectModel) => ProjectModel)) => {
 			setProject(project => {
 				let model: ProjectModel
@@ -75,10 +71,10 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 				throw new Error("No workbench is set: cannot convert coords")
 			}
 			let {x, y} = workbench.pointerEventToWorkbenchCoords(e)
-			x /= sizeMultiplier
-			y /= sizeMultiplier
+			x /= inworldUnitPixelSize
+			y /= inworldUnitPixelSize
 			return roundToGrain({x, y})
-		}, [sizeMultiplier, roundToGrain, workbenchRef])
+		}, [inworldUnitPixelSize, roundToGrain, workbenchRef])
 
 		return {
 			currentlyDrawnShapeId,
@@ -88,7 +84,6 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			model,
 			modelId,
 			setModel,
-			sizeMultiplier,
 			shapesStateStack,
 			roundToGrain,
 			updateShapes,
