@@ -34,15 +34,12 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 
 	const rootSize = useElementSize(rootRef)
 
-	const pointerEventToWorkbenchCoords = useCallback((e: AnyPointerEvent, zoom?: number, x?: number, y?: number) => {
+	const pointerEventToWorkbenchCoords = useCallback((e: AnyPointerEvent, zoom?: number) => {
 		const root = rootRef.current
 		if(!root){
 			throw new Error("No workbench, cannot convert coords")
 		}
 		zoom ??= benchStateRef.current.zoom
-		// TODO: we don't need to pass those anymore I think
-		x ??= benchStateRef.current.x
-		y ??= benchStateRef.current.y
 		const rootSize = root.getBoundingClientRect()
 		const coords = pointerEventsToOffsetCoordsByRect(e, rootSize)
 		coords.x -= rootSize.width / 2
@@ -51,8 +48,8 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 		coords.y -= height / 2
 		coords.x /= zoom
 		coords.y /= zoom
-		coords.x -= x
-		coords.y -= y
+		coords.x -= benchStateRef.current.x
+		coords.y -= benchStateRef.current.y
 		return coords
 	}, [height, width])
 

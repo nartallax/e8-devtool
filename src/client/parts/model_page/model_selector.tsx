@@ -1,5 +1,5 @@
 import {Button} from "client/components/button/button"
-import {AlertModal} from "client/components/modal/alert_modal"
+import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
 import {MappedNamedIdTreeControls, MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
 import {CentralColumn} from "client/parts/layouts/central_column"
@@ -12,7 +12,6 @@ import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
 import {NamedId, ProjectModel} from "data/project"
 import {Icon} from "generated/icons"
-import {useState} from "react"
 
 const findDefaultId = (values: NamedId[]): UUID | null => {
 	return values.find(value => value.name === "default")?.id ?? values[0]?.id ?? null
@@ -23,8 +22,8 @@ export const ModelSelector = () => {
 	const {textureFiles} = useTextures()
 	const modelMap = new Map(project.models.map(model => [model.id, model]))
 	const {matchedUrl} = useRoutingContext()
+	const {showAlert} = useAlert()
 
-	const [alertText, setAlertText] = useState("")
 	const getModelWithDefaults = (): ProjectModel | null => {
 		let collisionGroupId = findDefaultId(project.collisionGroups)
 		if(!collisionGroupId){
@@ -46,7 +45,9 @@ export const ModelSelector = () => {
 
 		const textureId = findDefaultId(textureFiles)
 		if(!textureId){
-			setAlertText("Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first.")
+			showAlert({
+				body: "Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first."
+			})
 			return null
 		}
 
@@ -87,7 +88,6 @@ export const ModelSelector = () => {
 
 	return (
 		<CentralColumn>
-			{alertText && <AlertModal header="Error" body={alertText} onClose={() => setAlertText("")}/>}
 			<MappedNamedIdTreeView
 				isSearchable
 				values={project.modelTree}

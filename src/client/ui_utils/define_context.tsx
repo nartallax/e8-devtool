@@ -5,10 +5,11 @@ const emptyContext = Symbol()
 type Props<T, I> = {
 	name?: string
 	useValue: (providerProps: I) => T
+	additionalChildren?: (context: T) => React.ReactNode
 }
 
 /** Create context (as in, React.createContext()), but in more safe and predictable way */
-export const defineContext = <T, I>({name, useValue: getValue}: Props<T, I>): [
+export const defineContext = <T, I>({name, useValue: getValue, additionalChildren}: Props<T, I>): [
 	provider: (props: React.PropsWithChildren<I>) => React.ReactNode,
 	useThisContext: () => T
 ] => {
@@ -25,7 +26,12 @@ export const defineContext = <T, I>({name, useValue: getValue}: Props<T, I>): [
 	const Provider = (props: PropsWithChildren<I>) => {
 		const {children} = props
 		const value = getValue(props)
-		return <Context.Provider value={value}>{children}</Context.Provider>
+		return (
+			<Context.Provider value={value}>
+				{children}
+				{additionalChildren?.(value)}
+			</Context.Provider>
+		)
 	}
 
 	return [Provider, useThisContext]

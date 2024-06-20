@@ -10,7 +10,7 @@ type Props = {
 	zoomSpeed: number
 	zoomMin: number
 	zoomMax: number
-	pointerEventToWorkbenchCoords: (e: AnyPointerEvent, zoom?: number, x?: number, y?: number) => {x: number, y: number}
+	pointerEventToWorkbenchCoords: (e: AnyPointerEvent, zoom?: number) => {x: number, y: number}
 }
 
 export const useWorkbenchInputProps = ({setBenchState, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax}: Props) => {

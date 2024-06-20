@@ -1,7 +1,7 @@
 import {LayerType} from "@nartallax/e8"
 import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
-import {AlertModal} from "client/components/modal/alert_modal"
+import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
 import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
@@ -22,25 +22,19 @@ type Props = {
 export const LayersModal = ({value: initialValue, onClose, layerType}: Props) => {
 	const [project, setProject] = useProject()
 	const [value, setValue] = useState(initialValue)
+	const {showAlert} = useAlert()
 
-	const [deletionConflictModels, setDeletionConflictModels] = useState<ProjectModel[]>([])
 	const onDelete = (layer: ProjectLayerDefinition) => {
 		// TODO: check particles for particle type layers
 		const models = project.models.filter(model => model.layerId === layer.id)
 		if(models.length > 0){
-			setDeletionConflictModels(models)
+			showAlert({
+				header: "This layer is in use",
+				body: getDeletionConflictMessage(models)
+			})
+
 			throw new AbortError("Has conflicts")
 		}
-	}
-
-	const getDeletionConflictMessage = (models: ProjectModel[]): string => {
-		const firstFewNames = models.slice(0, 10).map(x => x.name)
-		if(firstFewNames.length < models.length){
-			firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
-		}
-		const namesStr = firstFewNames.join("\n\t")
-
-		return `This layer is already used in some models: \n\t${namesStr}\nYou should remove models from this layer before deleting it.`
 	}
 
 	return (
@@ -51,12 +45,6 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			onClose={onClose}>
 			<Form onSubmit={() => onClose(value)}>
 				<Col gap stretch grow>
-					{deletionConflictModels.length > 0
-					&& <AlertModal
-						header="This layer is in use"
-						body={getDeletionConflictMessage(deletionConflictModels)}
-						onClose={() => setDeletionConflictModels([])}
-					/>}
 					<MappedNamedIdTreeView
 						selectedValue={value}
 						onLeafClick={leaf => leaf.type === layerType && setValue(leaf.id)}
@@ -75,4 +63,14 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			</Form>
 		</Modal>
 	)
+}
+
+const getDeletionConflictMessage = (models: ProjectModel[]): string => {
+	const firstFewNames = models.slice(0, 10).map(x => x.name)
+	if(firstFewNames.length < models.length){
+		firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
+	}
+	const namesStr = firstFewNames.join("\n\t")
+
+	return `This layer is already used in some models: \n\t${namesStr}\nYou should remove models from this layer before deleting it.`
 }

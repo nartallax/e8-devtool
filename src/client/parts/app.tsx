@@ -1,5 +1,6 @@
 import {Form} from "client/components/form/form"
 import {HotkeyContextProvider} from "client/components/hotkey_context/hotkey_context"
+import {AlertModalProvider} from "client/components/modal/alert_modal"
 import {RootRoutingContextProvider} from "client/components/router/routing_context"
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
 import {ToastProvider} from "client/components/toast/toast_context"
@@ -25,19 +26,21 @@ export const App = () => {
 const Providers = ({children}: PropsWithChildren) => (
 	<ToastProvider>
 		<HotkeyContextProvider>
-			<ApiProvider>
-				<RootRoutingContextProvider>
-					<TextureTreeProvider>
-						<ProjectProvider>
-							<ConfigProvider>
-								<Form>
-									{children}
-								</Form>
-							</ConfigProvider>
-						</ProjectProvider>
-					</TextureTreeProvider>
-				</RootRoutingContextProvider>
-			</ApiProvider>
+			<AlertModalProvider>
+				<ApiProvider>
+					<RootRoutingContextProvider>
+						<TextureTreeProvider>
+							<ProjectProvider>
+								<ConfigProvider>
+									<Form>
+										{children}
+									</Form>
+								</ConfigProvider>
+							</ProjectProvider>
+						</TextureTreeProvider>
+					</RootRoutingContextProvider>
+				</ApiProvider>
+			</AlertModalProvider>
 		</HotkeyContextProvider>
 	</ToastProvider>
 )
