@@ -3,7 +3,7 @@ import * as css from "./tree_view.module.scss"
 import {TreeBranchChildren, TreeBranchChildrenProps} from "client/components/tree_view/tree_fragments"
 import {MutableRefObject, useCallback, useMemo, useRef, useState} from "react"
 import {SetState} from "client/ui_utils/react_types"
-import {TreeDragContextProvider} from "client/components/tree_view/tree_drag_context"
+import {useTreeViewDragProps} from "client/components/tree_view/tree_drag"
 
 export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
 	controlRef?: MutableRefObject<TreeControls | null>
@@ -65,28 +65,24 @@ export const TreeView = <L, B>({
 		controlRef.current = controls
 	}
 
+	const dragProps = useTreeViewDragProps({canBeChildOf, tree, onDrag, rootRef})
+
+
 	return (
-		<TreeDragContextProvider
-			canBeChildOf={canBeChildOf as TreeViewProps<unknown, unknown>["canBeChildOf"]}
-			tree={tree}
-			onDrag={onDrag}
-			rootRef={rootRef}
-			canDrag={!!onDrag}>
-			<div className={css.treeView} ref={rootRef}>
-				<TreeBranchChildren
-					{...props}
-					path={[]}
-					inlineEditPath={inlineEditPath}
-					onLabelEditComplete={onLabelEditComplete}
-					canEditBranchLabel={!!onBranchLabelEdit}
-					canEditLeafLabel={!!onLeafLabelEdit}
-					setInlineEditPath={setInlineEditPath}
-					onNodeDelete={onNodeDelete}
-					canDeleteBranch={!!onBranchDelete}
-					canDeleteLeaf={!!onLeafDelete}
-					tree={tree}
-				/>
-			</div>
-		</TreeDragContextProvider>
+		<div className={css.treeView} ref={rootRef} {...onDrag ? dragProps : {}}>
+			<TreeBranchChildren
+				{...props}
+				path={[]}
+				inlineEditPath={inlineEditPath}
+				onLabelEditComplete={onLabelEditComplete}
+				canEditBranchLabel={!!onBranchLabelEdit}
+				canEditLeafLabel={!!onLeafLabelEdit}
+				setInlineEditPath={setInlineEditPath}
+				onNodeDelete={onNodeDelete}
+				canDeleteBranch={!!onBranchDelete}
+				canDeleteLeaf={!!onLeafDelete}
+				tree={tree}
+			/>
+		</div>
 	)
 }

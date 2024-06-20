@@ -9,7 +9,6 @@ import React = require("react")
 import {Button} from "client/components/button/button"
 import {SetState} from "client/ui_utils/react_types"
 import {isInButton} from "client/ui_utils/dom_queries"
-import {useTreeViewDrag} from "client/components/tree_view/tree_drag"
 import {ValidatorsMaybeFactory} from "client/components/form/validators"
 
 type BaseProps<L, B> = {
@@ -89,8 +88,6 @@ const TreeRow = <T, B>({
 	canDeleteLeaf, leafLabelValidators, branchLabelValidators, selectedPath, InlineEditor = InlineTreeElementEditor
 }: RowProps<T, B>) => {
 	const isSelected = !!selectedPath && areTreePathsEqual(selectedPath, path)
-	const rowRef = React.useRef<HTMLDivElement | null>(null)
-	useTreeViewDrag(rowRef, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
 	let label: string
 	if(isTreeBranch(row)){
@@ -172,7 +169,6 @@ const TreeRow = <T, B>({
 			<div
 				className={className}
 				onClick={onRowClick}
-				ref={rowRef}
 				data-path={JSON.stringify(path)}>
 				<TreeRowSquares squares={squares ?? []} endsWith="expander"/>
 				{labelOrEditor}
@@ -197,7 +193,6 @@ const TreeRow = <T, B>({
 				className={className}
 				onClick={onRowClick}
 				onDoubleClick={onRowDblClick}
-				ref={rowRef}
 				data-path={JSON.stringify(path)}>
 				{!squares
 					? <TreeRowSquares squares={["empty"]}/>

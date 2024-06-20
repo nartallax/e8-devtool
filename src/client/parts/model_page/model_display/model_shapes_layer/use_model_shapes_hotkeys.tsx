@@ -5,7 +5,7 @@ import {useModelDisplayContext} from "client/parts/model_page/model_display/mode
 import {RefObject} from "react"
 
 export const useModelShapesHotkeys = (rootRef: RefObject<HTMLElement | SVGElement>) => {
-	const {getShapes, updateShapes, shapesStateStack, selectedShapeId, setSelectedShapeId, movingPointStateRef} = useModelDisplayContext()
+	const {getShapes, updateShapes, shapesStateStack, selectedShapeId, setSelectedShapeId, selectedPointRef} = useModelDisplayContext()
 	const {inworldUnitPixelSize} = useConfig()
 
 	useHotkey({
@@ -36,9 +36,9 @@ export const useModelShapesHotkeys = (rootRef: RefObject<HTMLElement | SVGElemen
 
 	useHotkey({
 		ref: rootRef,
-		shouldPick: (e: KeyboardEvent) => (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") && (movingPointStateRef.current?.pointIndex ?? -1) >= 0,
+		shouldPick: (e: KeyboardEvent) => (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") && (selectedPointRef.current?.pointIndex ?? -1) >= 0,
 		onPress: e => {
-			const movingPointState = movingPointStateRef.current!
+			const movingPointState = selectedPointRef.current!
 			const step = 1 / inworldUnitPixelSize
 			const shape = getShapes().find(shape => shape.id === movingPointState.shapeId)!
 			let [x, y] = shape.points[movingPointState.pointIndex]!
@@ -48,8 +48,6 @@ export const useModelShapesHotkeys = (rootRef: RefObject<HTMLElement | SVGElemen
 				case "ArrowUp": y -= step; break
 				case "ArrowDown": y += step; break
 			}
-			movingPointState.lastX = x
-			movingPointState.lastY = y
 			updateShapes(shapes => shapes.map(shape => shape.id !== movingPointState.shapeId ? shape : {
 				...shape,
 				points: shape.points.map((point, i) => i !== movingPointState.pointIndex ? point : [x, y])

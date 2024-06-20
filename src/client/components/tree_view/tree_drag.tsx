@@ -1,10 +1,9 @@
-import {addMouseDragHandler, pointerEventsToClientCoords, pointerEventsToOffsetCoords} from "common/mouse_drag"
-import {RefObject, useEffect} from "react"
+import {RefObject, useRef} from "react"
 import * as css from "./tree_view.module.scss"
 import {Tree, TreeBranch, TreePath, getBranchByPath, getTreeByPath, isTreeBranch} from "common/tree"
 import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"
-import {useTreeDragContext} from "client/components/tree_view/tree_drag_context"
 import {lockUserSelect, unlockUserSelect} from "client/ui_utils/user_select_lock"
+import {AnyPointerEvent, pointerEventsToClientCoords, pointerEventsToOffsetCoords, useMouseDragProps} from "client/ui_utils/use_mouse_drag"
 
 
 
@@ -16,110 +15,130 @@ type DragDestination<T, B> = {
 	rect: DOMRect
 }
 
-export const useTreeViewDrag = <T, B>(rowRef: RefObject<HTMLElement | null>, rowPath: TreePath) => {
-	const {onDrag, canDrag, rootRef, canBeChildOf, tree} = useTreeDragContext<T, B>()
+type RowElPath = {
+	el: HTMLElement
+	path: TreePath
+}
 
-	useEffect(() => {
-		if(!onDrag || !rootRef || !canDrag){
+type TreeDragParams<T, B> = {
+	onDrag?: (from: TreePath, to: TreePath) => void
+	rootRef: RefObject<HTMLElement | null>
+	tree: Tree<T, B>[]
+	canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
+}
+
+export const useTreeViewDragProps = <T, B>({onDrag: _onDrag, rootRef, canBeChildOf, tree}: TreeDragParams<T, B>) => {
+	const offset = useRef({x: 0, y: 0})
+	const destination = useRef<DragDestination<T, B> | null>(null)
+	const draggedRow = useRef<RowElPath | null>(null)
+
+	const onDragRef = useRef(_onDrag)
+	onDragRef.current = _onDrag
+
+	const updateDest = (e: AnyPointerEvent) => {
+		const newDest = getDragDestination(tree, e)
+		const root = rootRef.current
+		if(!newDest || !draggedRow.current || !root){
 			return
 		}
 
-		const el = rowRef.current
-		const root = rootRef.current
-		if(!el || !root){
-			throw new Error("No required elements!")
+		if(isPathInsidePath(draggedRow.current.path, newDest.path)){
+			return
 		}
 
-		let draggedRowOffsetX = 0
-		let draggedRowOffsetY = 0
-		let dest: DragDestination<T, B> | null = null
-
-		const updateDest = (e: MouseEvent | TouchEvent) => {
-			const newDest = getDragDestination(tree, e)
-			if(!newDest){
-				return
-			}
-
-			if(isPathInsidePath(rowPath, newDest.path)){
-				return
-			}
-
-			if(canBeChildOf){
-				let parent: TreeBranch<T, B> | null = null
-				if(newDest.disposition === "inside"){
-					parent = newDest.tree as TreeBranch<T, B>
-				} else {
-					const parentPath = newDest.path.slice(0, newDest.path.length - 1)
-					if(parentPath.length > 0){
-						parent = getBranchByPath(tree, parentPath)
-					}
-				}
-
-				if(!canBeChildOf(getTreeByPath(tree, rowPath), parent)){
-					return
+		if(canBeChildOf){
+			let parent: TreeBranch<T, B> | null = null
+			if(newDest.disposition === "inside"){
+				parent = newDest.tree as TreeBranch<T, B>
+			} else {
+				const parentPath = newDest.path.slice(0, newDest.path.length - 1)
+				if(parentPath.length > 0){
+					parent = getBranchByPath(tree, parentPath)
 				}
 			}
 
-			dest = newDest
+			if(!canBeChildOf(getTreeByPath(tree, draggedRow.current.path), parent)){
+				return
+			}
+		}
+
+		const dest = destination.current = newDest
+		const rootRect = root.getBoundingClientRect()
+		const markerY = dest.rect.top - rootRect.top + (
+			dest.disposition === "above" ? 0
+				: dest.disposition === "below" ? dest.rect.height
+					: dest.rect.height / 2)
+		root.style.setProperty("--drag-dest-y", markerY + "px")
+	}
+
+	return useMouseDragProps({
+		distanceBeforeMove: 3,
+		start: e => {
+			const target = getRowPath(e)
+			const root = rootRef.current
+			if(!target || !root){
+				return false
+			}
+			draggedRow.current = target
+
+			const rowRect = target.el.getBoundingClientRect()
 			const rootRect = root.getBoundingClientRect()
-			const markerY = dest.rect.top - rootRect.top + (
-				dest.disposition === "above" ? 0
-					: dest.disposition === "below" ? dest.rect.height
-						: dest.rect.height / 2)
-			root.style.setProperty("--drag-dest-y", markerY + "px")
-		}
-
-		const handlers = addMouseDragHandler({
-			// TODO: don't add drag handlers to each row, add them only to the root
-			element: el,
-			distanceBeforeMove: 3,
-			start: () => {
-				const rowRect = el.getBoundingClientRect()
-				const rootRect = root.getBoundingClientRect()
-				draggedRowOffsetX = rowRect.left - rootRect.left
-				draggedRowOffsetY = rowRect.top - rootRect.top
-
-				lockUserSelect()
-				root.classList.add(css.dragContainer!)
-				el.classList.add(css.draggedRow!)
-			},
-			stop: () => {
-				unlockUserSelect()
-				root.classList.remove(css.dragContainer!)
-				root.style.removeProperty("--drag-offset-x")
-				root.style.removeProperty("--drag-offset-y")
-				root.style.removeProperty("--drag-dest-y")
-				el.classList.remove(css.draggedRow!)
-				if(dest){
-					const destPath = [...dest.path]
-					if(dest.disposition === "below"){
-						destPath[destPath.length - 1]!++
-					} else if(dest.disposition === "inside"){
-						destPath.push(0)
-					}
-					onDrag(rowPath, destPath)
-				}
-				dest = null
-			},
-			onMove: e => {
-				const {x, y} = pointerEventsToOffsetCoords(e, root)!
-				root.style.setProperty("--drag-offset-x", (x - draggedRowOffsetX) + "px")
-				root.style.setProperty("--drag-offset-y", (y - draggedRowOffsetY) + "px")
-				updateDest(e)
+			offset.current = {
+				x: rowRect.left - rootRect.left,
+				y: rowRect.top - rootRect.top
 			}
-		})
 
-		return () => handlers.detach()
-	}, [rowRef, onDrag, rootRef, canBeChildOf, tree, rowPath, canDrag])
+			lockUserSelect()
+			root.classList.add(css.dragContainer!)
+			target.el.classList.add(css.draggedRow!)
+			return true
+		},
+		stop: () => {
+			const target = draggedRow.current
+			const root = rootRef.current
+			if(!target || !root){
+				return
+			}
+			unlockUserSelect()
+
+			root.classList.remove(css.dragContainer!)
+			root.style.removeProperty("--drag-offset-x")
+			root.style.removeProperty("--drag-offset-y")
+			root.style.removeProperty("--drag-dest-y")
+			target.el.classList.remove(css.draggedRow!)
+			let dest = destination.current
+			if(dest){
+				const destPath = [...dest.path]
+				if(dest.disposition === "below"){
+					destPath[destPath.length - 1]!++
+				} else if(dest.disposition === "inside"){
+					destPath.push(0)
+				}
+				onDragRef.current?.(target.path, destPath)
+			}
+			dest = null
+		},
+		onMove: e => {
+			const root = rootRef.current
+			if(!root){
+				return
+			}
+
+			const {x, y} = pointerEventsToOffsetCoords(e, root)!
+			root.style.setProperty("--drag-offset-x", (x - offset.current.x) + "px")
+			root.style.setProperty("--drag-offset-y", (y - offset.current.y) + "px")
+			updateDest(e)
+		}
+	})
 }
 
 
-const getDragDestination = <T, B>(tree: Tree<T, B>[], event: MouseEvent | TouchEvent): DragDestination<T, B> | null => {
+const getDragDestination = <T, B>(tree: Tree<T, B>[], event: AnyPointerEvent): DragDestination<T, B> | null => {
 	const searchResult = getRowPath(event)
 	if(!searchResult){
 		return null
 	}
-	const [path, targetRow] = searchResult
+	const {path, el: targetRow} = searchResult
 
 	const targetRect = targetRow.getBoundingClientRect()
 	const {y} = pointerEventsToClientCoords(event)
@@ -137,11 +156,11 @@ const getDragDestination = <T, B>(tree: Tree<T, B>[], event: MouseEvent | TouchE
 	return {path, tree: targetTree, disposition: disp, rect: targetRect}
 }
 
-const getRowPath = (event: MouseEvent | TouchEvent): [TreePath, HTMLElement] | null => {
+const getRowPath = (event: AnyPointerEvent): RowElPath | null => {
 	if(!(event.target instanceof Node)){
 		return null // should never happen
 	}
-	const parent = nodeOrParentThatMatches(event.target, (node): node is HTMLElement => {
+	const el = nodeOrParentThatMatches(event.target, (node): node is HTMLElement => {
 		if(!(node instanceof HTMLElement)){
 			return false
 		}
@@ -154,12 +173,12 @@ const getRowPath = (event: MouseEvent | TouchEvent): [TreePath, HTMLElement] | n
 		return node.classList.contains(css.treeView!)
 	})
 
-	if(!parent || parent.classList.contains(css.treeView!)){
+	if(!el || el.classList.contains(css.treeView!)){
 		return null
 	}
 
-	const path: TreePath = JSON.parse(parent.getAttribute("data-path")!)
-	return [path, parent]
+	const path: TreePath = JSON.parse(el.getAttribute("data-path")!)
+	return {path, el}
 }
 
 const isPathInsidePath = (maybeParent: TreePath, maybeChild: TreePath): boolean => {

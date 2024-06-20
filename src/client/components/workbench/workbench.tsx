@@ -1,9 +1,8 @@
 import {MutableRefObject, PropsWithChildren, useCallback, useLayoutEffect, useRef, useState} from "react"
 import * as css from "./workbench.module.scss"
 import {useElementSize} from "client/ui_utils/use_element_size"
-import {pointerEventsToOffsetCoordsByRect} from "common/mouse_drag"
 import {WorkbenchContextProvider, WorkbenchContextValue} from "client/components/workbench/workbench_context"
-import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
+import {AnyPointerEvent, pointerEventsToOffsetCoordsByRect} from "client/ui_utils/use_mouse_drag"
 import {useWorkbenchInputProps} from "client/components/workbench/use_workbench_input"
 
 type Props = {
