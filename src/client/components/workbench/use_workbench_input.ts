@@ -1,7 +1,7 @@
 import {WorkbenchPositionState} from "client/components/workbench/workbench"
+import {AnyPointerEvent, useMouseDragProps} from "client/ui_utils/use_mouse_drag"
 import {lockUserSelect, unlockUserSelect} from "client/ui_utils/user_select_lock"
-import {addMouseDragHandler} from "common/mouse_drag"
-import {RefObject, useEffect} from "react"
+import {useCallback, useRef} from "react"
 
 type SetterFn<T> = (callback: (value: T) => T) => void
 
@@ -10,76 +10,60 @@ type Props = {
 	zoomSpeed: number
 	zoomMin: number
 	zoomMax: number
-	rootRef: RefObject<HTMLElement | null>
-	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent, zoom?: number, x?: number, y?: number) => {x: number, y: number}
+	pointerEventToWorkbenchCoords: (e: AnyPointerEvent, zoom?: number, x?: number, y?: number) => {x: number, y: number}
 }
 
-export const useWorkbenchInput = ({setBenchState, rootRef, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax}: Props) => {
-	useEffect(() => {
-		const root = rootRef.current
-		if(!root){
-			return
-		}
+export const useWorkbenchInputProps = ({setBenchState, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax}: Props) => {
+	const wheelHandler = useCallback((e: React.WheelEvent | WheelEvent) => {
+		setBenchState(({x, y, zoom}) => {
+			const mult = 1 + (e.deltaY < 0 ? 1 : -1) * zoomSpeed
+			let newZoom = zoom
+			if((newZoom < 1 && newZoom * mult > 1) || (newZoom > 1 && newZoom * mult < 1)){
+				// breakpoint. always stop for zoom = 1
+				newZoom = 1
+			} else {
+				newZoom *= mult
+			}
+			newZoom = Math.max(zoomMin, Math.min(zoomMax, newZoom))
 
-		const wheelHandler = (e: WheelEvent) => {
-			setBenchState(({x, y, zoom}) => {
-				const mult = 1 + (e.deltaY < 0 ? 1 : -1) * zoomSpeed
-				let newZoom = zoom
-				if((newZoom < 1 && newZoom * mult > 1) || (newZoom > 1 && newZoom * mult < 1)){
-					// breakpoint. always stop for zoom = 1
-					newZoom = 1
-				} else {
-					newZoom *= mult
-				}
-				newZoom = Math.max(zoomMin, Math.min(zoomMax, newZoom))
+			const zoomPointCoordsBeforeZoom = pointerEventToWorkbenchCoords(e, zoom)
+			const zoomPointCoordsAfterZoom = pointerEventToWorkbenchCoords(e, newZoom)
+			const dx = zoomPointCoordsBeforeZoom.x - zoomPointCoordsAfterZoom.x
+			const dy = zoomPointCoordsBeforeZoom.y - zoomPointCoordsAfterZoom.y
+			return {
+				zoom: newZoom,
+				x: x - dx,
+				y: y - dy
+			}
+		})
+	}, [pointerEventToWorkbenchCoords, setBenchState, zoomMax, zoomMin, zoomSpeed])
 
-				const zoomPointCoordsBeforeZoom = pointerEventToWorkbenchCoords(e, zoom)
-				const zoomPointCoordsAfterZoom = pointerEventToWorkbenchCoords(e, newZoom)
-				const dx = zoomPointCoordsBeforeZoom.x - zoomPointCoordsAfterZoom.x
-				const dy = zoomPointCoordsBeforeZoom.y - zoomPointCoordsAfterZoom.y
+	const dragStart = useRef({x: 0, y: 0})
+
+	const dragProps = useMouseDragProps({
+		distanceBeforeMove: 2,
+		start: () => {
+			setBenchState(state => {
+				dragStart.current.x = state.x
+				dragStart.current.y = state.y
+				return state
+			})
+			lockUserSelect()
+		},
+		stop: unlockUserSelect,
+		onMove: (_, {diff: {x: dx, y: dy}}) => {
+			setBenchState(({zoom}) => {
 				return {
-					zoom: newZoom,
-					x: x - dx,
-					y: y - dy
+					zoom,
+					x: dragStart.current.x - dx / zoom,
+					y: dragStart.current.y - dy / zoom
 				}
 			})
 		}
+	})
 
-		let startCursorPos = {x: 0, y: 0}
-		let startCenterPos = {x: 0, y: 0}
-		const mouseDrag = addMouseDragHandler({
-			distanceBeforeMove: 2,
-			element: root,
-			start: e => {
-				setBenchState(({x, y, zoom}) => {
-					startCursorPos = pointerEventToWorkbenchCoords(e)
-					startCenterPos = {x, y}
-					return {x, y, zoom}
-				})
-				lockUserSelect()
-				return true
-			},
-			stop: () => {
-				unlockUserSelect()
-			},
-			onMove: e => {
-				setBenchState(({zoom}) => {
-					const curCursorPos = pointerEventToWorkbenchCoords(e, zoom, startCenterPos.x, startCenterPos.y)
-					const dx = startCursorPos.x - curCursorPos.x
-					const dy = startCursorPos.y - curCursorPos.y
-					return {
-						zoom,
-						x: startCenterPos.x - dx,
-						y: startCenterPos.y - dy
-					}
-				})
-			}
-		})
-
-		root.addEventListener("wheel", wheelHandler, {passive: true})
-		return () => {
-			mouseDrag.detach()
-			root.removeEventListener("wheel", wheelHandler)
-		}
-	}, [setBenchState, rootRef, zoomMax, zoomMin, zoomSpeed, pointerEventToWorkbenchCoords])
+	return {
+		...dragProps,
+		onWheel: wheelHandler
+	}
 }

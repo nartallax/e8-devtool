@@ -1,6 +1,6 @@
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {findPointInsertionIndex} from "client/parts/model_page/model_display/model_display_data"
-import {isAddDeleteEvent} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_data"
+import {isModelShapeNodeAddDeleteEvent} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_data"
 import {useMemo} from "react"
 
 export const useAddNodeProps = () => {
@@ -42,7 +42,7 @@ export const useAddNodeProps = () => {
 		}
 
 		return (e: React.MouseEvent) => {
-			if(isAddDeleteEvent(e)){
+			if(isModelShapeNodeAddDeleteEvent(e)){
 				e.preventDefault()
 				e.stopPropagation()
 				addNodeAt(e)

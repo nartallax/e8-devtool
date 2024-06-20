@@ -4,6 +4,7 @@ import {useConfig} from "client/parts/config_context"
 import {useProject} from "client/parts/project_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {StateStack} from "client/ui_utils/state_stack"
+import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
 import {UUID} from "common/uuid"
 import {ProjectModel, ProjectShape} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -12,14 +13,12 @@ type ShapeStateMeta = {
 	type: "keyboard_move" | "mouse_move" | "initial"
 }
 
-type MovingPointState = {
-	startX: number
-	startY: number
-	lastX: number
-	lastY: number
+type SelectedPoint = {
 	pointIndex: number
 	shapeId: UUID
 }
+
+export type ModelDisplayContextValue = ReturnType<typeof useModelDisplayContext>
 
 export const [ModelDisplayContextProvider, useModelDisplayContext] = defineContext({
 	name: "ModelDisplayContext",
@@ -34,7 +33,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		const {inworldUnitPixelSize} = useConfig()
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
-		const movingPointStateRef = useRef<MovingPointState | null>(null)
+		const selectedPointRef = useRef<SelectedPoint | null>(null)
 
 		const setModel = useCallback((modelOrCallback: ProjectModel | ((oldValue: ProjectModel) => ProjectModel)) => {
 			setProject(project => {
@@ -75,7 +74,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			workbenchRef?.current?.resetPosition()
 		}, [workbenchRef])
 
-		const mouseEventToInworldCoords = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): XY => {
+		const mouseEventToInworldCoords = useCallback((e: AnyPointerEvent): XY => {
 			const workbench = workbenchRef.current
 			if(!workbench){
 				throw new Error("No workbench is set: cannot convert coords")
@@ -101,7 +100,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			workbenchRef,
 			resetPosition,
 			mouseEventToInworldCoords,
-			movingPointStateRef
+			selectedPointRef
 		}
 	}
 })

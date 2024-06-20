@@ -6,9 +6,9 @@ import {useModelDisplayContext} from "client/parts/model_page/model_display/mode
 import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
 import {useConfig} from "client/parts/config_context"
 import {useModelShapesHotkeys} from "client/parts/model_page/model_display/model_shapes_layer/use_model_shapes_hotkeys"
-import {useModelShapesDrag} from "client/parts/model_page/model_display/model_shapes_layer/use_model_shapes_drag"
-import {isAddDeleteEvent} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_data"
+import {isModelShapeNodeAddDeleteEvent} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_data"
 import {useAddNodeProps} from "client/parts/model_page/model_display/model_shapes_layer/use_add_node_props"
+import {useModelShapesDragProps} from "client/parts/model_page/model_display/model_shapes_layer/use_model_shapes_drag"
 
 export const ModelShapeLayer = () => {
 	const rootRef = useRef<SVGSVGElement | null>(null)
@@ -33,7 +33,7 @@ const ModelShapePaths = () => {
 					className={cn(css.shapePath, {[css.isSelected!]: selectedShapeId === shape.id})}
 					strokeWidth={0.005}
 					d={shapeToSvgPathD(shape.points, inworldUnitPixelSize, shape.id, currentlyDrawnShapeId)}
-					onMouseDown={e => setSelectedShapeId(id => id === shape.id && !isAddDeleteEvent(e) ? null : shape.id)}
+					onMouseDown={e => setSelectedShapeId(id => id === shape.id && !isModelShapeNodeAddDeleteEvent(e) ? null : shape.id)}
 				/>
 			))}
 		</>
@@ -42,11 +42,10 @@ const ModelShapePaths = () => {
 
 const ModelShapeNodes = () => {
 	const {model, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
-	const rootRef = useRef<SVGGElement | null>(null)
-	useModelShapesDrag(rootRef)
+	const dragProps = useModelShapesDragProps()
 
 	return (
-		<g ref={rootRef}>
+		<g {...dragProps}>
 			{model.shapes.map(shape => (
 				<g
 					key={shape.id}

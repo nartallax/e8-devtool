@@ -1,9 +1,10 @@
 import {MutableRefObject, PropsWithChildren, useCallback, useLayoutEffect, useRef, useState} from "react"
 import * as css from "./workbench.module.scss"
-import {useWorkbenchInput} from "client/components/workbench/use_workbench_input"
 import {useElementSize} from "client/ui_utils/use_element_size"
 import {pointerEventsToOffsetCoordsByRect} from "common/mouse_drag"
 import {WorkbenchContextProvider, WorkbenchContextValue} from "client/components/workbench/workbench_context"
+import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
+import {useWorkbenchInputProps} from "client/components/workbench/use_workbench_input"
 
 type Props = {
 	minZoom?: number
@@ -34,12 +35,13 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 
 	const rootSize = useElementSize(rootRef)
 
-	const pointerEventToWorkbenchCoords = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent, zoom?: number, x?: number, y?: number) => {
+	const pointerEventToWorkbenchCoords = useCallback((e: AnyPointerEvent, zoom?: number, x?: number, y?: number) => {
 		const root = rootRef.current
 		if(!root){
 			throw new Error("No workbench, cannot convert coords")
 		}
 		zoom ??= benchStateRef.current.zoom
+		// TODO: we don't need to pass those anymore I think
 		x ??= benchStateRef.current.x
 		y ??= benchStateRef.current.y
 		const rootSize = root.getBoundingClientRect()
@@ -67,7 +69,7 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 		resetPosition()
 	}, [resetPosition, width, height])
 
-	useWorkbenchInput({rootRef, setBenchState: updateBenchState, zoomMin: minZoom, zoomMax: maxZoom, zoomSpeed, pointerEventToWorkbenchCoords})
+	const inputProps = useWorkbenchInputProps({setBenchState: updateBenchState, zoomMin: minZoom, zoomMax: maxZoom, zoomSpeed, pointerEventToWorkbenchCoords})
 
 	return (
 		<WorkbenchContextProvider
@@ -76,7 +78,7 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 			height={height}
 			pointerEventToWorkbenchCoords={pointerEventToWorkbenchCoords}
 			resetPosition={resetPosition}>
-			<div className={css.workbench} ref={rootRef}>
+			<div className={css.workbench} {...inputProps} ref={rootRef}>
 				<div
 					className={css.workbenchContent}
 					style={{

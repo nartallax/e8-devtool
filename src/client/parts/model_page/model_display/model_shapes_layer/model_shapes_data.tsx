@@ -1,8 +1,8 @@
+import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
 import {UUID} from "common/uuid"
 
-// TODO: rename, too common
-export const isAddDeleteEvent = (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): boolean => e.ctrlKey || e.metaKey
-export const getTargetIds = (e: MouseEvent | TouchEvent): ({shapeId: UUID, pointIndex: number} | null) => {
+export const isModelShapeNodeAddDeleteEvent = (e: AnyPointerEvent): boolean => e.ctrlKey || e.metaKey
+export const getModelShapeNodeTargetIds = (e: AnyPointerEvent): ({shapeId: UUID, pointIndex: number} | null) => {
 	let el = e.target
 	while(el instanceof SVGElement){
 		const shapeId = el.getAttribute("data-shape-id")

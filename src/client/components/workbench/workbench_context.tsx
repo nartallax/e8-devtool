@@ -1,11 +1,12 @@
 import {XY} from "@nartallax/e8"
 import {defineContext} from "client/ui_utils/define_context"
+import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
 import {MutableRefObject} from "react"
 
 export type WorkbenchContextValue = {
 	width: number
 	height: number
-	pointerEventToWorkbenchCoords: (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => XY
+	pointerEventToWorkbenchCoords: (e: AnyPointerEvent) => XY
 	resetPosition: () => void
 }
 
