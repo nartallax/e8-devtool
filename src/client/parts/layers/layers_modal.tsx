@@ -28,7 +28,7 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 		// TODO: check particles for particle type layers
 		const models = project.models.filter(model => model.layerId === layer.id)
 		if(models.length > 0){
-			showAlert({
+			void showAlert({
 				header: "This layer is in use",
 				body: getDeletionConflictMessage(models)
 			})

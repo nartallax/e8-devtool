@@ -4,6 +4,7 @@ import {Col, Row} from "client/components/row_col/row_col"
 import * as css from "./modal.module.scss"
 import {defineContext} from "client/ui_utils/define_context"
 import {useCallback, useState} from "react"
+import {Icon} from "generated/icons"
 
 type Props = {
 	header: string
@@ -19,7 +20,12 @@ export const AlertModal = ({header, body, onClose}: Props) => {
 					{body}
 				</div>
 				<Row justify="end" alignSelf="stretch">
-					<Button text="OK" onClick={onClose} hotkey={e => e.code === "Enter"}/>
+					<Button
+						text="OK"
+						onClick={onClose}
+						hotkey={e => e.code === "Enter"}
+						icon={Icon.check}
+					/>
 				</Row>
 			</Col>
 		</Modal>
@@ -38,17 +44,17 @@ export const [AlertModalProvider, useAlert] = defineContext({
 	useValue: () => {
 		const [props, setProps] = useState(emptyProps)
 
-		const showAlert = useCallback((props: Partial<Props>) => {
+		const showAlert = useCallback((props: Partial<Omit<Props, "onClose">>) => new Promise<void>(ok => {
 			setProps({
 				...emptyProps,
 				...props,
 				isOpen: true,
 				onClose: () => {
 					setProps(emptyProps)
-					props.onClose?.()
+					ok()
 				}
 			})
-		}, [])
+		}), [])
 
 		return {props, showAlert}
 	},

@@ -27,7 +27,7 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 	const onDelete = (group: ProjectCollisionGroup) => {
 		const models = project.models.filter(model => model.collisionGroupId === group.id)
 		if(models.length > 0){
-			showAlert({
+			void showAlert({
 				header: "This collision group is in use",
 				body: getDeletionConflictMessage(models)
 			})

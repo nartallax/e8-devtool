@@ -45,7 +45,7 @@ export const ModelSelector = () => {
 
 		const textureId = findDefaultId(textureFiles)
 		if(!textureId){
-			showAlert({
+			void showAlert({
 				body: "Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first."
 			})
 			return null

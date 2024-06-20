@@ -34,5 +34,9 @@ export const defineContext = <T, I>({name, useValue: getValue, additionalChildre
 		)
 	}
 
+	if(name){
+		Provider.displayName = name + ".Provider"
+	}
+
 	return [Provider, useThisContext]
 }

@@ -1,6 +1,8 @@
+import {useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useApi} from "client/parts/api_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {SetState} from "client/ui_utils/react_types"
+import {useWrappedSetState} from "client/ui_utils/use_wrapped_setstate"
 import {Project, makeBlankProject} from "data/project"
 
 export const [ProjectProvider, useProjectContext] = defineContext({
@@ -13,5 +15,7 @@ export const [ProjectProvider, useProjectContext] = defineContext({
 
 export const useProject = (): [Project, SetState<Project>] => {
 	const {project, setProject} = useProjectContext()
-	return [project, setProject]
+	const {notifyHasUnsavedChanges} = useUnsavedChanges()
+	const wrappedSetProject = useWrappedSetState(setProject, {before: notifyHasUnsavedChanges})
+	return [project, wrappedSetProject]
 }
