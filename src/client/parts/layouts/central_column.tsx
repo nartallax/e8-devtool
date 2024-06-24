@@ -1,9 +1,10 @@
 import {Col} from "client/components/row_col/row_col"
-import {PropsWithChildren} from "react"
+import {PropsWithChildren, forwardRef} from "react"
 
-export const CentralColumn = ({children}: PropsWithChildren) => {
+export const CentralColumn = forwardRef<HTMLDivElement, PropsWithChildren>(({children}, ref) => {
 	return (
 		<Col
+			ref={ref}
 			width="100%"
 			padding
 			align="center"
@@ -17,4 +18,4 @@ export const CentralColumn = ({children}: PropsWithChildren) => {
 			</Col>
 		</Col>
 	)
-}
+})

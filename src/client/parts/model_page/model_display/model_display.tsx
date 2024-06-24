@@ -24,6 +24,7 @@ import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {useConfig} from "client/parts/config_context"
+import {useTitlePart} from "client/components/title_context/title_context"
 
 type Props = {
 	modelId: UUID
@@ -115,6 +116,9 @@ const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingS
 
 	const {textureFiles} = useTextures()
 
+	const ref = useRef<HTMLDivElement>(null)
+	useTitlePart(ref, " - " + model.name)
+
 	return (
 		<>
 			<NamedIdSelector
@@ -158,7 +162,7 @@ const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingS
 			<CheckboxField label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>
 			<CheckboxField label="Show grid" value={isShowingGrid} onChange={setShowGrid}/>
 			<CheckboxField label="Show texture" value={isShowingTexture} onChange={setShowTexture}/>
-			<Row gap>
+			<Row gap ref={ref}>
 				<TooltipIcon
 					icon={Icon.questionCircle}
 					tooltipCorner="top-left"

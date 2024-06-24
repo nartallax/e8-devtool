@@ -4,6 +4,7 @@ import {AlertModalProvider} from "client/components/modal/alert_modal"
 import {ChoiceModalProvider} from "client/components/modal/choice_modal"
 import {RootRoutingContextProvider} from "client/components/router/routing_context"
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
+import {TitleProvider} from "client/components/title_context/title_context"
 import {ToastProvider} from "client/components/toast/toast_context"
 import {ToastDisplay} from "client/components/toast/toast_list"
 import {UnsavedChangesProvider, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
@@ -17,6 +18,9 @@ import {ModelPage} from "client/parts/model_page/model_page"
 import {ProjectProvider, useProjectContext} from "client/parts/project_context"
 import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
 import {PropsWithChildren, useEffect} from "react"
+import faviconDefault from "../favicon.svg"
+import faviconHasChanges from "../favicon_has_changes.svg"
+import {Favicon} from "client/components/favicon/favicon"
 
 export const App = () => (
 	<Providers>
@@ -26,17 +30,19 @@ export const App = () => (
 
 /** Not app-specific providers */
 const CommonProviders = ({children}: PropsWithChildren) => (
-	<ToastProvider>
-		<HotkeyContextProvider>
-			<AlertModalProvider>
-				<ChoiceModalProvider>
-					<Form>
-						{children}
-					</Form>
-				</ChoiceModalProvider>
-			</AlertModalProvider>
-		</HotkeyContextProvider>
-	</ToastProvider>
+	<TitleProvider defaultTitle="E8 devtool">
+		<ToastProvider>
+			<HotkeyContextProvider>
+				<AlertModalProvider>
+					<ChoiceModalProvider>
+						<Form>
+							{children}
+						</Form>
+					</ChoiceModalProvider>
+				</AlertModalProvider>
+			</HotkeyContextProvider>
+		</ToastProvider>
+	</TitleProvider>
 )
 
 /** API interactions providers */
@@ -79,7 +85,7 @@ const Content = () => {
 	const {isLoaded: isProjectLoaded} = useProjectContext()
 	const {isLoaded: isConfigLoaded} = useConfigContext()
 	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded && isConfigLoaded
-	const {clearUnsavedFlag} = useUnsavedChanges()
+	const {clearUnsavedFlag, hasUnsaved} = useUnsavedChanges()
 
 	useEffect(() => {
 		if(isEverythingLoaded){
@@ -91,8 +97,11 @@ const Content = () => {
 		return null
 	}
 
+	const favicon = hasUnsaved ? faviconHasChanges : faviconDefault
+
 	return (
 		<>
+			<Favicon src={favicon}/>
 			<GlobalHotkeyManager/>
 			<TabsAndRouter
 				tabs={[

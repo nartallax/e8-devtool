@@ -1,5 +1,5 @@
 import {defineContext} from "client/ui_utils/define_context"
-import {nonNull} from "common/non_null"
+import {orderDomElementsInOrderOfAppearance} from "client/ui_utils/order_dom_elements_in_order_of_appearance"
 import {RefObject, useCallback, useEffect, useRef} from "react"
 
 type HotkeyHandler = {
@@ -91,63 +91,7 @@ function findBestHandlers(handlers: HotkeyHandler[]): HotkeyHandler[] {
 		return handlers
 	}
 
-	let chains = handlers
-		.map(handler => {
-			const el = handler.ref.current
-			if(!el){
-				return null
-			}
-			return {chain: buildElementChain(el), listener: handler}
-		})
-		.filter(nonNull)
-	let currentParent: HTMLElement | SVGElement = document.body
-	let currentIndex = 0
-	while(chains.length > 1){
-		const childArray = chains
-			.map(({chain}) => chain[currentIndex])
-			.filter((el): el is HTMLElement | SVGElement => !!el)
-		const lowestChild = findLowestChild(currentParent, childArray)
-		const filteredChains = chains.filter(({chain}) => chain[currentIndex] === lowestChild)
-		if(filteredChains.length === 0){
-			// the only case when it could happen - when there's more than one listener for an element
-			// in which case we should invoke all of them
-			break
-		}
-		chains = filteredChains
-		currentIndex++
-		currentParent = lowestChild
-	}
-
-	return chains.map(chain => chain.listener)
-}
-
-function findLowestChild(parent: HTMLElement | SVGElement, children: (HTMLElement | SVGElement)[]): (HTMLElement | SVGElement) {
-	let maxIndex = 0
-	let maxIndexChild = children[0]!
-	for(const child of children){
-		const index = indexOfChild(parent, child)
-		if(index > maxIndex){
-			maxIndex = index
-			maxIndexChild = child
-		}
-	}
-	return maxIndexChild
-}
-
-function indexOfChild(parent: HTMLElement | SVGElement, child: HTMLElement | SVGElement): number {
-	for(let i = 0; i < parent.children.length; i++){
-		if(parent.children[i] === child){
-			return i
-		}
-	}
-	throw new Error("The child is not child of parent")
-}
-
-function buildElementChain(el: HTMLElement | SVGElement): (HTMLElement | SVGElement)[] {
-	const result = [el]
-	while(el.parentElement && el.parentElement !== document.body){
-		el = el.parentElement
-		result.push(el)
-	}
-	return result.reverse()
+	const sortedHandlers = orderDomElementsInOrderOfAppearance(handlers)
+	const target = sortedHandlers[sortedHandlers.length - 1]!.ref.current
+	return handlers.filter(handler => handler.ref.current === target)
 }

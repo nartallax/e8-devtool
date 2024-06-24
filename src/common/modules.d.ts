@@ -19,3 +19,8 @@ declare module "*.glsl" {
 	const shaderCode: string
 	export default shaderCode
 }
+
+declare module "*.svg" {
+	const svgPath: string
+	export default svgPath
+}

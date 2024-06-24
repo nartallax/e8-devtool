@@ -1,4 +1,5 @@
 import {Button} from "client/components/button/button"
+import {useTitlePart} from "client/components/title_context/title_context"
 import {MappedNamedIdTreeControls, MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
 import {InputBindModal} from "client/parts/input_bind_page/input_bind_modal"
 import {CentralColumn} from "client/parts/layouts/central_column"
@@ -6,12 +7,14 @@ import {useProject} from "client/parts/project_context"
 import {isTreeBranch} from "common/tree"
 import {ProjectInputBind, ProjectInputBindSet} from "data/project"
 import {Icon} from "generated/icons"
-import {useState} from "react"
+import {useRef, useState} from "react"
 
 export const InputBindPage = () => {
 	const [project, setProject] = useProject()
 	const [editedBind, setEditedBind] = useState<ProjectInputBind | null>(null)
 	const groups = new Map(project.inputGroups.map(group => [group.id, group]))
+	const ref = useRef<HTMLDivElement>(null)
+	useTitlePart(ref, "Inputs")
 
 	const onBindModalClose = (bind?: ProjectInputBind) => {
 		setEditedBind(null)
@@ -32,7 +35,7 @@ export const InputBindPage = () => {
 	}
 
 	return (
-		<CentralColumn>
+		<CentralColumn ref={ref}>
 			{editedBind ? <InputBindModal bind={editedBind} onClose={onBindModalClose}/> : null}
 			<MappedNamedIdTreeView
 				values={project.inputBinds}

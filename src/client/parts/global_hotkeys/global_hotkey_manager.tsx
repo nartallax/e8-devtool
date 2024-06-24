@@ -1,6 +1,6 @@
 import {useHotkey} from "client/components/hotkey_context/hotkey_context"
 import {preventUndoRedoGlobally} from "client/components/hotkey_context/hotkey_utils"
-import {useSave} from "client/parts/global_hotkeys/use_save"
+import {useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useEffect, useRef} from "react"
 
 // a component that manages hotkeys that fire globally on page
@@ -14,7 +14,7 @@ export const GlobalHotkeyManager = () => {
 	}, [])
 
 
-	const save = useSave()
+	const {save} = useUnsavedChanges()
 	useHotkey({
 		ref: useRef(document.body),
 		shouldPick: e => e.code === "KeyS" && e.ctrlKey,

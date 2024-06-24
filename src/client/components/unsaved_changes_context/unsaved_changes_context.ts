@@ -4,6 +4,10 @@ import {defineContext} from "client/ui_utils/define_context"
 import {useCallback, useEffect, useRef, useState} from "react"
 
 type Props = {
+	// TODO: redo this.
+	// it's weird to have one function to save everything, and then... some more functions that do saving?
+	// let's do everything through array of saveable changes
+	// we'll need to think about call order
 	onSave: () => (Promise<void> | void)
 	/** Adds handler to display "Are you sure" when user closes tab with unsaved changes */
 	preventUnsavedClose?: boolean
