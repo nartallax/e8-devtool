@@ -5,6 +5,10 @@ import {RefObject, useCallback, useEffect, useRef} from "react"
 type HotkeyHandler = {
 	/** Reference to element that will receive the hotkey
 	Only used for determining priority of calling the handlers */
+	// TODO: this sucks.
+	// we should instead create context-like element like <Hotkey>
+	// and through that infer hotkey priority, not through refs
+	// and also this will allow us to abolish forwardRef()ing
 	ref: RefObject<HTMLElement | SVGElement>
 	// this is optional because sometimes (see <Button>) this function may be absent, meaning "no hotkey"
 	// end-users should always supply this one

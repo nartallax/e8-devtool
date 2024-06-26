@@ -1,9 +1,7 @@
-import {defineContext} from "client/ui_utils/define_context"
-import {orderDomElementsInOrderOfAppearance} from "client/ui_utils/order_dom_elements_in_order_of_appearance"
-import {RefObject, useEffect, useState} from "react"
+import {defineNestedTreeContext} from "client/ui_utils/define_nested_tree_context"
+import {useEffect} from "react"
 
 type TitlePart = {
-	ref: RefObject<Element>
 	part: string
 }
 
@@ -11,27 +9,18 @@ type Props = {
 	defaultTitle?: string
 }
 
-const [_TitleProvider, useTitleContext] = defineContext({
+export const {RootProvider: TitleProvider, NestedProvider: TitlePart} = defineNestedTreeContext({
 	name: "TitleContext",
-	useValue: ({defaultTitle = ""}: Props) => {
-		const [parts, setParts] = useState<TitlePart[]>([])
-		if(parts.length === 0){
-			document.title = defaultTitle
-		} else {
-			const sortedParts = orderDomElementsInOrderOfAppearance(parts)
-			document.title = sortedParts.map(x => x.part).join("")
-		}
-		return {setParts}
+	useNestedValue: ({part}: TitlePart) => part,
+	useRootValue: ({defaultTitle}: Props, treeServices) => {
+		useEffect(() => {
+			let title: string
+			if(treeServices.forest.length === 0){
+				title = defaultTitle ?? ""
+			} else {
+				title = treeServices.getSortedByDepth().join("")
+			}
+			document.title = title
+		}, [defaultTitle, treeServices])
 	}
 })
-
-export const TitleProvider = _TitleProvider
-
-export const useTitlePart = (ref: RefObject<Element>, titlePart: string) => {
-	const {setParts} = useTitleContext()
-	useEffect(() => {
-		const part: TitlePart = {ref, part: titlePart}
-		setParts(parts => [...parts, part])
-		return () => setParts(parts => parts.filter(somePart => somePart !== part))
-	}, [titlePart, setParts, ref])
-}
