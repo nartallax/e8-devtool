@@ -9,6 +9,8 @@ type UseSaveableStateResult<T> = {
 	markSaved: () => void
 }
 
+/** setState that tracks if it was saved
+"saved" here means "uploaded to some storage or parent state" */
 export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | Promise<void>): UseSaveableStateResult<T> => {
 	const currentValueRef = useRef(value)
 	const [currentValue, rawSetState] = useState(value)
