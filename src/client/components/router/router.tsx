@@ -12,7 +12,7 @@ type Props = {
 
 export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 
-	const {nonMatchedUrl: oldNonMatchedUrl, matchedUrl: oldMatchedUrl} = useRoutingContext()
+	const {nonMatchedUrl: oldNonMatchedUrl, matchedUrl: oldMatchedUrl, ...context} = useRoutingContext()
 	const [routeMatch, setRouteMatch] = useState<RouteMatchingResult | null>(null)
 	const everCalledUpdateHandler = useRef(false)
 
@@ -35,7 +35,7 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 
 
 	return !routeMatch ? null : (
-		<RoutingContextProvider nonMatchedUrl={routeMatch.nonMatchedUrl} matchedUrl={routeMatch.matchedUrl}>
+		<RoutingContextProvider nonMatchedUrl={routeMatch.nonMatchedUrl} matchedUrl={routeMatch.matchedUrl} {...context}>
 			<Col
 				grow={1}
 				shrink={1}

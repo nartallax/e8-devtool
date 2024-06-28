@@ -45,7 +45,7 @@ const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, u
 
 		const {showConfirmationModal} = useChoiceModal()
 		/** If there are unsaved changes - ask user if they should be saved. If user refuses - throw AbortError; save otherwise. */
-		const saveOrAbort = useCallback(async(opts: TrySaveOptions) => {
+		const saveOrAbort = useCallback(async(opts: TrySaveOptions = {}) => {
 			if(!hasChanges){
 				return
 			}

@@ -28,7 +28,11 @@ export function ChoiceModal<T>({header, body, options, onClose}: Props<T>) {
 				<div className={css.alertModalBody}>
 					{body}
 				</div>
-				<Row justify="end" alignSelf="stretch">
+				<Row
+					justify="end"
+					alignSelf="stretch"
+					gap
+					margin="top">
 					{options.map(option => (
 						<Button
 							key={option.text}

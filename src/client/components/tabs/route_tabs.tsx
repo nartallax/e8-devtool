@@ -1,5 +1,6 @@
 import {useRoutingContext} from "client/components/router/routing_context"
 import {Tabs} from "client/components/tabs/tabs"
+import {mergeUrls} from "client/ui_utils/urls"
 import {Icon} from "generated/icons"
 import {useEffect} from "react"
 
@@ -13,13 +14,12 @@ export type RouteTab = {
 
 type Props = {
 	tabs: RouteTab[]
-	historyActionType?: "push" | "replace"
 	matchedUrl?: URL
 	isAutoRoutingToDefaultEnabled?: boolean
 }
 
-export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, isAutoRoutingToDefaultEnabled = false}: Props) => {
-	const {matchedUrl: baseUrl} = useRoutingContext()
+export const RouteTabs = ({tabs, matchedUrl, isAutoRoutingToDefaultEnabled = false}: Props) => {
+	const {matchedUrl: baseUrl, navigate} = useRoutingContext()
 	const effMatchedUrl = matchedUrl ?? baseUrl
 
 	useEffect(() => {
@@ -34,8 +34,8 @@ export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, isAutoR
 		if(!defaultTab){
 			return
 		}
-		goToTab(baseUrl, defaultTab, historyActionType)
-	}, [effMatchedUrl, tabs, baseUrl, historyActionType, isAutoRoutingToDefaultEnabled])
+		navigate(mergeUrls(baseUrl, defaultTab.suffix))
+	}, [effMatchedUrl, tabs, baseUrl, isAutoRoutingToDefaultEnabled, navigate])
 
 	return (
 		<Tabs tabs={tabs.map(tab => ({
@@ -44,7 +44,7 @@ export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, isAutoR
 			icon: tab.icon,
 			hotkey: tab.hotkey,
 			isActive: isMatching(tab, effMatchedUrl),
-			onClick: () => goToTab(baseUrl, tab, historyActionType)
+			onClick: () => navigate(mergeUrls(baseUrl, tab.suffix))
 		}))}
 		/>
 	)
@@ -52,16 +52,4 @@ export const RouteTabs = ({tabs, historyActionType = "push", matchedUrl, isAutoR
 
 const isMatching = (tab: RouteTab, url: URL): boolean => {
 	return url.pathname.startsWith(tab.suffix)
-}
-
-const goToTab = (baseUrl: URL, tab: RouteTab, historyActionType: Props["historyActionType"]) => {
-	const target = new URL(tab.suffix, baseUrl)
-	switch(historyActionType){
-		case "push":
-			window.history.pushState(null, "", target)
-			return
-		case "replace":
-			window.history.replaceState(null, "", target)
-			return
-	}
 }

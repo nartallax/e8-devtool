@@ -1,5 +1,6 @@
 import {XY} from "@nartallax/e8"
-import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {useBeforeNavigation} from "client/components/router/routing_context"
+import {UnsavedChanges, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {WorkbenchContextValue} from "client/components/workbench/workbench_context"
 import {useConfig} from "client/parts/config_context"
@@ -77,6 +78,9 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			y /= inworldUnitPixelSize
 			return roundToGrain({x, y})
 		}, [inworldUnitPixelSize, roundToGrain, workbenchRef])
+
+		const {saveOrAbort} = useUnsavedChanges()
+		useBeforeNavigation(() => saveOrAbort({actionDescription: "navigate away"}))
 
 		return {
 			currentlyDrawnShapeId,
