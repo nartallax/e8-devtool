@@ -7,8 +7,6 @@ import {promises as Fs} from "fs"
 import * as Path from "path"
 
 export interface ConfigFilePathless {
-	host?: string
-	port: number
 	/** Approximate amount of pixels for one inworld unit.
 	 * This setting affects precision and some inferred values
 	 * Keep this around 100, and make the textures accordingly */
@@ -53,7 +51,6 @@ export function makeEmptyConfigFile(): ConfigFile {
 	return {
 		entityClassesDirectoryPath: "",
 		inworldUnitPixelSize: 100,
-		port: 24765,
 		projectPath: "./project.e8.json",
 		resourcePackPath: "./generated/resource_pack.e8.bin",
 		textureDirectoryPath: "./textures",
@@ -77,7 +74,7 @@ export function stripCliArgsFromConfig(config: Config): ConfigFile {
 }
 
 export function stripPathsFromConfigFile(config: ConfigFile): ConfigFilePathless {
-	return deepOmit(config, configFilePathProps)
+	return {inworldUnitPixelSize: config.inworldUnitPixelSize}
 }
 
 export async function getConfig(): Promise<Config> {

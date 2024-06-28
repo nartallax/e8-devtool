@@ -21,6 +21,16 @@ const cli = CLI.define({
 		noStartOpen: CLI.bool({
 			keys: ["--no-start-open"],
 			description: "By default the tool will open its UI in default browser after start. Pass this option to prevent this behaviour."
+		}),
+		port: CLI.port({
+			keys: ["--port"],
+			description: "TCP port on which UI will be available. Defaults to 24765.",
+			default: 24765
+		}),
+		host: CLI.str({
+			keys: ["--host"],
+			description: "Host name on which UI will be available. Defaults to localhost.",
+			default: "localhost"
 		})
 	}
 })

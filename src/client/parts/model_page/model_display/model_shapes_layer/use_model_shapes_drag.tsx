@@ -87,7 +87,6 @@ export const useModelShapesDragProps = () => {
 			const {x, y} = mouseEventToInworldCoords(e)
 			movingPointRef.current.lastX = x
 			movingPointRef.current.lastY = y
-			// TODO: have a warning on navigation about unsaved changes
 			updateShapes(shapes => shapes.map(shape => shape.id !== selectedPoint.shapeId ? shape : {
 				...shape,
 				points: shape.points.map((point, i) => i !== selectedPoint.pointIndex ? point : [x, y])
