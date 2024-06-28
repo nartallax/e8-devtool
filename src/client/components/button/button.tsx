@@ -2,7 +2,7 @@ import {Icon} from "generated/icons"
 import * as css from "./button.module.scss"
 import {useCallback, useRef, useState} from "react"
 import {cn} from "client/ui_utils/classname"
-import {useHotkey} from "client/components/hotkey_context/hotkey_context"
+import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 
 type Props = {
 	text?: string
@@ -65,30 +65,30 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 		timeout.current = null
 	}, [])
 
-	useHotkey({ref, shouldPick: hotkey, onPress: wrappedOnClick})
-
 	return (
-		<button
-			ref={ref}
-			// those eslint rules are really stupid it turns out
-			// eslint-disable-next-line react/button-has-type
-			type={type}
-			className={cn(css.button, {
-				[css.defaultVariant!]: variant === "default",
-				[css.plainIconVariant!]: variant === "plain-icon",
-				[css.largePlainIconVariant!]: variant === "large-plain-icon",
-				[css.tabVariant!]: variant === "tab",
-				[css.isActive!]: isActive,
-				[css.isPressed!]: isPressed,
-				[css.isError!]: isError
-			})}
-			style={{["--holdTimeUntilAction"]: (holdTimeUntilAction / 1000) + "s"} as React.CSSProperties}
-			disabled={isEffectivelyDisabled}
-			onClick={wrappedOnClick}
-			onMouseDown={onPress}
-			onMouseUp={onRelease}>
-			{!!icon && <div className={cn(css.icon, icon)}/>}
-			{!!text && <div>{text}</div>}
-		</button>
+		<Hotkey shouldPick={hotkey} onPress={wrappedOnClick}>
+			<button
+				ref={ref}
+				// those eslint rules are really stupid it turns out
+				// eslint-disable-next-line react/button-has-type
+				type={type}
+				className={cn(css.button, {
+					[css.defaultVariant!]: variant === "default",
+					[css.plainIconVariant!]: variant === "plain-icon",
+					[css.largePlainIconVariant!]: variant === "large-plain-icon",
+					[css.tabVariant!]: variant === "tab",
+					[css.isActive!]: isActive,
+					[css.isPressed!]: isPressed,
+					[css.isError!]: isError
+				})}
+				style={{["--holdTimeUntilAction"]: (holdTimeUntilAction / 1000) + "s"} as React.CSSProperties}
+				disabled={isEffectivelyDisabled}
+				onClick={wrappedOnClick}
+				onMouseDown={onPress}
+				onMouseUp={onRelease}>
+				{!!icon && <div className={cn(css.icon, icon)}/>}
+				{!!text && <div>{text}</div>}
+			</button>
+		</Hotkey>
 	)
 }

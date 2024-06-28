@@ -1,101 +1,85 @@
-import {defineContext} from "client/ui_utils/define_context"
-import {orderDomElementsInOrderOfAppearance} from "client/ui_utils/order_dom_elements_in_order_of_appearance"
-import {RefObject, useCallback, useEffect, useRef} from "react"
+import {CallResolver} from "client/components/hotkey_context/call_resolver"
+import {defineNestedTreeContext} from "client/ui_utils/define_nested_tree_context"
+import {noop} from "client/ui_utils/noop"
+import {useCallback, useEffect, useRef} from "react"
+
+// TODO: abolish forwardRef()ing
+
+export const enum ModalHotkeyPriority {
+	default = 0,
+	alert = 100
+}
 
 type HotkeyHandler = {
-	/** Reference to element that will receive the hotkey
-	Only used for determining priority of calling the handlers */
-	// TODO: this sucks.
-	// we should instead create context-like element like <Hotkey>
-	// and through that infer hotkey priority, not through refs
-	// and also this will allow us to abolish forwardRef()ing
-	ref: RefObject<HTMLElement | SVGElement>
 	// this is optional because sometimes (see <Button>) this function may be absent, meaning "no hotkey"
 	// end-users should always supply this one
 	shouldPick?: (e: KeyboardEvent) => boolean
 	onPress: (e: KeyboardEvent) => void
 }
 
-export const [HotkeyContextProvider, useHotkeyContext] = defineContext({
+type Props = {
+	priority?: ModalHotkeyPriority
+}
+
+const keydownResolver = new CallResolver()
+
+const {useMaybeRootContext, RootProvider, NestedProvider} = defineNestedTreeContext({
 	name: "HotkeyContext",
-	useValue: () => {
-		const handlers = useRef(new Set<HotkeyHandler>()).current
-		const rootHandler = useCallback((e: KeyboardEvent) => {
-			const eligibleHandlers: HotkeyHandler[] = []
-			for(const handler of handlers){
-				if(handler.shouldPick!(e)){
-					eligibleHandlers.push(handler)
+	useNestedValue: ({shouldPick, onPress}: HotkeyHandler) => {
+		const ref = useRef({shouldPick, onPress})
+		ref.current.shouldPick = shouldPick
+		ref.current.onPress = onPress
+		return ref.current
+	},
+	useRootValue: ({priority = 0}: Props, treeServices) => {
+		const disabledCounterRef = useRef(0)
+		const disable = useCallback(() => {
+			disabledCounterRef.current++
+		}, [])
+		const enable = useCallback(() => {
+			disabledCounterRef.current--
+		}, [])
+
+		const {enable: enableParent, disable: disableParent} = useMaybeRootContext()?.value ?? {disable: noop, enable: noop}
+		useEffect(() => {
+			if(!parent){
+				return noop
+			}
+			disableParent()
+			return () => {
+				enableParent()
+			}
+		}, [enableParent, disableParent])
+
+		const treeServiceRef = useRef(treeServices)
+		treeServiceRef.current = treeServices
+
+		useEffect(() => {
+			const rootHandler = async(e: KeyboardEvent) => {
+				if(disabledCounterRef.current > 0){
+					return
+				}
+
+				// this should pick one context with highest priority (maybe more, but when everything goes right - just one)
+				// most of the time multiple contexts are resolved by disabling, hovewer there are situations possible when contexts have the same parent
+				// for example, when a component defines a modal and an alert near that modal -
+				// both modal and alert (which is also a modal) will have their own hotkey contexts
+				// to resolve this, alert's hotkey context would have higher priority, because when alert is active - the screen is "blocked"
+				await keydownResolver.resolve(priority)
+
+				const handlers = treeServiceRef.current.getSortedByDepth(({shouldPick}) => !!shouldPick && shouldPick(e))
+				for(const handler of handlers){
+					handler.onPress(e)
 				}
 			}
 
+			window.addEventListener("keydown", rootHandler)
+			return () => window.removeEventListener("keydown", rootHandler)
+		}, [priority])
 
-			for(const handler of findBestHandlers(eligibleHandlers)){
-				handler.onPress(e)
-			}
-		}, [handlers])
-
-		return {handlers, rootHandler}
+		return {disable, enable}
 	}
 })
 
-const updateSet = (handlers: Set<HotkeyHandler>, handler: HotkeyHandler, rootHandler: (e: KeyboardEvent) => void) => {
-	if(!handler.shouldPick){
-		const hadNonzero = handlers.size > 0
-		handlers.delete(handler)
-		if(hadNonzero && handlers.size === 0){
-			window.removeEventListener("keydown", rootHandler)
-		}
-	} else {
-		const hadZero = handlers.size === 0
-		handlers.add(handler)
-		if(hadZero && (handlers.size as number) === 1){
-			window.addEventListener("keydown", rootHandler)
-		}
-	}
-}
-
-export const useHotkey = ({ref, shouldPick, onPress}: HotkeyHandler) => {
-	const handler = useRef({ref, shouldPick, onPress}).current
-	const {handlers, rootHandler} = useHotkeyContext()
-
-	useEffect(() => {
-		updateSet(handlers, handler, rootHandler)
-		return () => {
-			handlers.delete(handler)
-			if(handlers.size === 0){
-				window.removeEventListener("keydown", rootHandler)
-			}
-		}
-	}, [handler, handlers, rootHandler])
-
-	useEffect(() => {
-		handler.ref = ref
-		handler.shouldPick = shouldPick
-		handler.onPress = onPress
-		updateSet(handlers, handler, rootHandler)
-	}, [ref, shouldPick, onPress, handler, handlers, rootHandler])
-}
-
-/* the idea is that one keypress should do only one thing
-that means we can't call all eligible listeners at once
-
-but we can't rely on focus either;
-most of the time we want to capture hotkeys when the target element is not focused
-(or not focusable at all, because it doesn't make any sense)
-
-so this function exists, to pick only that one element that needs to receive the hotkey
-logic is: we take most down-the-tree element. that's it.
-reasoning is: we have modals, and we need for topmost modal (lowest in the tree) to receive hotkeys before modals under him (above in the tree)
-and it also makes sense to first give hotkeys to something inside modal (cancel selection)
-and only then give hotkey to modal itself (close) */
-function findBestHandlers(handlers: HotkeyHandler[]): HotkeyHandler[] {
-	if(handlers.length === 0){
-		return []
-	} else if(handlers.length === 1){
-		return handlers
-	}
-
-	const sortedHandlers = orderDomElementsInOrderOfAppearance(handlers)
-	const target = sortedHandlers[sortedHandlers.length - 1]!.ref.current
-	return handlers.filter(handler => handler.ref.current === target)
-}
+export const HotkeyProvider = RootProvider
+export const Hotkey = NestedProvider

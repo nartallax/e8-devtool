@@ -5,6 +5,7 @@ import {Col, Row} from "client/components/row_col/row_col"
 import {Button} from "client/components/button/button"
 import {defineContext} from "client/ui_utils/define_context"
 import {useCallback, useState} from "react"
+import {ModalHotkeyPriority} from "client/components/hotkey_context/hotkey_context"
 
 type Option<T> = {
 	text: string
@@ -22,7 +23,7 @@ type Props<T> = {
 
 export function ChoiceModal<T>({header, body, options, onClose}: Props<T>) {
 	return (
-		<Modal header={header}>
+		<Modal header={header} hotkeyPriority={ModalHotkeyPriority.alert}>
 			<Col gap align="center" padding>
 				<div className={css.alertModalBody}>
 					{body}

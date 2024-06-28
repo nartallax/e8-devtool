@@ -4,6 +4,7 @@ type Pack = {
 	ref: RefObject<Element>
 }
 
+// TODO: remove this
 /** Having a set of elements, order them in a way they appear in the tree
 Most intuitive understanding of result would be "as seen in devtools" */
 export const orderDomElementsInOrderOfAppearance = <T extends Pack>(packs: T[]): T[] => {

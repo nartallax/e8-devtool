@@ -13,6 +13,7 @@ type Result<PR, VR, PN, VN> = {
 	NestedProvider: React.FC<PropsWithChildren<PN>>
 	useRootContext: () => VR
 	useNestedContext: () => {parents: VN[], value: VN}
+	useMaybeRootContext: () => VR | null
 }
 
 /** Define a context that consists of two parts -
@@ -36,6 +37,11 @@ export function defineNestedContext<PR, VR, PN, VN>({useRootValue, useNestedValu
 			throw new Error(`No nested context defined${name ? " for " + name : ""}`)
 		}
 		return value
+	}
+
+	const useMaybeRootContext = () => {
+		const rootContext = useContext(RootContext)
+		return rootContext === noContext ? null : rootContext
 	}
 
 	const RootProvider = (props: PropsWithChildren<PR>) => {
@@ -70,5 +76,5 @@ export function defineNestedContext<PR, VR, PN, VN>({useRootValue, useNestedValu
 		)
 	}
 
-	return {RootProvider, NestedProvider, useRootContext, useNestedContext}
+	return {RootProvider, NestedProvider, useRootContext, useMaybeRootContext, useNestedContext}
 }

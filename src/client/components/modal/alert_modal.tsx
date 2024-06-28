@@ -5,6 +5,7 @@ import * as css from "./modal.module.scss"
 import {defineContext} from "client/ui_utils/define_context"
 import {useCallback, useState} from "react"
 import {Icon} from "generated/icons"
+import {ModalHotkeyPriority} from "client/components/hotkey_context/hotkey_context"
 
 type Props = {
 	header: string
@@ -14,7 +15,11 @@ type Props = {
 
 export const AlertModal = ({header, body, onClose}: Props) => {
 	return (
-		<Modal header={header} onClose={onClose} contentWidth={["200px", "100%", "50vw"]}>
+		<Modal
+			header={header}
+			onClose={onClose}
+			contentWidth={["200px", "100%", "50vw"]}
+			hotkeyPriority={ModalHotkeyPriority.alert}>
 			<Col gap align="center" padding>
 				<div className={css.alertModalBody}>
 					{body}

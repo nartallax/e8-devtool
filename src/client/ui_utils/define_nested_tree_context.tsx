@@ -1,8 +1,10 @@
 import {defineNestedContext} from "client/ui_utils/define_nested_context"
+import {SetState} from "client/ui_utils/react_types"
 import {Tree, isTreeBranch} from "common/tree"
+import {UUID, getRandomUUID} from "common/uuid"
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 
-type Forest<T> = Tree<never, T>[]
+type Forest<T> = Tree<T, UUID>[]
 
 type Args<PR, VR, PN, VN> = {
 	useRootValue: (props: PR, services: TreeContextServices<VN>) => VR
@@ -11,9 +13,21 @@ type Args<PR, VR, PN, VN> = {
 	name?: string
 }
 
+type NestedValue<VN> = {
+	value: VN
+	rootId: UUID
+	id: UUID
+}
+type RootValue<VN, VR> = {
+	treeServices: TreeContextServices<VN>
+	setForest: SetState<Forest<VN>>
+	id: UUID
+	value: VR
+}
+
 /** A nested context which builds a tree */
 export function defineNestedTreeContext<PR, VR, PN, VN>({useRootValue, useNestedValue, name}: Args<PR, VR, PN, VN>) {
-	return defineNestedContext({
+	return defineNestedContext<PR, RootValue<VN, VR>, PN, NestedValue<VN>>({
 		name,
 
 		useRootValue: (props: PR) => {
@@ -31,20 +45,38 @@ export function defineNestedTreeContext<PR, VR, PN, VN>({useRootValue, useNested
 				}
 			}, [])
 
+			const idRef = useRef(getRandomUUID())
 			const treeServices = useMemo(() => new TreeContextServices(forest), [forest])
-			return {treeServices, forest, setForest, value: useRootValue(props, treeServices)}
+			return {
+				treeServices,
+				setForest,
+				value: useRootValue(props, treeServices),
+				id: idRef.current
+			}
 		},
 
-		useNestedValue: (props: PN, root, parents: VN[]) => {
-			const {setForest} = root
+		useNestedValue: (props: PN, root, parents) => {
+			const {setForest, id: rootId} = root
 			const value = useNestedValue(props)
+			const id = useRef(getRandomUUID()).current
 
 			useEffect(() => {
-				setForest(forest => addTree(forest, value, parents, 0))
-				return () => setForest(forest => deleteTree(forest, value, parents, 0))
-			}, [value, parents, setForest])
 
-			return value
+				let parentIds: UUID[]
+				const lastParentRootId = parents[parents.length - 1]?.rootId
+				if(lastParentRootId !== rootId){
+					// sometimes we want to nest root contexts too (in case of hotkey contexts for example)
+					// and we need to avoid using nested contexts from another root as parents for this one
+					parentIds = []
+				} else {
+					parentIds = parents.map(parent => parent.id)
+				}
+
+				setForest(forest => addTree(forest, value, id, parentIds, 0))
+				return () => setForest(forest => deleteTree(forest, id, parentIds, 0))
+			}, [value, parents, setForest, rootId, id])
+
+			return useMemo(() => ({value, rootId, id}), [value, rootId, id])
 		}
 	})
 }
@@ -65,46 +97,68 @@ class TreeContextServices<T> {
 	}
 }
 
-function addTree<T>(forest: Forest<T>, child: T, parents: T[], parentIndex: number): Forest<T> {
-	const result: Forest<T> = []
-	const parent = parents[parentIndex]
-	if(!parent){
-		result.push({children: [], value: child})
+function addTree<T>(forest: Forest<T>, child: T, childId: UUID, parentIds: UUID[], parentIndex: number): Forest<T> {
+	let result: Forest<T> = []
+	const parentId = parentIds[parentIndex]
+	if(!parentId){
+		let haveBranch = false
+		result = forest.map(tree => {
+			if(tree.value !== childId || !isTreeBranch(tree)){
+				return tree
+			}
+
+			haveBranch = true
+			// result could have this tree already if its descendant was added first
+			const newChildren = tree.children.filter(child => isTreeBranch(child))
+			newChildren.push({value: child})
+			return {
+				...tree,
+				children: newChildren
+			}
+		})
+
+		if(!haveBranch){
+			result.push({children: [{value: child}], value: childId})
+		}
 	} else {
 		let found = false
 		for(const tree of forest){
 			// wonder if referential equality is good enough here
-			if(isTreeBranch(tree) && tree.value === parent){
+			if(isTreeBranch(tree) && tree.value === parentId){
 				found = true
 				result.push({
 					...tree,
-					children: addTree(tree.children, child, parents, parentIndex + 1)
+					children: addTree(tree.children, child, childId, parentIds, parentIndex + 1)
 				})
 			} else {
 				result.push(tree)
 			}
 		}
+
 		if(!found){
-			throw new Error("Cannot find parent in existing tree.")
+			// sometimes child is added ahead of parent
+			// this is normal and we should just add the parent too
+			result.push({children: addTree(forest, child, childId, parentIds, parentIndex + 1), value: parentId})
 		}
 	}
 	return result
 }
 
-function deleteTree<T>(forest: Forest<T>, child: T, parents: T[], parentIndex: number): Forest<T> {
-	const parent = parents[parentIndex]
-	if(!parent){
-		const result = forest.filter(tree => tree.value !== child)
-		if(result.length === forest.length){
-			throw new Error("Failed to delete tree: child not found")
-		}
-		return result
+function deleteTree<T>(forest: Forest<T>, childId: UUID, parentIds: UUID[], parentIndex: number): Forest<T> {
+	const parentId = parentIds[parentIndex]
+	if(!parentId){
+		return trimForest(forest.map(node => {
+			if(node.value !== childId || !isTreeBranch(node)){
+				return node
+			}
+			return {...node, children: node.children.filter(child => isTreeBranch(child))}
+		}))
 	}
 
 	const result: Forest<T> = []
 	for(const tree of forest){
-		if(isTreeBranch(tree) && tree.value === parent){
-			result.push({...tree, children: deleteTree(tree.children, child, parents, parentIndex + 1)})
+		if(isTreeBranch(tree) && tree.value === parentId){
+			result.push({...tree, children: deleteTree(tree.children, childId, parentIds, parentIndex + 1)})
 		} else {
 			result.push(tree)
 		}
@@ -112,15 +166,34 @@ function deleteTree<T>(forest: Forest<T>, child: T, parents: T[], parentIndex: n
 
 	// at this point, it's possible to not update a single tree in the forest
 	// it can be fine in case parent was deleted before child, so we don't need to raise errors
+	return trimForest(result)
+}
+
+function trimForest<T>(forest: Forest<T>): Forest<T> {
+	const result: Forest<T> = []
+	for(const tree of forest){
+		if(isTreeBranch(tree)){
+			const children = trimForest(tree.children)
+			if(children.length > 0){
+				result.push({...tree, children})
+			}
+		} else {
+			result.push(tree)
+		}
+	}
 	return result
 }
 
 function filterForest<T>(forest: Forest<T>, filter: (value: T) => boolean): Forest<T> {
 	const result: Forest<T> = []
 	for(const tree of forest){
-		const children = isTreeBranch(tree) ? filterForest(tree.children, filter) : []
-		if(filter(tree.value) || children.length !== 0){
-			result.push({...tree, children})
+		if(isTreeBranch(tree)){
+			const children = filterForest(tree.children, filter)
+			if(children.length > 0){
+				result.push({...tree, children})
+			}
+		} else if(filter(tree.value)){
+			result.push(tree)
 		}
 	}
 	return result
@@ -129,9 +202,10 @@ function filterForest<T>(forest: Forest<T>, filter: (value: T) => boolean): Fore
 function sortForestByDepth<T>(forest: Forest<T>, result: T[]): void {
 	const nextLevel: Forest<T> = []
 	for(const tree of forest){
-		result.push(tree.value)
 		if(isTreeBranch(tree)){
 			nextLevel.push(...tree.children)
+		} else {
+			result.push(tree.value)
 		}
 	}
 

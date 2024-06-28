@@ -17,3 +17,7 @@ export const preventUndoRedoGlobally = () => {
 		}
 	}, {capture: true})
 }
+
+export const isArrowKeypress = (e: KeyboardEvent | React.KeyboardEvent) => {
+	return (e.code === "ArrowLeft" || e.code === "ArrowRight" || e.code === "ArrowDown" || e.code === "ArrowUp")
+}

@@ -1,7 +1,4 @@
 import {Form} from "client/components/form/form"
-import {HotkeyContextProvider} from "client/components/hotkey_context/hotkey_context"
-import {AlertModalProvider} from "client/components/modal/alert_modal"
-import {ChoiceModalProvider} from "client/components/modal/choice_modal"
 import {RootRoutingContextProvider} from "client/components/router/routing_context"
 import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
 import {TitleProvider} from "client/components/title_context/title_context"
@@ -21,6 +18,8 @@ import {PropsWithChildren, useEffect} from "react"
 import faviconDefault from "../favicon.svg"
 import faviconHasChanges from "../favicon_has_changes.svg"
 import {Favicon} from "client/components/favicon/favicon"
+import {HotkeyProvider} from "client/components/hotkey_context/hotkey_context"
+import {ModalProviders} from "client/components/modal/modal_providers"
 
 export const App = () => (
 	<Providers>
@@ -32,15 +31,13 @@ export const App = () => (
 const CommonProviders = ({children}: PropsWithChildren) => (
 	<TitleProvider defaultTitle="E8 devtool">
 		<ToastProvider>
-			<HotkeyContextProvider>
-				<AlertModalProvider>
-					<ChoiceModalProvider>
-						<Form>
-							{children}
-						</Form>
-					</ChoiceModalProvider>
-				</AlertModalProvider>
-			</HotkeyContextProvider>
+			<HotkeyProvider>
+				<ModalProviders>
+					<Form>
+						{children}
+					</Form>
+				</ModalProviders>
+			</HotkeyProvider>
 		</ToastProvider>
 	</TitleProvider>
 )
@@ -100,9 +97,8 @@ const Content = () => {
 	const favicon = hasUnsaved ? faviconHasChanges : faviconDefault
 
 	return (
-		<>
+		<GlobalHotkeyManager>
 			<Favicon src={favicon}/>
-			<GlobalHotkeyManager/>
 			<TabsAndRouter
 				tabs={[
 					{
@@ -124,6 +120,6 @@ const Content = () => {
 				]}
 			/>
 			<ToastDisplay/>
-		</>
+		</GlobalHotkeyManager>
 	)
 }

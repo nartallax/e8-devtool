@@ -1,4 +1,4 @@
-import {useHotkey} from "client/components/hotkey_context/hotkey_context"
+import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 import {TextInput} from "client/components/text_input/text_input"
 import {useWaitForInput} from "client/ui_utils/use_wait_for_input"
 import {Icon} from "generated/icons"
@@ -38,24 +38,22 @@ export const SearchInput = ({inputWaitTime = 0, onChange, onAccept, isAutofocuse
 		}
 	}, [isAutofocused, ref])
 
-	useHotkey({
-		ref,
-		shouldPick: e => e.code === "KeyF" && e.ctrlKey,
-		onPress: e => {
-			e.preventDefault()
-			ref.current?.focus()
-		}
-	})
-
 	return (
-		<TextInput
-			isDisabled={isDisabled}
-			placeholder={placeholder}
-			value=""
-			onChange={wrappedOnChange}
-			icon={Icon.lookingGlass}
-			onKeyDown={onKeyDown}
-			inputRef={ref}
-		/>
+		<Hotkey
+			shouldPick={e => e.code === "KeyF" && e.ctrlKey}
+			onPress={e => {
+				e.preventDefault()
+				ref.current?.focus()
+			}}>
+			<TextInput
+				isDisabled={isDisabled}
+				placeholder={placeholder}
+				value=""
+				onChange={wrappedOnChange}
+				icon={Icon.lookingGlass}
+				onKeyDown={onKeyDown}
+				inputRef={ref}
+			/>
+		</Hotkey>
 	)
 }
