@@ -9,7 +9,6 @@ import {ApiProvider} from "client/parts/api_context"
 import {AtlasPage} from "client/parts/atlas_page/atlas_page"
 import {ConfigProvider, useConfigContext} from "client/parts/config_context"
 import {GlobalHotkeyManager} from "client/parts/global_hotkeys/global_hotkey_manager"
-import {useSave} from "client/parts/global_hotkeys/use_save"
 import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
 import {ModelPage} from "client/parts/model_page/model_page"
 import {ProjectProvider, useProjectContext} from "client/parts/project_context"
@@ -57,9 +56,8 @@ const DataProviders = ({children}: PropsWithChildren) => (
 
 /** App-specific providers that are not directly related to API interaction process */
 const AppProviders = ({children}: PropsWithChildren) => {
-	const save = useSave()
 	return (
-		<UnsavedChangesProvider onSave={save} preventUnsavedClose>
+		<UnsavedChangesProvider preventUnsavedClose>
 			<RootRoutingContextProvider>
 				{children}
 			</RootRoutingContextProvider>
@@ -82,19 +80,19 @@ const Content = () => {
 	const {isLoaded: isProjectLoaded} = useProjectContext()
 	const {isLoaded: isConfigLoaded} = useConfigContext()
 	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded && isConfigLoaded
-	const {clearUnsavedFlag, hasUnsaved} = useUnsavedChanges()
+	const {hasChanges, markAllRevisionsAsSaved} = useUnsavedChanges()
 
 	useEffect(() => {
 		if(isEverythingLoaded){
-			clearUnsavedFlag()
+			markAllRevisionsAsSaved()
 		}
-	}, [isEverythingLoaded, clearUnsavedFlag])
+	}, [isEverythingLoaded, markAllRevisionsAsSaved])
 
 	if(!isEverythingLoaded){
 		return null
 	}
 
-	const favicon = hasUnsaved ? faviconHasChanges : faviconDefault
+	const favicon = hasChanges ? faviconHasChanges : faviconDefault
 
 	return (
 		<GlobalHotkeyManager>

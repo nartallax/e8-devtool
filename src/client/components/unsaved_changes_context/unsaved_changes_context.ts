@@ -1,64 +1,103 @@
 import {useChoiceModal} from "client/components/modal/choice_modal"
 import {AbortError} from "client/ui_utils/abort_error"
-import {defineContext} from "client/ui_utils/define_context"
+import {defineNestedTreeContext} from "client/ui_utils/define_nested_tree_context"
+import {noop} from "client/ui_utils/noop"
+import {useMemoObject} from "client/ui_utils/use_memo_object"
 import {useCallback, useEffect, useRef, useState} from "react"
 
 type Props = {
-	// TODO: redo this.
-	// it's weird to have one function to save everything, and then... some more functions that do saving?
-	// let's do everything through array of saveable changes
-	// we'll need to think about call order
-	onSave: () => (Promise<void> | void)
 	/** Adds handler to display "Are you sure" when user closes tab with unsaved changes */
 	preventUnsavedClose?: boolean
 }
 
-const [_UnsavedChangesProvider, useUnsavedChangesContext] = defineContext({
+type NestedProps = {
+	revision: number
+	save: () => void | Promise<void>
+}
+
+const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, useRootContext: _useUnsavedChanges} = defineNestedTreeContext({
 	name: "UnsavedChangesContext",
-	useValue: ({onSave, preventUnsavedClose}: Props) => {
-		const [hasUnsaved, setHasUnsaved] = useState(false)
-		const onSaveActions = useRef<(() => (Promise<void> | void))[]>([])
+	useNestedValue: ({revision, save}: NestedProps) => {
+		const [lastSavedRevision, setLastSavedRevision] = useState(revision)
+		const saveRef = useRef(save)
+		saveRef.current = save
+		const saveCallback = useCallback(async() => {
+			await Promise.resolve(saveRef.current())
+		}, [])
+		return useMemoObject({lastSavedRevision, setLastSavedRevision, revision, save: saveCallback})
+	},
+	useRootValue: ({preventUnsavedClose = false}: Props, treeServices) => {
+		const treeRef = useRef(treeServices)
+		treeRef.current = treeServices
 
 		const save = useCallback(async() => {
-			const actions = onSaveActions.current
-			await Promise.all(actions.map(action => Promise.resolve(action())))
-			await onSave()
-			setHasUnsaved(false)
-		}, [onSave])
-
-		useEffect(() => {
-			if(!preventUnsavedClose || !hasUnsaved){
-				// we are checking hasUnsaved here, because some browsers (chrome) trigger on the mere presence of onbeforeunload
-				// regardless of what it actually does
-				// so we need to clear it if we don't plan to actually prevent user from leaving
-				return noop
-			}
-
-			const oldBeforeunload = window.onbeforeunload
-			const newBeforeunload = (e: BeforeUnloadEvent) => {
-				e.preventDefault()
-				e.returnValue = true
-				return true
-			}
-
-			// yes, this effect can only be achieved if event handler is assigned like this
-			window.onbeforeunload = newBeforeunload
-			return () => {
-				if(window.onbeforeunload === newBeforeunload){
-					window.onbeforeunload = oldBeforeunload
-				} else {
-					console.warn("Something re-assigned window.onbeforeunload. That's unexpected - <UnsavedChangesContext> uses this property, and nothing else should modify it.")
+			const savers = treeRef.current.getSortedByDepth()
+			for(let i = savers.length - 1; i >= 0; i--){
+				const {save, revision, lastSavedRevision, setLastSavedRevision} = savers[i]!
+				if(lastSavedRevision !== revision){
+					await save()
+					setLastSavedRevision(revision)
 				}
 			}
-		}, [preventUnsavedClose, hasUnsaved])
+		}, [])
 
-		return {save, onSaveActions, hasUnsaved, setHasUnsaved}
+		const hasChanges = treeServices.getSortedByDepth().some(child => child.revision !== child.lastSavedRevision)
+		usePreventBrowserClose(hasChanges && preventUnsavedClose)
+
+		const {showConfirmationModal} = useChoiceModal()
+		/** If there are unsaved changes - ask user if they should be saved. If user refuses - throw AbortError; save otherwise. */
+		const saveOrAbort = useCallback(async(opts: TrySaveOptions) => {
+			if(!hasChanges){
+				return
+			}
+
+			if(!await showConfirmationModal({
+				header: "Unsaved changes",
+				body: getTrySaveMessage(opts)
+			})){
+				throw new AbortError("User don't want to save.")
+			}
+
+			await save()
+		}, [hasChanges, showConfirmationModal, save])
+
+		const markAllRevisionsAsSaved = useCallback(() => {
+			const savers = treeRef.current.getSortedByDepth()
+			for(const {revision, setLastSavedRevision} of savers){
+				setLastSavedRevision(revision)
+			}
+		}, [])
+
+		return {save, hasChanges, saveOrAbort, markAllRevisionsAsSaved}
 	}
 })
-export const UnsavedChangesProvider = _UnsavedChangesProvider
 
-type HookOptions = {
-	onSave?: () => (Promise<void> | void)
+const usePreventBrowserClose = (isEnabled: boolean) => {
+	useEffect(() => {
+		if(!isEnabled){
+			// because some browsers (chrome) trigger on the mere presence of onbeforeunload
+			// regardless of what it actually does
+			// so we need to clear it if we don't plan to actually prevent user from leaving
+			return noop
+		}
+
+		const oldBeforeunload = window.onbeforeunload
+		const newBeforeunload = (e: BeforeUnloadEvent) => {
+			e.preventDefault()
+			e.returnValue = true
+			return true
+		}
+
+		// yes, this effect can only be achieved if event handler is assigned like this
+		window.onbeforeunload = newBeforeunload
+		return () => {
+			if(window.onbeforeunload === newBeforeunload){
+				window.onbeforeunload = oldBeforeunload
+			} else {
+				console.warn("Something re-assigned window.onbeforeunload. That's unexpected - UnsavedChangesContext uses this property, and nothing else should modify it.")
+			}
+		}
+	}, [isEnabled])
 }
 
 type TrySaveOptions = {
@@ -69,44 +108,6 @@ const getTrySaveMessage = ({actionDescription}: TrySaveOptions = {}) => {
 	return `We have unsaved changes that will be lost${actionDescription ? " if you " + actionDescription : ""}. Do you want to save them?`
 }
 
-
-const noop = () => {}
-export const useUnsavedChanges = ({onSave}: HookOptions = {}) => {
-	const {onSaveActions, hasUnsaved, setHasUnsaved, save} = useUnsavedChangesContext()
-	const {showConfirmationModal} = useChoiceModal()
-
-	useEffect(() => {
-		if(!onSave){
-			return noop
-		}
-
-		onSaveActions.current.push(onSave)
-		return () => onSaveActions.current = onSaveActions.current.filter(x => x !== onSave)
-	}, [onSave, onSaveActions])
-
-	const notifyHasUnsavedChanges = useCallback(() => {
-		setHasUnsaved(true)
-	}, [setHasUnsaved])
-
-	const clearUnsavedFlag = useCallback(() => {
-		setHasUnsaved(false)
-	}, [setHasUnsaved])
-
-	/** If there are unsaved changes - ask user if they should be saved. If user refuses - throw AbortError; save otherwise. */
-	const saveChangesOrAbort = useCallback(async(opts: TrySaveOptions) => {
-		if(!hasUnsaved){
-			return
-		}
-
-		if(!await showConfirmationModal({
-			header: "Unsaved changes",
-			body: getTrySaveMessage(opts)
-		})){
-			throw new AbortError("User don't want to save.")
-		}
-
-		await save()
-	}, [hasUnsaved, showConfirmationModal, save])
-
-	return {notifyHasUnsavedChanges, clearUnsavedFlag, save, saveChangesOrAbort, hasUnsaved}
-}
+export const UnsavedChangesProvider = _UnsavedChangesProvider
+export const UnsavedChanges = _UnsavedChanges
+export const useUnsavedChanges = () => _useUnsavedChanges().value
