@@ -1,6 +1,6 @@
 import {DefaultableSideSize, DefaultableSize, MinMaxableSize, resolveDefaultableSideSize, resolveDefaultableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
 import * as css from "./row_col.module.scss"
-import {CSSProperties, PropsWithChildren, forwardRef} from "react"
+import {CSSProperties, PropsWithChildren} from "react"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {
@@ -46,19 +46,19 @@ const resolveFlexAlign = (align?: string, stretch?: boolean): string | undefined
 	return (align === "start" || align === "end" ? "flex-" + align : align) ?? (stretch === true ? "stretch" : undefined)
 }
 
-export const Row = forwardRef<HTMLDivElement, PropsWithChildren<Props>>(({children, className, ...props}, ref) => {
-	return <div className={cn(css.row, className)} style={propsToStyle(props)} ref={ref}>{children}</div>
-})
+export const Row = ({children, className, ...props}: PropsWithChildren<Props>) => {
+	return <div className={cn(css.row, className)} style={propsToStyle(props)}>{children}</div>
+}
 
-export const Col = forwardRef<HTMLDivElement, PropsWithChildren<Props>>(({children, className, ...props}, ref) => {
-	return <div className={cn(css.col, className)} style={propsToStyle(props)} ref={ref}>{children}</div>
-})
+export const Col = ({children, className, ...props}: PropsWithChildren<Props>) => {
+	return <div className={cn(css.col, className)} style={propsToStyle(props)}>{children}</div>
+}
 
-export const RowCol = forwardRef<HTMLDivElement, PropsWithChildren<Props & {direction?: "row" | "col"}>>(
-	({children, direction = "row", ...props}, ref) => {
+export const RowCol
+	= ({children, direction = "row", ...props}: PropsWithChildren<Props & {direction?: "row" | "col"}>) => {
 		if(direction === "row"){
-			return <Row {...props} ref={ref}>{children}</Row>
+			return <Row {...props}>{children}</Row>
 		} else {
-			return <Col {...props} ref={ref}>{children}</Col>
+			return <Col {...props}>{children}</Col>
 		}
-	})
+	}

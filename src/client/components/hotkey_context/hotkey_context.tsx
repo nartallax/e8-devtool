@@ -3,8 +3,6 @@ import {defineNestedTreeContext} from "client/ui_utils/define_nested_tree_contex
 import {noop} from "client/ui_utils/noop"
 import {useCallback, useEffect, useRef} from "react"
 
-// TODO: abolish forwardRef()ing
-
 export const enum ModalHotkeyPriority {
 	default = 0,
 	alert = 100

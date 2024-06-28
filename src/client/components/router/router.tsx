@@ -2,7 +2,7 @@ import {RouteDefinition, RouteMatchingResult, matchRoutes} from "client/componen
 import {RoutingContextProvider, useRoutingContext} from "client/components/router/routing_context"
 import {Col} from "client/components/row_col/row_col"
 import {Vanisher} from "client/components/vanisher/vanisher"
-import {forwardRef, useEffect, useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 	onMatchedUrlUpdate?: (url: URL | null) => void
 }
 
-export const Router = forwardRef<HTMLDivElement, Props>(({routes, onMatchedUrlUpdate}, ref) => {
+export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 
 	const {nonMatchedUrl: oldNonMatchedUrl, matchedUrl: oldMatchedUrl} = useRoutingContext()
 	const [routeMatch, setRouteMatch] = useState<RouteMatchingResult | null>(null)
@@ -34,17 +34,16 @@ export const Router = forwardRef<HTMLDivElement, Props>(({routes, onMatchedUrlUp
 	}, [oldNonMatchedUrl + "", oldMatchedUrl + "", routes])
 
 
-	return !routeMatch ? <span ref={ref}/> : (
+	return !routeMatch ? null : (
 		<RoutingContextProvider nonMatchedUrl={routeMatch.nonMatchedUrl} matchedUrl={routeMatch.matchedUrl}>
 			<Col
 				grow={1}
 				shrink={1}
-				alignSelf="stretch"
-				ref={ref}>
+				alignSelf="stretch">
 				<Vanisher key={routeMatch.routePattern}>
 					{routeMatch.renderer(routeMatch.arguments)}
 				</Vanisher>
 			</Col>
 		</RoutingContextProvider>
 	)
-})
+}
