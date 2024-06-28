@@ -6,10 +6,11 @@ type Props<T, I> = {
 	name?: string
 	useValue: (providerProps: I) => T
 	additionalChildren?: (context: T) => React.ReactNode
+	NestedWrapComponent?: React.FC<PropsWithChildren<{context: T}>>
 }
 
 /** Create context (as in, React.createContext()), but in more safe and predictable way */
-export const defineContext = <T, I>({name, useValue: getValue, additionalChildren}: Props<T, I>): [
+export const defineContext = <T, I>({name, useValue: getValue, additionalChildren, NestedWrapComponent}: Props<T, I>): [
 	provider: (props: React.PropsWithChildren<I>) => React.ReactNode,
 	useThisContext: () => T
 ] => {
@@ -26,12 +27,24 @@ export const defineContext = <T, I>({name, useValue: getValue, additionalChildre
 	const Provider = (props: PropsWithChildren<I>) => {
 		const {children} = props
 		const value = getValue(props)
-		return (
-			<Context.Provider value={value}>
+		let result = (
+			<>
 				{children}
 				{additionalChildren?.(value)}
-			</Context.Provider>
+			</>
 		)
+
+		if(NestedWrapComponent){
+			result = (
+				<NestedWrapComponent context={value}>
+					{result}
+				</NestedWrapComponent>
+			)
+		}
+
+		result = <Context.Provider value={value}>{result}</Context.Provider>
+
+		return result
 	}
 
 	if(name){

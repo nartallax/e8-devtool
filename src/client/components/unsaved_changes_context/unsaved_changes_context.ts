@@ -13,18 +13,19 @@ type Props = {
 type NestedProps = {
 	revision: number
 	save: () => void | Promise<void>
+	alwaysRun?: boolean
 }
 
 const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, useRootContext: _useUnsavedChanges} = defineNestedTreeContext({
 	name: "UnsavedChangesContext",
-	useNestedValue: ({revision, save}: NestedProps) => {
+	useNestedValue: ({revision, save, alwaysRun = false}: NestedProps) => {
 		const [lastSavedRevision, setLastSavedRevision] = useState(revision)
 		const saveRef = useRef(save)
 		saveRef.current = save
 		const saveCallback = useCallback(async() => {
 			await Promise.resolve(saveRef.current())
 		}, [])
-		return useMemoObject({lastSavedRevision, setLastSavedRevision, revision, save: saveCallback})
+		return useMemoObject({lastSavedRevision, setLastSavedRevision, revision, save: saveCallback, alwaysRun})
 	},
 	useRootValue: ({preventUnsavedClose = false}: Props, treeServices) => {
 		const treeRef = useRef(treeServices)
@@ -33,8 +34,8 @@ const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, u
 		const save = useCallback(async() => {
 			const savers = treeRef.current.getSortedByDepth()
 			for(let i = savers.length - 1; i >= 0; i--){
-				const {save, revision, lastSavedRevision, setLastSavedRevision} = savers[i]!
-				if(lastSavedRevision !== revision){
+				const {save, revision, lastSavedRevision, setLastSavedRevision, alwaysRun} = savers[i]!
+				if(lastSavedRevision !== revision || alwaysRun){
 					await save()
 					setLastSavedRevision(revision)
 				}

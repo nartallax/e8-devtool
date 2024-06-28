@@ -26,7 +26,7 @@ export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
 	const {save} = useUnsavedChanges()
 
 	return (
-		<UnsavedChanges revision={projectRevision} save={uploadProject}>
+		<UnsavedChanges revision={projectRevision} save={uploadProject} alwaysRun>
 			<Hotkey
 				shouldPick={e => e.code === "KeyS" && e.ctrlKey}
 				onPress={e => {

@@ -32,6 +32,8 @@ const onWindowKeyDown = (e: KeyboardEvent) => {
 	// for example, when a component defines a modal and an alert near that modal -
 	// both modal and alert (which is also a modal) will have their own hotkey contexts
 	// to resolve this, alert's hotkey context would have higher priority, because when alert is active - the screen is "blocked"
+	// and no other alert/modal can be on top of that alert anyway
+	// (it's not true for modals in general, because some modals could have nested modals)
 	const highestPriority = activeRoots.map(x => x.priority).reduce((a, b) => Math.max(a, b), 0)
 	const selectedRoots = activeRoots.filter(x => x.priority === highestPriority)
 
