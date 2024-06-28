@@ -3,7 +3,7 @@ import {AbortError} from "client/ui_utils/abort_error"
 import {defineNestedTreeContext} from "client/ui_utils/define_nested_tree_context"
 import {noop} from "client/ui_utils/noop"
 import {useMemoObject} from "client/ui_utils/use_memo_object"
-import {useCallback, useEffect, useRef, useState} from "react"
+import {useCallback, useEffect, useRef} from "react"
 
 type Props = {
 	/** Adds handler to display "Are you sure" when user closes tab with unsaved changes */
@@ -11,21 +11,20 @@ type Props = {
 }
 
 type NestedProps = {
-	revision: number
+	isUnsaved: boolean
 	save: () => void | Promise<void>
 	alwaysRun?: boolean
 }
 
 const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, useRootContext: _useUnsavedChanges} = defineNestedTreeContext({
 	name: "UnsavedChangesContext",
-	useNestedValue: ({revision, save, alwaysRun = false}: NestedProps) => {
-		const [lastSavedRevision, setLastSavedRevision] = useState(revision)
+	useNestedValue: ({isUnsaved, save, alwaysRun = false}: NestedProps) => {
 		const saveRef = useRef(save)
 		saveRef.current = save
 		const saveCallback = useCallback(async() => {
 			await Promise.resolve(saveRef.current())
 		}, [])
-		return useMemoObject({lastSavedRevision, setLastSavedRevision, revision, save: saveCallback, alwaysRun})
+		return useMemoObject({isUnsaved, save: saveCallback, alwaysRun})
 	},
 	useRootValue: ({preventUnsavedClose = false}: Props, treeServices) => {
 		const treeRef = useRef(treeServices)
@@ -34,15 +33,14 @@ const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, u
 		const save = useCallback(async() => {
 			const savers = treeRef.current.getSortedByDepth()
 			for(let i = savers.length - 1; i >= 0; i--){
-				const {save, revision, lastSavedRevision, setLastSavedRevision, alwaysRun} = savers[i]!
-				if(lastSavedRevision !== revision || alwaysRun){
+				const {save, isUnsaved, alwaysRun} = savers[i]!
+				if(isUnsaved || alwaysRun){
 					await save()
-					setLastSavedRevision(revision)
 				}
 			}
 		}, [])
 
-		const hasChanges = treeServices.getSortedByDepth().some(child => child.revision !== child.lastSavedRevision)
+		const hasChanges = treeServices.getSortedByDepth().some(child => child.isUnsaved)
 		usePreventBrowserClose(hasChanges && preventUnsavedClose)
 
 		const {showConfirmationModal} = useChoiceModal()
@@ -62,14 +60,7 @@ const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, u
 			await save()
 		}, [hasChanges, showConfirmationModal, save])
 
-		const markAllRevisionsAsSaved = useCallback(() => {
-			const savers = treeRef.current.getSortedByDepth()
-			for(const {revision, setLastSavedRevision} of savers){
-				setLastSavedRevision(revision)
-			}
-		}, [])
-
-		return {save, hasChanges, saveOrAbort, markAllRevisionsAsSaved}
+		return {save, hasChanges, saveOrAbort}
 	}
 })
 

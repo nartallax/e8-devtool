@@ -13,7 +13,7 @@ import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
 import {ModelPage} from "client/parts/model_page/model_page"
 import {ProjectProvider, useProjectContext} from "client/parts/project_context"
 import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
-import {PropsWithChildren, useEffect} from "react"
+import {PropsWithChildren} from "react"
 import faviconDefault from "../favicon.svg"
 import faviconHasChanges from "../favicon_has_changes.svg"
 import {Favicon} from "client/components/favicon/favicon"
@@ -80,13 +80,7 @@ const Content = () => {
 	const {isLoaded: isProjectLoaded} = useProjectContext()
 	const {isLoaded: isConfigLoaded} = useConfigContext()
 	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded && isConfigLoaded
-	const {hasChanges, markAllRevisionsAsSaved} = useUnsavedChanges()
-
-	useEffect(() => {
-		if(isEverythingLoaded){
-			markAllRevisionsAsSaved()
-		}
-	}, [isEverythingLoaded, markAllRevisionsAsSaved])
+	const {hasChanges} = useUnsavedChanges()
 
 	if(!isEverythingLoaded){
 		return null

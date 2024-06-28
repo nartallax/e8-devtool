@@ -1,6 +1,6 @@
 import {XY} from "@nartallax/e8"
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
-import {useRevision} from "client/components/unsaved_changes_context/use_revision"
+import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {WorkbenchContextValue} from "client/components/workbench/workbench_context"
 import {useConfig} from "client/parts/config_context"
 import {useProject} from "client/parts/project_context"
@@ -24,8 +24,8 @@ export type ModelDisplayContextValue = ReturnType<typeof useModelDisplayContext>
 
 export const [ModelDisplayContextProvider, useModelDisplayContext] = defineContext({
 	name: "ModelDisplayContext",
-	NestedWrapComponent: ({context: {revision, saveModelToProject}, children}) => (
-		<UnsavedChanges revision={revision} save={saveModelToProject}>
+	NestedWrapComponent: ({context: {isUnsaved, saveModelToProject}, children}) => (
+		<UnsavedChanges isUnsaved={isUnsaved} save={saveModelToProject}>
 			{children}
 		</UnsavedChanges>
 	),
@@ -35,21 +35,16 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		if(!_model){
 			throw new Error("No model for ID = " + modelId)
 		}
-		const [model, setModel] = useState(_model)
-		const revision = useRevision(model)
+		const {state: model, setState: setModel, isUnsaved, save: saveModelToProject} = useSaveableState(_model, model => setProject(project => {
+			const models = project.models.filter(model => model.id !== modelId)
+			models.push(model)
+			return {...project, models}
+		}))
 
 		const {inworldUnitPixelSize} = useConfig()
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 		const selectedPointRef = useRef<SelectedPoint | null>(null)
-
-		const saveModelToProject = useCallback(() => {
-			setProject(project => {
-				const models = project.models.filter(model => model.id !== modelId)
-				models.push(model)
-				return {...project, models}
-			})
-		}, [setProject, modelId, model])
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		const shapesStateStack = useMemo(() => new StateStack<ProjectShape[], ShapeStateMeta>(100, model.shapes), [modelId])
@@ -100,7 +95,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			mouseEventToInworldCoords,
 			selectedPointRef,
 			saveModelToProject,
-			revision
+			isUnsaved
 		}
 	}
 })
