@@ -1,6 +1,5 @@
 import {CLIArgs, getCliArgs} from "server/cli"
 import {deepMerge} from "common/deep_merge"
-import {deepOmit} from "common/deep_omit"
 import {DeepPartialFlags, deepResolvePaths} from "common/deep_resolve_paths"
 import {isEnoent} from "common/is_enoent"
 import {promises as Fs} from "fs"
