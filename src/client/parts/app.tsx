@@ -7,7 +7,6 @@ import {ToastDisplay} from "client/components/toast/toast_list"
 import {UnsavedChangesProvider, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {ApiProvider} from "client/parts/api_context"
 import {AtlasPage} from "client/parts/atlas_page/atlas_page"
-import {ConfigProvider, useConfigContext} from "client/parts/config_context"
 import {GlobalHotkeyManager} from "client/parts/global_hotkeys/global_hotkey_manager"
 import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
 import {ModelPage} from "client/parts/model_page/model_page"
@@ -46,9 +45,7 @@ const DataProviders = ({children}: PropsWithChildren) => (
 	<ApiProvider>
 		<TextureTreeProvider>
 			<ProjectProvider>
-				<ConfigProvider>
-					{children}
-				</ConfigProvider>
+				{children}
 			</ProjectProvider>
 		</TextureTreeProvider>
 	</ApiProvider>
@@ -78,8 +75,7 @@ const Providers = ({children}: PropsWithChildren) => (
 const Content = () => {
 	const {isLoaded: isTexturesLoaded} = useTextures()
 	const {isLoaded: isProjectLoaded} = useProjectContext()
-	const {isLoaded: isConfigLoaded} = useConfigContext()
-	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded && isConfigLoaded
+	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded
 	const {hasChanges} = useUnsavedChanges()
 
 	if(!isEverythingLoaded){

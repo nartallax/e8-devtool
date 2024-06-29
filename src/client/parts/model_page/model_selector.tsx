@@ -10,7 +10,7 @@ import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
 import {mapTreeLeaves} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
-import {NamedId, ProjectModel} from "data/project"
+import {NamedId, ProjectModel, makeBlankModel} from "data/project"
 import {Icon} from "generated/icons"
 
 const findDefaultId = (values: NamedId[]): UUID | null => {
@@ -51,16 +51,7 @@ export const ModelSelector = () => {
 			return null
 		}
 
-		return {
-			id: getRandomUUID(),
-			layerId,
-			collisionGroupId,
-			name: "unnamed model",
-			size: {x: 1, y: 1},
-			textureId,
-			isStatic: false,
-			shapes: []
-		}
+		return makeBlankModel({collisionGroupId, layerId, textureId})
 	}
 
 	const onAddModel = (controls: MappedNamedIdTreeControls<NamedId, NamedId>) => {

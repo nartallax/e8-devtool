@@ -30,7 +30,7 @@
     "dev:server": "npm run dev:server:build && ((npx wait-file-change ./target/e8-devtool.js -t 10 && npm run dev:server:run) & npm run dev:server:watch) && :",
     "dev:server:build": "npx parcel build --target server --no-cache",
     "dev:server:watch": "npx parcel watch --target server --no-cache --no-hmr",
-    "dev:server:run": "npx nodemon ./target/e8-devtool.js --watch ./target/e8-devtool.js -- --html 'http://localhost:24658' --no-start-open --config $E8_DEVTOOL_CONFIG",
+    "dev:server:run": "npx nodemon ./target/e8-devtool.js --watch ./target/e8-devtool.js -- --html 'http://localhost:24658' --no-start-open --project $E8_DEVTOOL_PROJECT",
     "generate": "npm run build && node ./target/e8-devtool.js --generate",
     "after-clone": "npm run test:generate && npm run icons",
     "icons": "npx icon-font-tool --svg-dir src/icons --font-path src/generated/icons --font-normalize --font-descent 150 --css-path src/generated/icons.css --ts-path src/generated/icons.ts --ts-css-import-style star --ts-name Icon",

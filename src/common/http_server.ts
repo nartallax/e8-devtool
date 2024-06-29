@@ -10,7 +10,7 @@ import {ApiError, ApiResponse, errorToErrorApiResp} from "common/api_response"
 import {log} from "common/log"
 import * as MimeTypes from "mime-types"
 
-interface StaticRoute {
+export interface HttpStaticRoute {
 	/** URL (in case of proxy) or path (in case of filesystem directory) is expected */
 	url: string
 	/** True here will enable client-side cacheing of any resources in the directory */
@@ -27,8 +27,9 @@ interface HttpServerOptions {
 	port: number
 	/** Host is mandatory to avoid accidently exposing localhost the server to outside world */
 	host: string
-	/** Map of request path prefixes -> description of route */
-	static: Readonly<Record<string, StaticRoute>>
+	/** Map of request path prefixes -> description of route.
+	Only used when routing requests; may be changed */
+	static: Readonly<Record<string, HttpStaticRoute>>
 	/** Part of path that precedes all of the API calls */
 	apiRoot: string
 	apiMethods: {
@@ -130,7 +131,7 @@ export class HttpServer {
 		}
 	}
 
-	private addStaticHeaders(route: StaticRoute, path: string, res: Http.ServerResponse, preventCache: boolean): void {
+	private addStaticHeaders(route: HttpStaticRoute, path: string, res: Http.ServerResponse, preventCache: boolean): void {
 		if(path.toLowerCase().endsWith(".html") || preventCache){
 			// never store the html
 			res.setHeader("Cache-Control", "max-age=0, no-store")
@@ -166,14 +167,14 @@ export class HttpServer {
 	}
 
 
-	private async processStaticRequestByProxy(path: string, route: StaticRoute, res: Http.ServerResponse): Promise<void> {
+	private async processStaticRequestByProxy(path: string, route: HttpStaticRoute, res: Http.ServerResponse): Promise<void> {
 		const resolvedUrl = new URL(path, route.url)
 		const result = await httpGet(resolvedUrl)
 		this.addStaticHeaders(route, this.resolveStaticFileName(path, route.url), res, !route.isCacheable)
 		res.end(result)
 	}
 
-	private async processStaticRequestByFile(resourcePath: string, route: StaticRoute, res: Http.ServerResponse): Promise<void> {
+	private async processStaticRequestByFile(resourcePath: string, route: HttpStaticRoute, res: Http.ServerResponse): Promise<void> {
 		resourcePath = this.resolveStaticFileName(resourcePath, route.url)
 
 		try {
@@ -284,5 +285,11 @@ function waitReadStreamToEnd(stream: Fs.ReadStream): Promise<void> {
 }
 
 export function apiMethodArgsToString(methodArgs: unknown[]): string {
-	return methodArgs.map(value => value instanceof Uint8Array ? "<binary>" : JSON.stringify(value)).join(", ")
+	return methodArgs.map(value => {
+		let str = value instanceof Uint8Array ? "<binary>" : JSON.stringify(value)
+		if(str.length > 50){
+			str = str.substring(0, 50) + "<cut>"
+		}
+		return str
+	}).join(", ")
 }

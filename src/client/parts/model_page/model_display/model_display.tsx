@@ -23,7 +23,6 @@ import {Icon} from "generated/icons"
 import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
-import {useConfig} from "client/parts/config_context"
 import {TitlePart} from "client/components/title_context/title_context"
 
 type Props = {
@@ -75,8 +74,8 @@ type SidebarProps = {
 
 const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture}: SidebarProps) => {
 	const [project] = useProject()
+	const {inworldUnitPixelSize} = project.config
 	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
-	const {inworldUnitPixelSize} = useConfig()
 	const {getTextureUrl} = useTextures()
 
 	const startShapeDrawing = () => {
@@ -202,7 +201,7 @@ type WorkbenchProps = {
 
 const ModelWorkbench = ({isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture}: WorkbenchProps) => {
 	const {model, workbenchRef} = useModelDisplayContext()
-	const {inworldUnitPixelSize} = useConfig()
+	const [{config: {inworldUnitPixelSize}}] = useProject()
 
 	return (
 		<Workbench

@@ -14,7 +14,7 @@ export const [ProjectProvider, useProjectContext] = defineContext({
 	name: "ProjectContext",
 	useValue: () => {
 		const apiClient = useApiClient()
-		const {addToast, updateToast} = useToastContext()
+		const {addToast, updateToast, removeToast} = useToastContext()
 
 		const {state: project, setState: setProject, isUnsaved, markSaved, save} = useSaveableState(
 			makeBlankProject(), async project => {
@@ -24,7 +24,14 @@ export const [ProjectProvider, useProjectContext] = defineContext({
 					id: savingToastId,
 					isStepRotating: true
 				})
-				await apiClient.saveAndProduce(project)
+				try {
+					await apiClient.saveAndProduce(project)
+				} catch(e){
+					// if there was an error - it was api error and there's a toast already
+					// so all that's left is to remove ours
+					removeToast(savingToastId)
+				}
+
 				updateToast({
 					id: savingToastId,
 					text: "Saved!",

@@ -10,10 +10,6 @@ const cli = CLI.define({
 			description: "Path to directory, or URL, that contains HTML and other browser-related devtool files. Mostly meant for development of the tool itself; for other purposes tool comes with its own client.",
 			default: Path.resolve(Path.dirname(process.argv[1] ?? "."), "./client/")
 		}),
-		configPath: CLI.path({
-			keys: ["--config"],
-			description: "Path to configuration file that describes the project."
-		}),
 		generate: CLI.bool({
 			keys: ["--generate"],
 			description: "Generate everything that can be generated from project definition and exit."
@@ -31,6 +27,10 @@ const cli = CLI.define({
 			keys: ["--host"],
 			description: "Host name on which UI will be available. Defaults to localhost.",
 			default: "localhost"
+		}),
+		projectPath: CLI.path({
+			keys: ["--project"],
+			description: "Path to a file that will hold definition of the project, and also serve as point where relative paths are calculated from."
 		})
 	}
 })

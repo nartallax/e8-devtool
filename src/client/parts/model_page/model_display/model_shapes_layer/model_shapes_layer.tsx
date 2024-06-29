@@ -3,11 +3,11 @@ import * as css from "../model_display.module.scss"
 import {shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
-import {useConfig} from "client/parts/config_context"
 import {isModelShapeNodeAddDeleteEvent} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_data"
 import {useAddNodeProps} from "client/parts/model_page/model_display/model_shapes_layer/use_add_node_props"
 import {useModelShapesDragProps} from "client/parts/model_page/model_display/model_shapes_layer/use_model_shapes_drag"
 import {ModelShapesHotkeys} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_hotkeys"
+import {useProject} from "client/parts/project_context"
 
 export const ModelShapeLayer = () => {
 	return (
@@ -22,7 +22,7 @@ export const ModelShapeLayer = () => {
 
 const ModelShapePaths = () => {
 	const {model, currentlyDrawnShapeId, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
-	const {inworldUnitPixelSize} = useConfig()
+	const [{config: {inworldUnitPixelSize}}] = useProject()
 	return (
 		<>
 			{model.shapes.map(shape => (

@@ -99,7 +99,12 @@ let result = tseslint.config(
 		"no-multi-spaces": ["warn"],
 		"no-trailing-spaces": ["warn"],
 		"no-whitespace-before-property": ["warn"],
-		"object-curly-newline": ["warn", {consistent: true}],
+		"object-curly-newline": ["warn", {
+			ImportDeclaration: "never",
+			ExportDeclaration: "never",
+			ObjectPattern: {multiline: true, consistent: true, minProperties: 4},
+			ObjectExpression: {multiline: true, consistent: true, minProperties: 4},
+	}],
 		"object-curly-spacing": "off",
 		"operator-linebreak": ["warn", "before"],
 		quotes: "off",

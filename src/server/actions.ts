@@ -1,5 +1,4 @@
 import {NamedId, Project, TextureFile, makeBlankProject} from "data/project"
-import {Config} from "server/config"
 import {promises as Fs} from "fs"
 import {isEnoent} from "common/is_enoent"
 import * as Tempy from "tempy"
@@ -11,14 +10,47 @@ import {encodeResourcePack} from "@nartallax/e8"
 import {Tree, isTreeBranch} from "common/tree"
 import {getHashUUID} from "common/uuid"
 import {readdirAsTree} from "common/readdir_as_tree"
+import {CLIArgs} from "server/cli"
+import {deepMerge} from "common/deep_merge"
 
-export const getActions = (config: Config) => {
+const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
+	const tmpFile = await Tempy.temporaryWrite(value)
+	await Fs.mkdir(Path.dirname(path), {recursive: true})
+	await Fs.rename(tmpFile, path)
+}
+
+export type DevtoolActions = ReturnType<typeof getActions>
+
+export const getActions = (cli: CLIArgs) => {
+
 	const getProject = async(): Promise<Project> => {
-		return JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
+		let project: Project
+		try {
+			const rawProject: Project = JSON.parse(await Fs.readFile(cli.projectPath, "utf-8"))
+			const [mergedProject] = deepMerge(makeBlankProject(), rawProject)
+			project = mergedProject
+		} catch(e){
+			if(!isEnoent(e)){
+				throw e
+			}
+
+			project = makeBlankProject()
+		}
+
+		return project
+	}
+
+	const saveProject = async(project: Project) => {
+		// pretty-printing JSON here is important for git-friendliness
+		// when all project is oneline - any concurrent changes will introduce conflict
+		// when it's prettyprinted - git will be able to resolve most conflicts by itself
+		// even when not - human will be able to
+		await safeWrite(cli.projectPath, JSON.stringify(project, null, "\t"))
 	}
 
 	const getTextureTree = async(): Promise<Tree<TextureFile, NamedId>[]> => {
-		const fileTree = await readdirAsTree(config.textureDirectoryPath)
+		const project = await getProject()
+		const fileTree = await readdirAsTree(resolveProjectPath(project.config.textureDirectoryPath))
 
 		const convert = (tree: Tree<string, string>, parents: string[]): Tree<TextureFile, NamedId> => {
 			if(isTreeBranch(tree)){
@@ -43,46 +75,17 @@ export const getActions = (config: Config) => {
 		return fileTree.map(tree => convert(tree, []))
 	}
 
-	const getProjectOrCreate = async(): Promise<Project> => {
-		let project: Project
-		try {
-			project = await getProject()
-		} catch(e){
-			if(!isEnoent(e)){
-				throw e
-			}
-
-			project = makeBlankProject()
-		}
-
-		return project
-	}
-
-	const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
-		const tmpFile = await Tempy.temporaryWrite(value)
-		await Fs.mkdir(Path.dirname(path), {recursive: true})
-		await Fs.rename(tmpFile, path)
-	}
-
-	const saveProject = async(project: Project) => {
-		// pretty-printing JSON here is important for git-friendliness
-		// when all project is oneline - any concurrent changes will introduce conflict
-		// when it's prettyprinted - git will be able to resolve most conflicts by itself
-		// even when not - human will be able to
-		await safeWrite(config.projectPath, JSON.stringify(project, null, "\t"))
-	}
-
 	const produceResourcePack = async() => {
-		const project = JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
-		const resourcePack = await projectToResourcePack(project, config)
+		const project = await getProject()
+		const resourcePack = await projectToResourcePack(project, actions)
 		const bytes = encodeResourcePack(resourcePack)
-		await safeWrite(config.resourcePackPath, bytes)
+		await safeWrite(resolveProjectPath(project.config.resourcePackPath), bytes)
 	}
 
 	const produceTypescript = async() => {
-		const project = JSON.parse(await Fs.readFile(config.projectPath, "utf-8"))
-		const ts = await projectToTypescript(project, config)
-		await safeWrite(config.ts.path, ts)
+		const project = await getProject()
+		const ts = await projectToTypescript(project, actions)
+		await safeWrite(resolveProjectPath(project.config.ts.path), ts)
 	}
 
 	const produceEverything = async() => {
@@ -93,15 +96,20 @@ export const getActions = (config: Config) => {
 		log("Done.")
 	}
 
-	return {
+	const resolveProjectPath = (path: string): string => {
+		const rootDir = Path.dirname(cli.projectPath)
+		return Path.resolve(rootDir, path)
+	}
+
+	const actions = {
 		getProject,
-		getProjectOrCreate,
 		saveProject,
 		produceResourcePack,
 		produceTypescript,
 		produceEverything,
-		getTextureTree
+		getTextureTree,
+		resolveProjectPath
 	}
 
-
+	return actions
 }

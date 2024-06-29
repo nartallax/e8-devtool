@@ -3,7 +3,6 @@ import {useBeforeNavigation} from "client/components/router/routing_context"
 import {UnsavedChanges, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {WorkbenchContextValue} from "client/components/workbench/workbench_context"
-import {useConfig} from "client/parts/config_context"
 import {useProject} from "client/parts/project_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {StateStack} from "client/ui_utils/state_stack"
@@ -32,17 +31,19 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 	),
 	useValue: ({modelId}: {modelId: UUID}) => {
 		const [project, setProject] = useProject()
+		const inworldUnitPixelSize = project.config.inworldUnitPixelSize
 		const _model = project.models.find(model => model.id === modelId)
 		if(!_model){
 			throw new Error("No model for ID = " + modelId)
 		}
-		const {state: model, setState: setModel, isUnsaved, save: saveModelToProject} = useSaveableState(_model, model => setProject(project => {
+		const {
+			state: model, setState: setModel, isUnsaved, save: saveModelToProject
+		} = useSaveableState(_model, model => setProject(project => {
 			const models = project.models.filter(model => model.id !== modelId)
 			models.push(model)
 			return {...project, models}
 		}))
 
-		const {inworldUnitPixelSize} = useConfig()
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 		const selectedPointRef = useRef<SelectedPoint | null>(null)

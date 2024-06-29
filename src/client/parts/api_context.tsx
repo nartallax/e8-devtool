@@ -1,16 +1,19 @@
 import {XY} from "@nartallax/e8"
+import {useToastContext} from "client/components/toast/toast_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {SetState} from "client/ui_utils/react_types"
 import {ApiClient} from "common/api_client_base"
+import {ApiError} from "common/api_response"
 import {Tree} from "common/tree"
+import {getRandomUUID} from "common/uuid"
 import {NamedId, Project, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {useEffect, useRef, useState} from "react"
-import {ConfigFile} from "server/config"
+import {Icon} from "generated/icons"
+import {useEffect, useMemo, useState} from "react"
 
 class DevtoolApiClient extends ApiClient {
-	constructor() {
-		super("/api/", "POST")
+	constructor(onApiError?: (error: ApiError) => void) {
+		super("/api/", "POST", onApiError)
 	}
 
 	getProject = () => this.call<Project>({name: "getProject"})
@@ -18,14 +21,25 @@ class DevtoolApiClient extends ApiClient {
 	getTextureFiles = () => this.call<Tree<TextureFile, NamedId>[]>({name: "getTextureFiles"})
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	projectToAtlasLayout = (project: Project) => this.call<(SvgTextureFile & XY)[]>({name: "projectToAtlasLayout", body: [project]})
-	getConfigFile = () => this.call<ConfigFile>({name: "getConfigFile"})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
 }
+
+const apiErrorToastId = getRandomUUID()
 
 const [_ApiProvider, useApiContext] = defineContext({
 	name: "ApiContext",
 	useValue: () => {
-		const client = useRef(new DevtoolApiClient()).current
+	  const {addToast} = useToastContext()
+		const client = useMemo(() => {
+			return new DevtoolApiClient(error => {
+				addToast({
+					icon: Icon.exclamationTriangle,
+					text: error.message,
+					ttl: 10000,
+					id: apiErrorToastId
+				})
+			})
+		}, [addToast])
 		return {client}
 	}
 })

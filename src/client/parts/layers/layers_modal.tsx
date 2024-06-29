@@ -44,7 +44,6 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
 			<Form onSubmit={() => onClose(value)}>
-				<Button text="alert!" onClick={() => showAlert({body: "owo"})}/>
 				<Col gap stretch grow>
 					<MappedNamedIdTreeView
 						selectedValue={value}

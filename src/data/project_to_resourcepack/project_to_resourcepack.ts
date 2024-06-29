@@ -4,19 +4,18 @@ import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
-import {Config} from "server/config"
 import {Atlas, InputBindSetDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 import {UUID} from "crypto"
 import {omit} from "common/omit"
-import {getActions} from "server/actions"
 import {getForestLeavesAsArray} from "common/tree"
+import {DevtoolActions} from "server/actions"
 
 /** Convert project into ResourcePack structure. */
-export async function projectToResourcePack(project: Project, config: Config): Promise<ResourcePack> {
+export async function projectToResourcePack(project: Project, actions: DevtoolActions): Promise<ResourcePack> {
 	const allModels = getAllProjectModels(project)
-	const texturesWithPositions = await projectToAtlasLayout(project, config)
+	const texturesWithPositions = await projectToAtlasLayout(project, actions)
 	const atlasSideLength = getAtlasSideLength(texturesWithPositions)
 	const atlasSvg = glueSvgsIntoAtlas(texturesWithPositions, atlasSideLength)
 	const atlas: Atlas = {
@@ -59,7 +58,7 @@ export async function projectToResourcePack(project: Project, config: Config): P
 	}))
 
 	return {
-		inworldUnitPixelSize: config.inworldUnitPixelSize,
+		inworldUnitPixelSize: project.config.inworldUnitPixelSize,
 		particles: project.particles.map(def => omit(def, "emissionType")),
 		atlasses: [atlas],
 		models,
@@ -70,10 +69,10 @@ export async function projectToResourcePack(project: Project, config: Config): P
 	}
 }
 
-export async function projectToAtlasLayout(project: Project, config: Config): Promise<(SvgTextureFile & XY)[]> {
+export async function projectToAtlasLayout(project: Project, actions: DevtoolActions): Promise<(SvgTextureFile & XY)[]> {
 	const allModels = getAllProjectModels(project)
 	const allTextureIds = [...new Set(allModels.map(model => model.textureId))]
-	const allTextures = await readAllTextures(allTextureIds, config)
+	const allTextures = await readAllTextures(allTextureIds, project, actions)
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that
 	return buildAtlasLayout(allTextures, 1)
@@ -102,9 +101,9 @@ function glueSvgsIntoAtlas(textures: (SvgTextureFile & XY)[], sideLength: number
 	return compoundSvg
 }
 
-async function readAllTextures(ids: UUID[], config: Config): Promise<SvgTextureFile[]> {
+async function readAllTextures(ids: UUID[], project: Project, actions: DevtoolActions): Promise<SvgTextureFile[]> {
 	const result = new Array<SvgTextureFile>(ids.length)
-	const textureTree = await getActions(config).getTextureTree()
+	const textureTree = await actions.getTextureTree()
 	const textureFiles = getForestLeavesAsArray(textureTree)
 	const textureMap = new Map(textureFiles.map(file => [file.id, file.fullPath]))
 	await Promise.all(ids.map(async(id, index) => {
@@ -115,7 +114,8 @@ async function readAllTextures(ids: UUID[], config: Config): Promise<SvgTextureF
 		if(!path.toLowerCase().endsWith(".svg")){
 			throw new Error("Only svgs are supported; got " + id)
 		}
-		const fileContent = await Fs.readFile(Path.resolve(config.textureDirectoryPath, path), "utf-8")
+		const texturesRoot = actions.resolveProjectPath(project.config.textureDirectoryPath)
+		const fileContent = await Fs.readFile(Path.resolve(texturesRoot, path), "utf-8")
 		result[index] = {...optimizeSvg(fileContent, id), id}
 	}))
 	return result

@@ -6,6 +6,7 @@ export type DeepPartialFlags<T> = T extends object
 		: true
 
 
+// TODO: remove? or do something else with paths
 /** Iterate over all paths in config and resolve them.*/
 export function deepResolvePaths<T>(rootPath: string, config: T, paths: DeepPartialFlags<T>): T {
 	const result: T = {...config}

@@ -47,7 +47,15 @@ export const [ToastProvider, useToastContext] = defineContext({
 		const [activeToasts, setActiveToasts] = useState<Toast[]>([])
 
 		const removeToast = useCallback((id: UUID) => {
-			setActiveToasts(toasts => toasts.filter(toast => toast.id !== id))
+			setActiveToasts(toasts => toasts.filter(toast => {
+				if(toast.id !== id){
+					return true
+				}
+				if(toast.ttlHandler !== null){
+					clearTimeout(toast.ttlHandler)
+				}
+				return false
+			}))
 		}, [])
 
 		const updateToast = useCallback((args: UpdateToastArgs) => {

@@ -1,29 +1,45 @@
 import {Project, NamedId, TextureFile} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {Config, ConfigFilePathless, stripCliArgsFromConfig, stripPathsFromConfigFile} from "server/config"
 import {Lock} from "common/lock"
 import {Tree} from "common/tree"
 import {projectToAtlasLayout} from "data/project_to_resourcepack/project_to_resourcepack"
 import {XY} from "@nartallax/e8"
 import {getActions} from "server/actions"
 import {log} from "common/log"
+import {CLIArgs} from "server/cli"
+import {isEnoent} from "common/is_enoent"
+import {ApiError} from "common/api_response"
 
-export function getApi(config: Config): Record<string, (...args: any[]) => unknown> {
+export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => void): Record<string, (...args: any[]) => unknown> {
 	const projectManipulationLock = new Lock()
 
-	const actions = getActions(config)
+	const actions = getActions(cli)
 
 	return {
 		async getProject(): Promise<Project> {
-			return await actions.getProjectOrCreate()
+			return await actions.getProject()
 		},
 
 		async getTextureFiles(): Promise<Tree<TextureFile, NamedId>[]> {
-			return await actions.getTextureTree()
+			try {
+				return await actions.getTextureTree()
+			} catch(e){
+				if(!isEnoent(e)){
+					throw e
+				}
+				throw new ApiError("Texture directory not found. Check project configuration.")
+			}
 		},
 
 		async projectToAtlasLayout(project: Project): Promise<(SvgTextureFile & XY)[]> {
-			return await projectToAtlasLayout(project, config)
+			try {
+				return await projectToAtlasLayout(project, actions)
+			} catch(e){
+				if(!isEnoent(e)){
+					throw e
+				}
+				throw new ApiError("Texture directory not found. Check project configuration.")
+			}
 		},
 
 		async saveAndProduce(project: Project): Promise<void> {
@@ -31,11 +47,8 @@ export function getApi(config: Config): Record<string, (...args: any[]) => unkno
 				log("Saving...")
 				await actions.saveProject(project)
 				await actions.produceEverything()
+				afterProjectUpdate(project)
 			})
-		},
-
-		getConfigFile(): ConfigFilePathless {
-			return stripPathsFromConfigFile(stripCliArgsFromConfig(config))
 		}
 	}
 }

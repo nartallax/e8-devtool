@@ -72,6 +72,7 @@ function* lines(points: [number, number][]): IterableIterator<[[number, number],
 	}
 }
 
+// TODO: this doesn't really need inworld pixel size
 export function shapeToSvgPathD(points: [number, number][], inworldUnitPixelSize: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
 	if(points.length === 0){
 		return ""
