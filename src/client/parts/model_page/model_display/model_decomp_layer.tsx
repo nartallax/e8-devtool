@@ -7,13 +7,11 @@ import {getRandomUUID} from "common/uuid"
 import {useToastContext} from "client/components/toast/toast_context"
 import {Icon} from "generated/icons"
 import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"
-import {useProject} from "client/parts/project_context"
 
 const decompErrorToastId = getRandomUUID()
 
 export const ModelDecompLayer = () => {
 	const {model} = useModelDisplayContext()
-	const [{config: {inworldUnitPixelSize}}] = useProject()
 	const {addToast, removeToast} = useToastContext()
 
 	// this is required to avoid update-on-render situation
@@ -48,7 +46,7 @@ export const ModelDecompLayer = () => {
 					key={index}
 					className={css.decompPath}
 					strokeWidth={0.005}
-					d={shapeToSvgPathD(points, inworldUnitPixelSize)}
+					d={shapeToSvgPathD(points)}
 				/>
 			))}
 		</ModelDisplaySvgLayer>

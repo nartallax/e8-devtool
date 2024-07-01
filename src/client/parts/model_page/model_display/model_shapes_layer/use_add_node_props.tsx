@@ -4,7 +4,9 @@ import {isModelShapeNodeAddDeleteEvent} from "client/parts/model_page/model_disp
 import {useMemo} from "react"
 
 export const useAddNodeProps = () => {
-	const {shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId, selectedShapeId} = useModelDisplayContext()
+	const {
+		shapesStateStack, updateShapes, getShapes, mouseEventToInworldCoords, currentlyDrawnShapeId, selectedShapeId
+	} = useModelDisplayContext()
 
 	const onMouseDown = useMemo(() => {
 		const addNodeAt = (e: MouseEvent | React.MouseEvent) => {

@@ -72,14 +72,9 @@ function* lines(points: [number, number][]): IterableIterator<[[number, number],
 	}
 }
 
-// TODO: this doesn't really need inworld pixel size
-export function shapeToSvgPathD(points: [number, number][], inworldUnitPixelSize: number, shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
-	if(points.length === 0){
+export function shapeToSvgPathD(points: [number, number][], shapeId: UUID | null = null, currentlyDrawnShapeId: UUID | null = null): string {
+	if(points.length < 2){
 		return ""
-	} else if(points.length === 1){
-		const [x, y] = points[0]!
-		const step = 1 / inworldUnitPixelSize
-		return `M ${x} ${y} h ${step} v ${step} h ${step} z`
 	} else {
 		let result = points
 			.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`)

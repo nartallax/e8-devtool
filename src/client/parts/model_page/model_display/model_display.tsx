@@ -72,10 +72,14 @@ type SidebarProps = {
 	setShowTexture: SetState<boolean>
 }
 
-const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture}: SidebarProps) => {
+const ModelSidebar = ({
+	isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture
+}: SidebarProps) => {
 	const [project] = useProject()
 	const {inworldUnitPixelSize} = project.config
-	const {currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel} = useModelDisplayContext()
+	const {
+		currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel
+	} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
 
 	const startShapeDrawing = () => {
@@ -105,10 +109,12 @@ const ModelSidebar = ({isShowingDecomp, setShowDecomp, isShowingGrid, isShowingS
 		// avoid to just collapse all the shapes into single dot at 0,0
 		if(multX > 0 && multY > 0 && Number.isFinite(multX) && Number.isFinite(multY) && (multX !== 1 || multY !== 1)){
 			lastNonInfiniteModelSize.current = {x, y}
-			updateShapes(shapes => shapes.map(shape => ({...shape, points: shape.points.map(([x, y]) => {
-				const {x: newX, y: newY} = roundToGrain({x: x * multX, y: y * multY})
-				return [newX, newY]
-			})})))
+			updateShapes(shapes => shapes.map(shape => ({
+				...shape, points: shape.points.map(([x, y]) => {
+					const {x: newX, y: newY} = roundToGrain({x: x * multX, y: y * multY})
+					return [newX, newY]
+				})
+			})))
 		}
 		setModel(model => ({...model, size: {x, y}}))
 	}
@@ -199,7 +205,9 @@ type WorkbenchProps = {
 	isShowingTexture: boolean
 }
 
-const ModelWorkbench = ({isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture}: WorkbenchProps) => {
+const ModelWorkbench = ({
+	isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture
+}: WorkbenchProps) => {
 	const {model, workbenchRef} = useModelDisplayContext()
 	const [{config: {inworldUnitPixelSize}}] = useProject()
 

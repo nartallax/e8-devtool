@@ -11,7 +11,9 @@ type MovingPointData = {
 }
 
 export const useModelShapesDragProps = () => {
-	const {getShapes, updateShapes, shapesStateStack, mouseEventToInworldCoords, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, selectedPointRef, selectedShapeId, setSelectedShapeId} = useModelDisplayContext()
+	const {
+		getShapes, updateShapes, shapesStateStack, mouseEventToInworldCoords, currentlyDrawnShapeId, setCurrentlyDrawnShapeId, selectedPointRef, selectedShapeId, setSelectedShapeId
+	} = useModelDisplayContext()
 
 	const movingPointRef = useRef<MovingPointData>({
 		startX: 0,
@@ -65,6 +67,7 @@ export const useModelShapesDragProps = () => {
 					shapesStateStack.storeState(getShapes())
 				}
 
+				e.stopPropagation() // to avoid adding another node on top of existing one
 				setCurrentlyDrawnShapeId(null)
 				return false
 			}

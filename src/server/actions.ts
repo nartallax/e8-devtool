@@ -49,7 +49,7 @@ export const getActions = (cli: CLIArgs) => {
 		await safeWrite(cli.projectPath, JSON.stringify(project, null, "\t"))
 	}
 
-	const getTextureTree = async(path: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
+	const getTextureTree = async(path?: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
 		const project = await getProject()
 		const fileTree = await readdirAsTree(resolveProjectPath(path ?? project.config.textureDirectoryPath))
 
