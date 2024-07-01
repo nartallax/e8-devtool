@@ -37,5 +37,7 @@ export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | 
 
 	const markSaved = useCallback(() => setUnsaved(false), [])
 
-	return {state: currentValue, setState, isUnsaved, save: doSave, markSaved}
+	return {
+		state: currentValue, setState, isUnsaved, save: doSave, markSaved
+	}
 }

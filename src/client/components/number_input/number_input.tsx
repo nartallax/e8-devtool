@@ -45,7 +45,9 @@ const stringify = (x: number, step: number): string => {
 	return result
 }
 
-export const NumberInputField = ({value, onChange, step = 0.0001, min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY, isDisabled = false, ...props}: Props) => {
+export const NumberInputField = ({
+	value, onChange, step = 0.0001, min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY, isDisabled = false, ...props
+}: Props) => {
 	const {id, hasError} = useRegisterField({value, ...props})
 	const ref = useRef<HTMLInputElement | null>(null)
 

@@ -16,7 +16,9 @@ export const [ProjectProvider, useProjectContext] = defineContext({
 		const apiClient = useApiClient()
 		const {addToast, updateToast, removeToast} = useToastContext()
 
-		const {state: project, setState: setProject, isUnsaved, markSaved, save} = useSaveableState(
+		const {
+			state: project, setState: setProject, isUnsaved, markSaved, save
+		} = useSaveableState(
 			makeBlankProject(), async project => {
 				addToast({
 					icon: Icon.spinner,
@@ -51,7 +53,9 @@ export const [ProjectProvider, useProjectContext] = defineContext({
 			})
 		}, [apiClient, markSaved, setProject])
 
-		return {project, setProject, isLoaded, isUnsaved, save}
+		return {
+			project, setProject, isLoaded, isUnsaved, save
+		}
 	}
 })
 

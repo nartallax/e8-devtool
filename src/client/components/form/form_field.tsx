@@ -12,8 +12,11 @@ type Props = {
 	onLabelClick?: () => void
 }
 
+// TODO: add hint text
 export const FormField = ({id, onLabelClick, children}: PropsWithChildren<Props>) => {
-	const {label, error} = useFormField(id)
+	const {
+		label, error, fieldLabelWidth, fieldInputWidth
+	} = useFormField(id)
 
 	return (
 		<div className={css.formField}>
@@ -21,6 +24,9 @@ export const FormField = ({id, onLabelClick, children}: PropsWithChildren<Props>
 				className={cn(css.formFieldLabel, {
 					[css.isClickable!]: !!onLabelClick
 				})}
+				style={{
+					width: fieldLabelWidth
+				}}
 				onClick={onLabelClick}>
 				<div className={css.formFieldLabelText}>
 					{label}
@@ -29,7 +35,9 @@ export const FormField = ({id, onLabelClick, children}: PropsWithChildren<Props>
 					{error}
 				</TooltipIcon>
 			</div>
-			{children}
+			<div className={css.formFieldInput} style={{width: fieldInputWidth}}>
+				{children}
+			</div>
 		</div>
 	)
 

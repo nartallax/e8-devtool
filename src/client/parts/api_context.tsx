@@ -18,7 +18,7 @@ class DevtoolApiClient extends ApiClient {
 
 	getProject = () => this.call<Project>({name: "getProject"})
 	saveAndProduce = (project: Project) => this.call({name: "saveAndProduce", body: [project]})
-	getTextureFiles = () => this.call<Tree<TextureFile, NamedId>[]>({name: "getTextureFiles"})
+	getTextureFiles = (path?: string) => this.call<Tree<TextureFile, NamedId>[]>({name: "getTextureFiles", body: [path ?? null]})
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	projectToAtlasLayout = (project: Project) => this.call<(SvgTextureFile & XY)[]>({name: "projectToAtlasLayout", body: [project]})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})

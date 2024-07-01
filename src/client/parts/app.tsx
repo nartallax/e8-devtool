@@ -18,6 +18,7 @@ import faviconHasChanges from "../favicon_has_changes.svg"
 import {Favicon} from "client/components/favicon/favicon"
 import {HotkeyProvider} from "client/components/hotkey_context/hotkey_context"
 import {ModalProviders} from "client/components/modal/modal_providers"
+import {SettingsPage} from "client/parts/settings_page/settings_page"
 
 export const App = () => (
 	<Providers>
@@ -104,6 +105,11 @@ const Content = () => {
 						suffix: "/atlas",
 						text: "Atlas",
 						render: () => <AtlasPage/>
+					},
+					{
+						suffix: "/settings",
+						text: "Settings",
+						render: () => <SettingsPage/>
 					}
 				]}
 			/>

@@ -1,7 +1,12 @@
 import {Col} from "client/components/row_col/row_col"
+import {MinMaxableSize} from "client/ui_utils/sizes"
 import {PropsWithChildren} from "react"
 
-export const CentralColumn = ({children}: PropsWithChildren) => {
+type Props = {
+	width?: MinMaxableSize
+}
+
+export const CentralColumn = ({children, width}: PropsWithChildren<Props>) => {
 	return (
 		<Col
 			width="100%"
@@ -9,7 +14,7 @@ export const CentralColumn = ({children}: PropsWithChildren) => {
 			align="center"
 			grow={1}>
 			<Col
-				width={["400px", "50vw", "800px"]}
+				width={width ?? ["400px", "50vw", "800px"]}
 				grow={1}
 				align="stretch"
 				gap>

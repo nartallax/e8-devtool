@@ -1,0 +1,33 @@
+.separator {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .separatorStart {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 0 0 auto;
+    width: calc(var(--field-label-width) - 2rem);
+  }
+
+  .separatorIcon {
+    width: 2rem;
+  }
+
+  .separatorText {
+    color: var(--color-font-disabled);
+    flex: 0 0 auto;
+    padding: 0.25rem 0.25rem 0.25rem 1.25rem;
+  }
+
+  hr {
+    height: 2px;
+    background-color: var(--color-border);
+    flex: 1 1 0;
+  }
+
+  hr:last-child:not(:first-child) {
+    margin-left: 1rem;
+  }
+}

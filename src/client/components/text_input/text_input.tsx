@@ -12,7 +12,9 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
 	icon?: Icon
 }
 
-export const TextInput = ({value, onChange, isDisabled, inputRef: ref, hasError, icon, ...props}: Props) => {
+export const TextInput = ({
+	value, onChange, isDisabled, inputRef: ref, hasError, icon, ...props
+}: Props) => {
 	const lastValue = useRef(value)
 	const handleChange = () => {
 		const input = ref.current

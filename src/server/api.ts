@@ -20,9 +20,9 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 			return await actions.getProject()
 		},
 
-		async getTextureFiles(): Promise<Tree<TextureFile, NamedId>[]> {
+		async getTextureFiles(path: string | null): Promise<Tree<TextureFile, NamedId>[]> {
 			try {
-				return await actions.getTextureTree()
+				return await actions.getTextureTree(path)
 			} catch(e){
 				if(!isEnoent(e)){
 					throw e

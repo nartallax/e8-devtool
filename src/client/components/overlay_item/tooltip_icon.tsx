@@ -8,27 +8,31 @@ type Props = {
 	tooltipCorner?: Corner
 	iconCorner?: Corner
 	icon?: Icon
-	variant?: "default" | "error"
+	variant?: "default" | "error" | "disabled"
 	isHidden?: boolean
 	isPreWrapped?: boolean
 }
 
-export const TooltipIcon = ({tooltipCorner, iconCorner, icon, variant = "default", isHidden, children, isPreWrapped}: PropsWithChildren<Props>) => {
+export const TooltipIcon = ({
+	tooltipCorner, iconCorner, icon, variant = "default", isHidden, children, isPreWrapped
+}: PropsWithChildren<Props>) => {
 	const [isVisible, setIsVisible] = useState(false)
 
 	return (
 		<OverlayItem
 			anchorCorner={iconCorner ?? "bottom-right"}
 			overlayCorner={tooltipCorner ?? "bottom-left"}
-			item={<div className={cn(css.tooltip, {
-				[css.isPreWrapped!]: isPreWrapped
-			})}>
+			item={<div
+				className={cn(css.tooltip, {
+					[css.isPreWrapped!]: isPreWrapped
+				})}>
 				{children}
 			</div>}
 			isVisible={isVisible}>
 			<div
 				className={cn(css.tooltipIcon, icon, {
 					[css.isError!]: variant === "error",
+					[css.isDisabled!]: variant === "disabled",
 					[css.isHidden!]: isHidden
 				})}
 				onMouseLeave={() => setIsVisible(false)}

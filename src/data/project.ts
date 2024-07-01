@@ -31,7 +31,7 @@ export interface Project {
 type ProjectConfig = {
 	/** Resolution of one inworld unit (on x1 zoom)
 	Used to determine how to render vector textures, if there are any, and some other values related to resolution. */
-	inworldUnitPixelSize: 100
+	inworldUnitPixelSize: number
 	resourcePackPath: string
 	textureDirectoryPath: string
 	/** Path that contains classes related to entities */
@@ -84,7 +84,7 @@ export function makeBlankProject(): Project {
 			// TODO: path resolving and how to approach that
 			resourcePackPath: "./generated/resource_pack.e8.bin",
 			textureDirectoryPath: "./textures",
-			entityClassesDirectoryPath: "",
+			entityClassesDirectoryPath: "./entities",
 			ts: {
 				path: "./generated/resource_pack_content.e8.ts",
 				inputBindSetEnumName: "BindSet",

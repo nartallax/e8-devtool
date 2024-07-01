@@ -281,7 +281,9 @@ let result = tseslint.config(
 		"react/require-default-props": ["off"],
 		"react/require-optimization": ["off"],
 		"react/require-render-return": ["error"],
-		"react/self-closing-comp": ["warn"],
+		// this one is good in general, just irritating
+		// in case when you're writing a code and it selfcloses tags in unfinished code
+		"react/self-closing-comp": ["off"],
 		"react/sort-comp": ["off"],
 		"react/sort-default-props": ["off"],
 		"react/sort-prop-types": ["off"],

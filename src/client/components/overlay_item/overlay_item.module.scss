@@ -16,6 +16,10 @@
     color: var(--color-error);
   }
 
+  &.isDisabled {
+    color: var(--color-font-disabled);
+  }
+
   &.isHidden {
     pointer-events: none;
     visibility: hidden;
@@ -24,12 +28,14 @@
 
 .tooltip {
   min-width: 200px;
+  width: 30vw;
+  max-width: 500px;
   padding: 0.25rem;
   border: var(--default-border);
   border-radius: var(--default-border-radius);
   background: var(--color-background);
 
   &.isPreWrapped {
-    white-space: pre;
+    white-space: pre-wrap;
   }
 }

@@ -12,6 +12,7 @@ import {getHashUUID} from "common/uuid"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
 import {deepMerge} from "common/deep_merge"
+import {isPathInsidePath} from "common/is_path_inside_path"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 	const tmpFile = await Tempy.temporaryWrite(value)
@@ -48,9 +49,9 @@ export const getActions = (cli: CLIArgs) => {
 		await safeWrite(cli.projectPath, JSON.stringify(project, null, "\t"))
 	}
 
-	const getTextureTree = async(): Promise<Tree<TextureFile, NamedId>[]> => {
+	const getTextureTree = async(path: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
 		const project = await getProject()
-		const fileTree = await readdirAsTree(resolveProjectPath(project.config.textureDirectoryPath))
+		const fileTree = await readdirAsTree(resolveProjectPath(path ?? project.config.textureDirectoryPath))
 
 		const convert = (tree: Tree<string, string>, parents: string[]): Tree<TextureFile, NamedId> => {
 			if(isTreeBranch(tree)){
@@ -64,11 +65,13 @@ export const getActions = (cli: CLIArgs) => {
 				}
 			} else {
 				const fullPath = [...parents, tree.value].join("/")
-				return {value: {
-					id: getHashUUID(fullPath),
-					fullPath,
-					name: tree.value
-				}}
+				return {
+					value: {
+						id: getHashUUID(fullPath),
+						fullPath,
+						name: tree.value
+					}
+				}
 			}
 		}
 
@@ -98,7 +101,11 @@ export const getActions = (cli: CLIArgs) => {
 
 	const resolveProjectPath = (path: string): string => {
 		const rootDir = Path.dirname(cli.projectPath)
-		return Path.resolve(rootDir, path)
+		const result = Path.resolve(rootDir, path)
+		if(!isPathInsidePath(result, rootDir)){
+			throw new Error("Attempt to break out of root directory: " + result)
+		}
+		return result
 	}
 
 	const actions = {

@@ -15,7 +15,9 @@ type Props = FormInputProps<string> & {
 	inputRef?: MutableRefObject<HTMLInputElement | null>
 }
 
-export const TextInputField = ({value, onChange, isDisabled, placeholder, isAutofocused, icon, onKeyDown, inputRef, ...props}: Props) => {
+export const TextInputField = ({
+	value, onChange, isDisabled, placeholder, isAutofocused, icon, onKeyDown, inputRef, ...props
+}: Props) => {
 	const {id, hasError} = useRegisterField({value, ...props})
 	const ref = useMemo(() => inputRef ?? createRef<HTMLInputElement | null>(), [inputRef])
 

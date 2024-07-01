@@ -27,6 +27,8 @@ type FormInputVisualState = {
 type FormFieldVisualState = {
 	error: string | null
 	label: string
+	fieldLabelWidth: string | undefined
+	fieldInputWidth: string | undefined
 }
 
 type FormContextValue = {
@@ -36,6 +38,8 @@ type FormContextValue = {
 	submit: () => Promise<void>
 	isShowingErrors: boolean
 	hasErrors: boolean
+	fieldLabelWidth?: string
+	fieldInputWidth?: string
 }
 
 export const [FormContextProvider, useFormContext] = defineContext({
@@ -60,10 +64,14 @@ export const useRegisterField = function<T>({label, value, validators}: FormFiel
 }
 
 export const useFormField = (id: UUID): FormFieldVisualState => {
-	const {fields, isShowingErrors} = useFormContext()
+	const {
+		fields, isShowingErrors, fieldLabelWidth, fieldInputWidth
+	} = useFormContext()
 	const field = fields.get(id)
 	return {
 		error: !isShowingErrors ? null : (field?.error ?? null),
-		label: field?.label ?? ""
+		label: field?.label ?? "",
+		fieldLabelWidth,
+		fieldInputWidth
 	}
 }
