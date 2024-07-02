@@ -1,26 +1,15 @@
-import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
 import {ValidatorSets} from "client/components/form/validators"
 import {NumberInputField} from "client/components/number_input/number_input"
 import {PathInputField} from "client/components/path_input/path_input_field"
 import {useBeforeNavigation} from "client/components/router/routing_context"
-import {Row} from "client/components/row_col/row_col"
 import {Separator} from "client/components/separator/separator"
 import {TextInputField} from "client/components/text_input/text_input_field"
-import {useToastContext} from "client/components/toast/toast_context"
 import {UnsavedChanges, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
-import {useApi, useApiClient} from "client/parts/api_context"
+import {useApi} from "client/parts/api_context"
 import {CentralColumn} from "client/parts/layouts/central_column"
 import {useProject} from "client/parts/project_context"
-import {TextureTreeModal} from "client/parts/textures/texture_tree_modal"
-import {Tree} from "common/tree"
-import {getRandomUUID} from "common/uuid"
-import {NamedId, TextureFile} from "data/project"
-import {Icon} from "generated/icons"
-import {useState} from "react"
-
-const textureLoadingToastId = getRandomUUID()
 
 const scaleHint = `Size, in pixels, of one in-world unit on x1 zoom. Affects many things:
 - Resolution of textures
@@ -38,36 +27,13 @@ export const SettingsPage = () => {
 		setProject(project => ({...project, config: settings}))
 	})
 
-	const [textureForest, setTextureForest] = useState<Tree<TextureFile, NamedId>[] | null>(null)
 	const {saveOrAbort} = useUnsavedChanges()
 	useBeforeNavigation(() => saveOrAbort({actionDescription: "navigate away"}))
-
-	const {addToast, removeToast} = useToastContext()
-	const apiClient = useApiClient()
-	const checkTexturePath = async() => {
-		addToast({
-			id: textureLoadingToastId,
-			text: "Loading textures...",
-			isStepRotating: true,
-			icon: Icon.spinner
-		})
-		try {
-			const forest = await apiClient.getTextureFiles(settings.textureDirectoryPath)
-			setTextureForest(forest)
-		} catch(e){
-			// nothing. error toast is already displayed
-		}
-		removeToast(textureLoadingToastId)
-	}
 
 	const [rootForest] = useApi(api => api.getProjectRootForest(), [])
 
 	return (
 		<CentralColumn width={["400px", "75vw", "800px"]}>
-			{textureForest !== null && <TextureTreeModal
-				textureForest={textureForest}
-				onClose={() => setTextureForest(null)}
-			/>}
 			<UnsavedChanges isUnsaved={isUnsaved} save={save}>
 				<Form fieldLabelWidth="20rem" fieldInputWidth="30rem" showAllErrors>
 					<Separator>General settings</Separator>
@@ -79,19 +45,16 @@ export const SettingsPage = () => {
 						min={0}
 					/>
 					<Separator hint="All paths are calculated relative to directory that contains project definition file. It is advised to keep them relative for portability.">Paths</Separator>
-					<Row gap>
-						<PathInputField
-							value={settings.textureDirectoryPath}
-							onChange={textureDirectoryPath => setSettings(settings => ({...settings, textureDirectoryPath}))}
-							label="Textures path"
-							hint="Path to a directory that contains textures. You can only use textures from this directory in this devtool project."
-							validators={ValidatorSets.nonEmpty}
-							fsForest={rootForest}
-							pathPrefix="./"
-							canSelectDirectory
-						/>
-						<Button text="Check" onClick={checkTexturePath}/>
-					</Row>
+					<PathInputField
+						value={settings.textureDirectoryPath}
+						onChange={textureDirectoryPath => setSettings(settings => ({...settings, textureDirectoryPath}))}
+						label="Textures path"
+						hint="Path to a directory that contains textures. You can only use textures from this directory in this devtool project."
+						validators={ValidatorSets.nonEmpty}
+						fsForest={rootForest}
+						pathPrefix="./"
+						canSelectDirectory
+					/>
 					<PathInputField
 						value={settings.resourcePackPath}
 						onChange={resourcePackPath => setSettings(settings => ({...settings, resourcePackPath}))}
