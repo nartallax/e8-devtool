@@ -49,10 +49,7 @@ export const getActions = (cli: CLIArgs) => {
 		await safeWrite(cli.projectPath, JSON.stringify(project, null, "\t"))
 	}
 
-	const getTextureTree = async(path?: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
-		const project = await getProject()
-		const fileTree = await readdirAsTree(resolveProjectPath(path ?? project.config.textureDirectoryPath))
-
+	const convertTextureForest = (forest: Tree<string, string>[]): Tree<TextureFile, NamedId>[] => {
 		const convert = (tree: Tree<string, string>, parents: string[]): Tree<TextureFile, NamedId> => {
 			if(isTreeBranch(tree)){
 				const newParents = [...parents, tree.value]
@@ -75,7 +72,13 @@ export const getActions = (cli: CLIArgs) => {
 			}
 		}
 
-		return fileTree.map(tree => convert(tree, []))
+		return forest.map(tree => convert(tree, []))
+	}
+
+	const getTextureTree = async(path?: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
+		const project = await getProject()
+		const fileTree = await readdirAsTree(resolveProjectPath(path ?? project.config.textureDirectoryPath))
+		return convertTextureForest(fileTree)
 	}
 
 	const produceResourcePack = async() => {
@@ -115,7 +118,8 @@ export const getActions = (cli: CLIArgs) => {
 		produceTypescript,
 		produceEverything,
 		getTextureTree,
-		resolveProjectPath
+		resolveProjectPath,
+		convertTextureForest
 	}
 
 	return actions

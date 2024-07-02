@@ -41,7 +41,7 @@ export const TextureTreeModal = ({
 					{isSelectionModal
 						? <ModalSubmitCancelButtons onCancel={onClose}/>
 						: <Row justify="end">
-							<Button onClick={onClose} icon={Icon.check} text="OK"/>
+							<Button onClick={() => onClose()} icon={Icon.check} text="OK"/>
 						</Row>}
 				</Col>
 			</Form>

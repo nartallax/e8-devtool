@@ -17,6 +17,17 @@
   padding: 0.25rem;
 }
 
+.textInputIconButtonWrap {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  > * {
+    position: absolute;
+    top: calc(var(--default-border-width) * -1);
+    left: calc(var(--default-border-width) * -1);
+  }
+}
+
 .textInputBase {
   border-radius: var(--default-border-radius);
   background-color: var(--color-interactive);

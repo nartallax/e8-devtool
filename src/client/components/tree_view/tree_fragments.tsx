@@ -21,7 +21,9 @@ type BaseProps<L, B> = {
 	getLeafLabel: (leaf: L) => string
 	getLeafSublabel?: (leaf: L) => React.ReactNode
 	onLeafClick?: (leaf: L, path: TreePath) => void
-	onLeafDoubleclick?: (leaf: L) => void
+	onLeafDoubleclick?: (leaf: L, path: TreePath) => void
+	onBranchClick?: (branch: B, path: TreePath) => void
+	onBranchDoubleclick?: (branch: B, path: TreePath) => void
 	onAddChild?: (parentPath: TreePath) => void
 	squares?: SquareName[]
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -85,7 +87,8 @@ const TreeRow = <T, B>({
 	row, squares, isExpanded, getBranchLabel, getLeafLabel, getLeafSublabel, getBranchSublabel,
 	onExpandChange, onLeafDoubleclick, onLeafClick, path, inlineEditPath, onLabelEditComplete,
 	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, onAddChild, canDeleteBranch,
-	canDeleteLeaf, leafLabelValidators, branchLabelValidators, selectedPath, InlineEditor = InlineTreeElementEditor
+	canDeleteLeaf, leafLabelValidators, branchLabelValidators, selectedPath, InlineEditor = InlineTreeElementEditor,
+	onBranchClick, onBranchDoubleclick
 }: RowProps<T, B>) => {
 	const isSelected = !!selectedPath && areTreePathsEqual(selectedPath, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
@@ -161,7 +164,14 @@ const TreeRow = <T, B>({
 	if(isTreeBranch(row)){
 		const onRowClick = (e: React.MouseEvent) => {
 			if(shouldHandleRowClick(e)){
+				onBranchClick?.(row.value, path)
 				onExpandChange?.()
+			}
+		}
+
+		const onRowDblClick = (e: React.MouseEvent) => {
+			if(shouldHandleRowClick(e)){
+				onBranchDoubleclick?.(row.value, path)
 			}
 		}
 
@@ -169,6 +179,7 @@ const TreeRow = <T, B>({
 			<div
 				className={className}
 				onClick={onRowClick}
+				onDoubleClick={onRowDblClick}
 				data-path={JSON.stringify(path)}>
 				<TreeRowSquares squares={squares ?? []} endsWith="expander"/>
 				{labelOrEditor}
@@ -178,7 +189,7 @@ const TreeRow = <T, B>({
 	} else {
 		const onRowDblClick = (e: React.MouseEvent) => {
 			if(shouldHandleRowClick(e)){
-				onLeafDoubleclick?.(row.value)
+				onLeafDoubleclick?.(row.value, path)
 			}
 		}
 
@@ -232,7 +243,9 @@ const BranchSquareCorner = () => <div className={css.branchCorner}/>
 const BranchSquareSplit = () => <div className={css.branchSplit}/>
 const BranchSquareExpander = () => <div className={cn(css.branchExpander, Icon.triangleRight)}/>
 
-export const TreeBranchChildren = <T, B>({tree, squares, path, ...props}: TreeBranchChildrenProps<T, B>) => {
+export const TreeBranchChildren = <T, B>({
+	tree, squares, path, ...props
+}: TreeBranchChildrenProps<T, B>) => {
 	const {getBranchKey, getLeafKey} = props
 	const squaresBase: SquareName[] | undefined = !squares
 		? undefined

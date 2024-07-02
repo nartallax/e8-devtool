@@ -9,6 +9,7 @@ import {log} from "common/log"
 import {CLIArgs} from "server/cli"
 import {isEnoent} from "common/is_enoent"
 import {ApiError} from "common/api_response"
+import {readdirAsTree} from "common/readdir_as_tree"
 
 export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => void): Record<string, (...args: any[]) => unknown> {
 	const projectManipulationLock = new Lock()
@@ -49,6 +50,11 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 				await actions.produceEverything()
 				afterProjectUpdate(project)
 			})
+		},
+
+		async getProjectRootForest(): Promise<Tree<NamedId, NamedId>[]> {
+			const forest = await readdirAsTree(actions.resolveProjectPath("."))
+			return actions.convertTextureForest(forest)
 		}
 	}
 }

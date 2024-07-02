@@ -47,6 +47,24 @@ export function getFirstTreeLeaf<T, B>(forest: Tree<T, B>[]): T | null {
 	return null
 }
 
+export function getFirstTreeLeafPath<T, B>(forest: Tree<T, B>[]): TreePath | null {
+	for(const tree of forest){
+		for(const [trees, leafValue] of getTreeLeaves(tree)){
+			const result: TreePath = []
+			let parentForest = forest
+			for(const tree of trees){
+				const index = parentForest.indexOf(tree)
+				result.push(index)
+				parentForest = tree.children
+			}
+			const leafIndex = parentForest.findIndex(tree => tree.value === leafValue)
+			result.push(leafIndex)
+			return result
+		}
+	}
+	return null
+}
+
 export const getForestLeavesAsArray = <T, B>(forest: Tree<T, B>[], result: T[] = []): T[] => {
 	for(const tree of forest){
 		if(isTreeBranch(tree)){
@@ -304,4 +322,40 @@ export const getTreeSiblings = <T, B>(trees: Tree<T, B>[], path: TreePath): Tree
 		throw new Error("Path is all wrong")
 	}
 	return parent.children
+}
+
+export const treeValuesToTreePath = <T, B, V>(forest: Tree<T, B>[], values: V[], treeMatches: (treeValue: T | B, arrayValue: V) => boolean): TreePath | null => {
+	const parentForest = forest
+	const result: TreePath = []
+	outer: for(const arrayValue of values){
+		let i = 0
+		for(const tree of parentForest){
+			if(treeMatches(tree.value, arrayValue)){
+				result.push(i)
+				continue outer
+			}
+			i++
+		}
+		return null
+	}
+	return result
+}
+
+export const treePathToValues = <T, B>(forest: Tree<T, B>[], path: TreePath): (T | B)[] => {
+	const result: (T | B)[] = []
+	for(let i = 0; i < path.length; i++){
+		const index = path[i]!
+		const tree = forest[index]
+		if(!tree){
+			throw new Error("Broken tree path - child index out of range")
+		}
+		if(i !== path.length - 1){
+			if(!isTreeBranch(tree)){
+				throw new Error("Expected intermediate elements of tree path to point to branches")
+			}
+			forest = tree.children
+		}
+		result.push(tree.value)
+	}
+	return result
 }

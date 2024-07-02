@@ -7,7 +7,8 @@ import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 type Props = {
 	text?: string
 	icon?: Icon
-	onClick?: () => void
+	/** null is possible if handler is invoked by hotkey */
+	onClick?: (e: React.MouseEvent | null) => void
 	clickRepeatTimeout?: number
 	isDisabled?: boolean
 	isError?: boolean
@@ -20,15 +21,17 @@ type Props = {
 	holdTimeUntilAction?: number
 }
 
-export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisabled, isError, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0, type = "button"}: Props) => {
+export const Button = ({
+	text, icon, onClick, clickRepeatTimeout = 250, isDisabled, isError, hotkey, variant = "default", isActive = false, holdTimeUntilAction = 0, type = "button"
+}: Props) => {
 	const [disabledByTimeoutCount, setDisabledByTimeoutCount] = useState(0)
 	const isEffectivelyDisabled = disabledByTimeoutCount > 0 || isDisabled
 	const ref = useRef<HTMLButtonElement>(null)
 	const [isPressed, setIsPressed] = useState(false)
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-	const doClick = useCallback(() => {
-		onClick?.()
+	const doClick = useCallback((e: React.MouseEvent | null) => {
+		onClick?.(e)
 		if(clickRepeatTimeout > 0){
 			setDisabledByTimeoutCount(count => count + 1)
 			setTimeout(() => setDisabledByTimeoutCount(count => count - 1), 250)
@@ -39,12 +42,12 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 		if(holdTimeUntilAction > 0){
 			return // will be processed by onDown/onUp handlers
 		}
-		doClick()
+		doClick(null)
 	}, [doClick, holdTimeUntilAction])
 
 	const onPress = useCallback((e: React.MouseEvent) => {
 		if(e.shiftKey){
-			doClick()
+			doClick(e)
 			return
 		}
 		if(holdTimeUntilAction === 0){
@@ -52,7 +55,7 @@ export const Button = ({text, icon, onClick, clickRepeatTimeout = 250, isDisable
 		}
 		setIsPressed(true)
 		timeout.current = setTimeout(() => {
-			doClick()
+			doClick(e)
 			setIsPressed(false)
 		}, holdTimeUntilAction)
 	}, [doClick, holdTimeUntilAction])

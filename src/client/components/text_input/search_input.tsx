@@ -13,7 +13,9 @@ type Props = {
 	inputWaitTime?: number // ms
 }
 
-export const SearchInput = ({inputWaitTime = 0, onChange, onAccept, isAutofocused, isDisabled, placeholder}: Props) => {
+export const SearchInput = ({
+	inputWaitTime = 0, onChange, onAccept, isAutofocused, isDisabled, placeholder
+}: Props) => {
 	const wrappedOnChange = useWaitForInput(inputWaitTime, onChange)
 
 	const onKeyDown = (e: React.KeyboardEvent) => {

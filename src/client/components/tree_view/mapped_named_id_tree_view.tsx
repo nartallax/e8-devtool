@@ -3,7 +3,7 @@ import {Row} from "client/components/row_col/row_col"
 import {SearchInput} from "client/components/text_input/search_input"
 import {TreeControls, TreeView, TreeViewProps} from "client/components/tree_view/tree_view"
 import {AbortError} from "client/ui_utils/abort_error"
-import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf} from "common/tree"
+import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf, getFirstTreeLeafPath} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -12,7 +12,7 @@ export type NullableNamedId = Omit<NamedId, "id"> & {
 	id: UUID | null
 }
 
-export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "InlineEditor" > & {
+export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "onBranchClick" | "onBranchDoubleclick" | "InlineEditor" > & {
 	values: S[]
 	onChange?: (values: S[]) => void
 	toTree: (sourceValue: S) => T
@@ -205,11 +205,12 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 
 	const onSearchAccept = () => {
 		const firstLeaf = getFirstTreeLeaf(filteredTree)
-		if(!firstLeaf){
+		const firstLeafPath = getFirstTreeLeafPath(filteredTree)
+		if(!firstLeaf || !firstLeafPath){
 			return
 		}
 		if(props.onLeafDoubleclick){
-			props.onLeafDoubleclick(firstLeaf)
+			props.onLeafDoubleclick(firstLeaf, firstLeafPath)
 		}
 	}
 

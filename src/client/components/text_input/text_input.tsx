@@ -1,7 +1,9 @@
 import {cn} from "client/ui_utils/classname"
-import {MutableRefObject, useRef} from "react"
+import {MutableRefObject, ReactNode, useRef} from "react"
 import * as css from "./text_input.module.scss"
 import {Icon} from "generated/icons"
+import {Button} from "client/components/button/button"
+import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"
 
 type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
 	value: string
@@ -10,10 +12,11 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
 	inputRef: MutableRefObject<HTMLInputElement | null>
 	hasError?: boolean
 	icon?: Icon
+	onIconClick?: () => void
 }
 
 export const TextInput = ({
-	value, onChange, isDisabled, inputRef: ref, hasError, icon, ...props
+	value, onChange, onIconClick, isDisabled, inputRef: ref, hasError, icon, ...props
 }: Props) => {
 	const lastValue = useRef(value)
 	const handleChange = () => {
@@ -24,9 +27,33 @@ export const TextInput = ({
 		}
 	}
 
+	let iconEl: ReactNode = null
+	if(icon){
+		if(!onIconClick){
+			iconEl = <div className={cn(icon, css.textInputIcon)}/>
+		} else {
+			iconEl = (
+				<div className={css.textInputIconButtonWrap}>
+					<Button
+						onClick={onIconClick}
+						icon={icon}
+						variant="large-plain-icon"
+					/>
+				</div>
+			)
+		}
+	}
+
 	return (
-		<div className={css.textInputBaseWrap} onClick={() => ref.current?.focus()}>
-			{icon && <div className={cn(icon, css.textInputIcon)}/>}
+		<div
+			className={css.textInputBaseWrap}
+			onClick={e => {
+				if(e.target instanceof HTMLElement && nodeOrParentThatMatches(e.target, node => node instanceof HTMLButtonElement)){
+					return
+				}
+				ref.current?.focus()
+			}}>
+			{iconEl}
 			<input
 				ref={ref}
 				className={cn(css.textInputBase, {[css.hasError!]: hasError})}

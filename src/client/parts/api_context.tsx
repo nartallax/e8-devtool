@@ -22,6 +22,7 @@ class DevtoolApiClient extends ApiClient {
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	projectToAtlasLayout = (project: Project) => this.call<(SvgTextureFile & XY)[]>({name: "projectToAtlasLayout", body: [project]})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
+	getProjectRootForest = () => this.call<Tree<NamedId, NamedId>[]>({name: "getProjectRootForest"})
 }
 
 const apiErrorToastId = getRandomUUID()
