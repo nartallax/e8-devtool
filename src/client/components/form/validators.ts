@@ -31,3 +31,7 @@ export namespace Validators {
 		}
 	}
 }
+
+export namespace ValidatorSets {
+	export const nonEmpty = [Validators.nonEmpty()]
+}

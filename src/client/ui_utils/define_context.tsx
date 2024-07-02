@@ -10,7 +10,9 @@ type Props<T, I> = {
 }
 
 /** Create context (as in, React.createContext()), but in more safe and predictable way */
-export const defineContext = <T, I>({name, useValue: getValue, additionalChildren, NestedWrapComponent}: Props<T, I>): [
+export const defineContext = <T, I>({
+	name, useValue: getValue, additionalChildren, NestedWrapComponent
+}: Props<T, I>): [
 	provider: (props: React.PropsWithChildren<I>) => React.ReactNode,
 	useThisContext: () => T
 ] => {

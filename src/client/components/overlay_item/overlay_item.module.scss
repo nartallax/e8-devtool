@@ -28,12 +28,13 @@
 
 .tooltip {
   min-width: 200px;
-  width: 30vw;
+  width: max-content;
   max-width: 500px;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
   border: var(--default-border);
   border-radius: var(--default-border-radius);
   background: var(--color-background);
+  text-align: left; // to override other text-aligns
 
   &.isPreWrapped {
     white-space: pre-wrap;

@@ -6,17 +6,18 @@ type Props = {
 	onSubmit?: () => void | Promise<void>
 	fieldLabelWidth?: string
 	fieldInputWidth?: string
+	showAllErrors?: boolean
 }
 
 export const Form = ({
-	children, onSubmit, fieldLabelWidth, fieldInputWidth
+	children, onSubmit, fieldLabelWidth, fieldInputWidth, showAllErrors = false
 }: PropsWithChildren<Props>) => {
 	const [formFields, setFormFields] = useState<ReadonlyMap<UUID, FormFieldState>>(new Map())
-	const [isShowingErrors, setShowingErrors] = useState(false)
+	const [isShowingErrors, setShowingErrors] = useState(showAllErrors)
 	const hasErrors = useMemo(() => !![...formFields.values()].find(({error}) => !!error), [formFields])
 
-	const registerField = useCallback((id: UUID, label: string, error: string | null) => {
-		setFormFields(fields => new Map([...fields, [id, {label, error}]]))
+	const registerField = useCallback((id: UUID, label: string, hint: React.ReactNode, error: string | null) => {
+		setFormFields(fields => new Map([...fields, [id, {label, error, hint}]]))
 	}, [setFormFields])
 
 	const unregisterField = useCallback((id: UUID) => {
