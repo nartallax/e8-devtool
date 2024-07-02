@@ -18,14 +18,10 @@
 }
 
 .textInputIconButtonWrap {
-  position: relative;
   width: 2rem;
   height: 2rem;
-  > * {
-    position: absolute;
-    top: calc(var(--default-border-width) * -1);
-    left: calc(var(--default-border-width) * -1);
-  }
+  margin-top: calc(var(--default-border-width) * -1);
+  margin-left: calc(var(--default-border-width) * -1);
 }
 
 .textInputBase {

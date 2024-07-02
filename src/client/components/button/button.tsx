@@ -90,7 +90,7 @@ export const Button = ({
 				onMouseDown={onPress}
 				onMouseUp={onRelease}>
 				{!!icon && <div className={cn(css.icon, icon)}/>}
-				{!!text && <div>{text}</div>}
+				{!!text && <div className={css.text}>{text}</div>}
 			</button>
 		</Hotkey>
 	)
