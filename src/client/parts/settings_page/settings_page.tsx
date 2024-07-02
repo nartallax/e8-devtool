@@ -81,7 +81,7 @@ export const SettingsPage = () => {
 							value={settings.textureDirectoryPath}
 							onChange={textureDirectoryPath => setSettings(settings => ({...settings, textureDirectoryPath}))}
 							label="Textures path"
-							hint="Path to directory that contains textures."
+							hint="Path to a directory that contains textures. You can only use textures from this directory in this devtool project."
 							validators={ValidatorSets.nonEmpty}
 						/>
 						<Button text="Check" onClick={checkTexturePath}/>

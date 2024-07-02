@@ -7,7 +7,7 @@ const cli = CLI.define({
 		html: CLI.str({
 			keys: ["--html"],
 			isHidden: true,
-			description: "Path to directory, or URL, that contains HTML and other browser-related devtool files. Mostly meant for development of the tool itself; for other purposes tool comes with its own client.",
+			description: "Path to a directory, or URL, that contains HTML and other browser-related devtool files. Mostly meant for development of the tool itself; for other purposes tool comes with its own client.",
 			default: Path.resolve(Path.dirname(process.argv[1] ?? "."), "./client/")
 		}),
 		generate: CLI.bool({
@@ -30,7 +30,7 @@ const cli = CLI.define({
 		}),
 		projectPath: CLI.path({
 			keys: ["--project"],
-			description: "Path to a file that will hold definition of the project, and also serve as point where relative paths are calculated from."
+			description: "Path to a file that will hold definition of the project, and also serve as point where relative paths are calculated from. Choose location of this file wisely, as in this project you won't be able to reference files outside directory that project definition file is in. If file does not exist - empty one will be generated."
 		})
 	}
 })

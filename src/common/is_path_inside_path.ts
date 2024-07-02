@@ -6,3 +6,10 @@ export function isPathInsidePath(child: string, parent: string): boolean {
 	const rel = Path.relative(parent, child)
 	return !!rel && !Path.isAbsolute(rel) && !rel.match(/^\.\.[\\/]/)
 }
+
+export function isPathEqualPath(child: string, parent: string): boolean {
+	child = Path.resolve(child)
+	parent = Path.resolve(parent)
+	const rel = Path.relative(parent, child)
+	return rel === ""
+}

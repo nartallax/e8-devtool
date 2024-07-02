@@ -12,7 +12,7 @@ import {getHashUUID} from "common/uuid"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
 import {deepMerge} from "common/deep_merge"
-import {isPathInsidePath} from "common/is_path_inside_path"
+import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 	const tmpFile = await Tempy.temporaryWrite(value)
@@ -102,7 +102,7 @@ export const getActions = (cli: CLIArgs) => {
 	const resolveProjectPath = (path: string): string => {
 		const rootDir = Path.dirname(cli.projectPath)
 		const result = Path.resolve(rootDir, path)
-		if(!isPathInsidePath(result, rootDir)){
+		if(!isPathInsidePath(result, rootDir) && !isPathEqualPath(result, rootDir)){
 			throw new Error("Attempt to break out of root directory: " + result)
 		}
 		return result

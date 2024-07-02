@@ -45,7 +45,9 @@ export type MappedNamedIdTreeControls<L, B> = {
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
-export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, isSearchable, ...props}: MappedNamedIdTreeProps<L, B, T, S>) => {
+export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({
+	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, isSearchable, ...props
+}: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
 		path: TreePath
@@ -239,8 +241,8 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 				onLeafLabelEdit={!canUpdateValues ? undefined : editName}
 				onLeafLabelEditCancel={cancelEditName}
 				onBranchLabelEditCancel={cancelEditName}
-				onLeafDelete={deleteNode}
-				onBranchDelete={deleteNode}
+				onLeafDelete={!canUpdateValues ? undefined : deleteNode}
+				onBranchDelete={!canUpdateValues ? undefined : deleteNode}
 				onAddChild={!canUpdateValues ? undefined : onAddChild}
 				selectedPath={selectedPath}
 			/>
