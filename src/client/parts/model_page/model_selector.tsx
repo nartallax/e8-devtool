@@ -7,10 +7,11 @@ import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
-import {mapTreeLeaves} from "common/tree"
-import {getRandomUUID} from "common/uuid"
+import {TreePath, mapTree} from "common/tree"
+import {getHashUUID, getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
-import {NamedId, ProjectModel, makeBlankModel} from "data/project"
+import {NamedId, Project, ProjectModel, makeBlankModel} from "data/project"
+import {getTreePathStr} from "data/project_utils"
 import {Icon} from "generated/icons"
 
 const findDefaultId = (values: NamedId[]): UUID | null => {
@@ -20,11 +21,10 @@ const findDefaultId = (values: NamedId[]): UUID | null => {
 export const ModelSelector = () => {
 	const [project, setProject] = useProject()
 	const {textureFiles} = useTextures()
-	const modelMap = new Map(project.models.map(model => [model.id, model]))
 	const {matchedUrl} = useRoutingContext()
 	const {showAlert} = useAlert()
 
-	const getModelWithDefaults = (name: string): ProjectModel => {
+	const getModelWithDefaults = (): ProjectModel => {
 		let collisionGroupId = findDefaultId(project.collisionGroups)
 		if(!collisionGroupId){
 			const id = collisionGroupId = getRandomUUID()
@@ -51,18 +51,17 @@ export const ModelSelector = () => {
 			throw new AbortError("Insufficient data.")
 		}
 
-		const result = makeBlankModel({collisionGroupId, layerId, textureId})
-		result.name = name
-		return result
+		return makeBlankModel({collisionGroupId, layerId, textureId})
 	}
 
-	const onModelCreated = (name: string) => {
-		const model = getModelWithDefaults(name)
+	const onModelCreated = (name: string, path: TreePath) => {
+		const pathStr = getTreePathStr(project.modelTree, path.slice(0, -1), name)
+		const model = getModelWithDefaults()
 		setProject(project => ({
 			...project,
-			models: [...project.models, model]
+			models: {...project.models, [pathStr]: model}
 		}))
-		return {id: model.id, name}
+		return {name, id: model.id}
 	}
 
 	return (
@@ -70,8 +69,19 @@ export const ModelSelector = () => {
 			<MappedNamedIdTreeView
 				isSearchable
 				values={project.modelTree}
-				toTree={node => mapTreeLeaves(node, id => ({id, name: modelMap.get(id)!.name}))}
-				fromTree={node => mapTreeLeaves(node, namedId => namedId.id)}
+				toTree={(node, index) => mapTree(node,
+					(name, path) => {
+						const pathStr = getTreePathStr(project.modelTree, path)
+						const model = project.models[pathStr]!
+						return {id: model.id, name}
+					},
+					(name, path) => {
+						const pathStr = getTreePathStr(project.modelTree, path, undefined, "branch")
+						return {id: getHashUUID(pathStr), name}
+					},
+					index
+				)}
+				fromTree={node => mapTree(node, namedId => namedId.name, namedId => namedId.name)}
 				onChange={modelTree => setProject(project => ({...project, modelTree}))}
 				canBeChildOf={() => true}
 				buttons={controls => (
@@ -85,19 +95,37 @@ export const ModelSelector = () => {
 					</>
 				)}
 				onLeafCreated={onModelCreated}
-				onBranchCreated={name => ({name, id: getRandomUUID()})}
-				onLeafDelete={leaf => setProject(project => ({
-					...project,
-					models: project.models.filter(model => model.id !== leaf.id)
-				}))}
+				onBranchCreated={(name, path) => {
+					const pathStr = getTreePathStr(project.modelTree, path.slice(0, -1), name, "branch")
+					return {id: getHashUUID(pathStr), name}
+				}}
+				onLeafDelete={(_, path) => setProject(project => {
+					const models = {...project.models}
+					const pathStr = getTreePathStr(project.modelTree, path)
+					delete models[pathStr]
+					return {...project, models}
+				})}
 				onLeafDoubleclick={namedId => pushHistory(appendUrlPath(matchedUrl, `./${namedId.id}`))}
-				onLeafRename={(namedId, name) => setProject(project => {
-					const models = project.models.map(model => {
-						if(model.id !== namedId.id){
-							return model
+				beforeBranchRename={(_, name, path) => setProject(project => {
+					const oldPrefix = getTreePathStr(project.modelTree, path, undefined, "branch")
+					const newPrefix = getTreePathStr(project.modelTree, path.slice(0, -1), name, "branch")
+					const models: Project["models"] = {}
+					for(const [oldModelPath, model] of Object.entries(project.models)){
+						let modelPath = oldModelPath
+						if(modelPath.startsWith(oldPrefix)){
+							modelPath = newPrefix + modelPath.substring(0, oldPrefix.length)
 						}
-						return {...model, name}
-					})
+						models[modelPath] = model
+					}
+					return {...project, models}
+				})}
+				beforeLeafRename={(_, name, path) => setProject(project => {
+					const models = {...project.models}
+					const oldPathStr = getTreePathStr(project.modelTree, path)
+					const model = models[oldPathStr]!
+					delete models[oldPathStr]
+					const newPathStr = getTreePathStr(project.modelTree, path.slice(0, -1), name)
+					models[newPathStr] = model
 					return {...project, models}
 				})}
 			/>

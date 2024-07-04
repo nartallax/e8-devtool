@@ -78,7 +78,7 @@ const ModelSidebar = ({
 	const [project] = useProject()
 	const {inworldUnitPixelSize} = project.config
 	const {
-		currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel
+		currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel, modelName
 	} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
 
@@ -123,7 +123,7 @@ const ModelSidebar = ({
 
 
 	return (
-		<TitlePart part={" - " + model.name}>
+		<TitlePart part={" - " + modelName}>
 			<NamedIdSelector
 				label="Texture"
 				values={textureFiles}

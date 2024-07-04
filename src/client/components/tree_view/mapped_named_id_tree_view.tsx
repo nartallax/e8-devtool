@@ -17,17 +17,17 @@ export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends Nullable
 	onChange?: (values: S[]) => void
 	// TODO: in great future, when we only have named id trees everywhere, we won't be needing as much mapping as this
 	// because we could then use trees directly
-	toTree: (sourceValue: S) => T
+	toTree: (sourceValue: S, index: number) => T
 	fromTree?: (tree: T) => S
 	// on..Delete handlers only exist for some special cases
 	// for example, validations - they can throw AbortError, and it will be handled
 	// simple deletion could be performed without them
-	onLeafDelete?: (leaf: L) => void
-	onBranchDelete?: (branch: B) => void
+	onLeafDelete?: (leaf: L, path: TreePath) => void
+	onBranchDelete?: (branch: B, path: TreePath) => void
 	buttons?: (controls: MappedNamedIdTreeControls) => React.ReactNode
 	// rename handlers exist for cases when name is lost during mapping
-	onBranchRename?: (branch: B, name: string) => void
-	onLeafRename?: (leaf: L, name: string) => void
+	beforeBranchRename?: (branch: B, name: string, path: TreePath) => void
+	beforeLeafRename?: (leaf: L, name: string, path: TreePath) => void
 	// called when user finished input of leaf's name
 	onLeafCreated?: (name: string, path: TreePath) => L
 	onBranchCreated?: (name: string, path: TreePath) => B
@@ -42,7 +42,7 @@ export type MappedNamedIdTreeControls = {
 
 /** A wrap around TreeView, to provide more high-level functionality */
 export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({
-	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, selectedValue, isSearchable, onLeafCreated, onBranchCreated, ...props
+	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, beforeBranchRename, beforeLeafRename, buttons, selectedValue, isSearchable, onLeafCreated, onBranchCreated, ...props
 }: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
@@ -78,24 +78,24 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 
 	const editName = (path: TreePath, name: string) => {
 		const node = getTreeByPath(tree, path)
-		try {
-			if(isTreeBranch(node)){
-				onBranchRename && onBranchRename(node.value, name)
-			} else {
-				onLeafRename && onLeafRename(node.value, name)
+		const isNew = node.value.id === newNode?.node.value.id
+
+		if(!isNew){
+			try {
+				if(isTreeBranch(node)){
+					beforeBranchRename && beforeBranchRename(node.value, name, path)
+				} else {
+					beforeLeafRename && beforeLeafRename(node.value, name, path)
+				}
+			} catch(e){
+				if(AbortError.isAbortError(e)){
+					return
+				}
+				throw e
 			}
-		} catch(e){
-			if(AbortError.isAbortError(e)){
-				return
-			}
-			throw e
 		}
 
-		let isNew = false
 		const newTree = updateTreeByPath(tree, path, node => {
-			const id = node.value.id
-			isNew = id === newNode?.node.value.id
-
 			if(!isNew){
 				// I don't understand why do I need this cast. oh well.
 				return {...node, value: {...node.value, name}} as Tree<L, B>
@@ -113,6 +113,7 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 				return node = {...node, value: onBranchCreated(name, path)}
 			}
 		})
+
 		if(isNew){
 			setNewNode(null)
 		}
@@ -132,10 +133,10 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		try {
 			if(isTreeBranch(node)){
 				if(onBranchDelete){
-					onBranchDelete(node.value)
+					onBranchDelete(node.value, path)
 				}
 			} else if(onLeafDelete){
-				onLeafDelete(node.value)
+				onLeafDelete(node.value, path)
 			}
 		} catch(e){
 			if(AbortError.isAbortError(e)){

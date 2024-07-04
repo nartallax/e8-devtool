@@ -12,9 +12,10 @@ export interface Project {
 	// TODO: think about reorganizing this array to map-object
 	// and other arrays, why not
 	// maybe then abolish NamedId alltogeter
-	models: ProjectModel[]
+	// map full path -> model
+	models: Record<string, ProjectModel>
 	particles: ProjectParticleDefinition[]
-	modelTree: Tree<UUID, NamedId>[]
+	modelTree: Tree<string, string>[]
 	// TODO: create a tree for everything. layers, groups etc.
 	// store names in tree only
 	// this will allow for more uniform editing experience
@@ -97,7 +98,7 @@ export function makeBlankProject(): Project {
 		collisionGroups: [collisionGroup],
 		collisionGroupPairs: [[collisionGroup.id, collisionGroup.id]],
 		layers: [modelLayer, particleLayer],
-		models: [],
+		models: {},
 		particles: [],
 		modelTree: [],
 		inputBinds: [{
@@ -124,11 +125,10 @@ type BlankModelParams = {
 	textureId: UUID
 }
 
-export const makeBlankModel = ({collisionGroupId, layerId, textureId}: BlankModelParams) => ({
+export const makeBlankModel = ({collisionGroupId, layerId, textureId}: BlankModelParams): ProjectModel => ({
 	id: getRandomUUID(),
 	layerId,
 	collisionGroupId,
-	name: "unnamed model",
 	size: {x: 1, y: 1},
 	textureId,
 	isStatic: false,
@@ -140,7 +140,8 @@ export interface NamedId {
 	id: UUID
 }
 
-export interface ProjectModel extends NamedId {
+export interface ProjectModel {
+	id: UUID
 	isStatic: boolean
 	shapes: ProjectShape[]
 	collisionGroupId: UUID

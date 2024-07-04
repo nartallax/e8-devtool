@@ -9,9 +9,10 @@ import {CollisionGridModal} from "client/parts/collision_groups/collision_grid_m
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
-import {ProjectCollisionGroup, ProjectModel} from "data/project"
+import {Project, ProjectCollisionGroup} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
+import {namesOfModelsWhich} from "data/project_utils"
 
 type Props = {
 	value: UUID
@@ -25,11 +26,11 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 	const {showAlert} = useAlert()
 
 	const onDelete = (group: ProjectCollisionGroup) => {
-		const models = project.models.filter(model => model.collisionGroupId === group.id)
-		if(models.length > 0){
+		const msg = getDeletionConflictMessage(project, group.id)
+		if(msg){
 			void showAlert({
 				header: "This collision group is in use",
-				body: getDeletionConflictMessage(models)
+				body: msg
 			})
 			throw new AbortError("Has conflicts")
 		}
@@ -69,10 +70,14 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 	)
 }
 
-const getDeletionConflictMessage = (models: ProjectModel[]): string => {
-	const firstFewNames = models.slice(0, 10).map(x => x.name)
-	if(firstFewNames.length < models.length){
-		firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
+const getDeletionConflictMessage = (project: Project, groupId: string): string | null => {
+	const allNames = namesOfModelsWhich(project, model => model.collisionGroupId === groupId)
+	if(allNames.length === 0){
+		return null
+	}
+	const firstFewNames = allNames.slice(0, 10)
+	if(firstFewNames.length < allNames.length){
+		firstFewNames.push(`...and ${allNames.length - firstFewNames.length} more.`)
 	}
 	const namesStr = firstFewNames.join("\n\t")
 

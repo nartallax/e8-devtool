@@ -9,7 +9,8 @@ import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
-import {ProjectLayerDefinition, ProjectModel} from "data/project"
+import {Project, ProjectLayerDefinition} from "data/project"
+import {namesOfModelsWhich} from "data/project_utils"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -26,11 +27,11 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 
 	const onDelete = (layer: ProjectLayerDefinition) => {
 		// TODO: check particles for particle type layers
-		const models = project.models.filter(model => model.layerId === layer.id)
-		if(models.length > 0){
+		const msg = getDeletionConflictMessage(project, layer.id)
+		if(msg !== null){
 			void showAlert({
 				header: "This layer is in use",
-				body: getDeletionConflictMessage(models)
+				body: msg
 			})
 
 			throw new AbortError("Has conflicts")
@@ -66,10 +67,14 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 	)
 }
 
-const getDeletionConflictMessage = (models: ProjectModel[]): string => {
-	const firstFewNames = models.slice(0, 10).map(x => x.name)
-	if(firstFewNames.length < models.length){
-		firstFewNames.push(`...and ${models.length - firstFewNames.length} more.`)
+const getDeletionConflictMessage = (project: Project, layerId: string): string | null => {
+	const allNames = namesOfModelsWhich(project, model => model.layerId === layerId)
+	if(allNames.length === 0){
+		return null
+	}
+	const firstFewNames = allNames.slice(0, 10)
+	if(firstFewNames.length < allNames.length){
+		firstFewNames.push(`...and ${allNames.length - firstFewNames.length} more.`)
 	}
 	const namesStr = firstFewNames.join("\n\t")
 

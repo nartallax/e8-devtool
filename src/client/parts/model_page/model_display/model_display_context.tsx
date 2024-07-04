@@ -7,8 +7,10 @@ import {useProject} from "client/parts/project_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {StateStack} from "client/ui_utils/state_stack"
 import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
+import {getLeafByPath} from "common/tree"
 import {UUID} from "common/uuid"
 import {ProjectShape} from "data/project"
+import {getTreePathStr, pathById} from "data/project_utils"
 import {useCallback, useMemo, useRef, useState} from "react"
 
 type ShapeStateMeta = {
@@ -32,15 +34,18 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 	useValue: ({modelId}: {modelId: UUID}) => {
 		const [project, setProject] = useProject()
 		const inworldUnitPixelSize = project.config.inworldUnitPixelSize
-		const _model = project.models.find(model => model.id === modelId)
+		const modelPath = pathById(project.modelTree, project.models, modelId)
+		const modelName = getLeafByPath(project.modelTree, modelPath).value
+		const modelPathStr = getTreePathStr(project.modelTree, modelPath)
+		const _model = project.models[modelPathStr]!
 		if(!_model){
 			throw new Error("No model for ID = " + modelId)
 		}
 		const {
 			state: model, setState: setModel, isUnsaved, save: saveModelToProject
 		} = useSaveableState(_model, model => setProject(project => {
-			const models = project.models.filter(model => model.id !== modelId)
-			models.push(model)
+			const models = {...project.models}
+			models[modelPathStr] = model
 			return {...project, models}
 		}))
 
@@ -100,7 +105,8 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			mouseEventToInworldCoords,
 			selectedPointRef,
 			saveModelToProject,
-			isUnsaved
+			isUnsaved,
+			modelName
 		}
 	}
 })

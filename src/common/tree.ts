@@ -76,17 +76,23 @@ export const getForestLeavesAsArray = <T, B>(forest: Tree<T, B>[], result: T[] =
 	return result
 }
 
-export function getTreeLeaves<T, B>(tree: Tree<T, B>): IterableIterator<[TreeBranch<T, B>[], T]> {
-	return getTreeLeavesInternal(tree, [])
+export function getTreeLeaves<T, B>(tree: Tree<T, B>, startingIndex?: number): IterableIterator<[TreeBranch<T, B>[], T, TreePath]> {
+	return getTreeLeavesInternal(tree, [], startingIndex === undefined ? [] : [startingIndex])
 }
 
-function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[]): IterableIterator<[TreeBranch<T, B>[], T]> {
+export function* getForestLeaves<T, B>(forest: Tree<T, B>[]): IterableIterator<[TreeBranch<T, B>[], T, TreePath]> {
+	for(let i = 0; i < forest.length; i++){
+		yield* getTreeLeaves(forest[i]!, i)
+	}
+}
+
+function* getTreeLeavesInternal<T, B>(tree: Tree<T, B>, parents: TreeBranch<T, B>[], path: TreePath): IterableIterator<[TreeBranch<T, B>[], T, TreePath]> {
 	if(isTreeLeaf(tree)){
-		yield[parents, tree.value]
+		yield[parents, tree.value, path]
 	} else {
 		parents.push(tree)
-		for(const child of tree.children){
-			yield* getTreeLeavesInternal(child, parents)
+		for(let i = 0; i < tree.children.length; i++){
+			yield* getTreeLeavesInternal(tree.children[i]!, parents, [...path, i])
 		}
 		parents.pop()
 	}
@@ -151,13 +157,30 @@ export function filterTreeLeaves<T, B>(tree: Tree<T, B>, shouldKeepLeaf: (value:
 	return newChildren.length === 0 ? null : {children: newChildren, value: tree.value}
 }
 
-export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T) => R): Tree<R, B> {
+export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T, path: TreePath) => R, path: TreePath = []): Tree<R, B> {
 	if(isTreeLeaf(tree)){
-		return {value: map(tree.value)}
+		return {value: map(tree.value, path)}
 	}
 
-	const newChildren = tree.children.map(x => mapTreeLeaves(x, map))
+	const newChildren = tree.children.map((x, i) => mapTreeLeaves(x, map, [...path, i]))
 	return {children: newChildren, value: tree.value}
+}
+
+export function mapTree<T, B, TT, BB>(tree: Tree<T, B>, mapLeaf: (value: T, path: TreePath) => TT, mapBranch: (value: B, path: TreePath) => BB, index?: number): Tree<TT, BB> {
+	return mapForest([tree], mapLeaf, mapBranch, index === undefined ? [] : [index])[0]!
+}
+
+export function mapForest<T, B, TT, BB>(forest: Tree<T, B>[], mapLeaf: (value: T, path: TreePath) => TT, mapBranch: (value: B, path: TreePath) => BB, path: TreePath = []): Tree<TT, BB>[] {
+	return forest.map((tree, i) => {
+		if(isTreeLeaf(tree)){
+			return {value: mapLeaf(tree.value, path)}
+		} else {
+			return {
+				value: mapBranch(tree.value, path),
+				children: mapForest(tree.children, mapLeaf, mapBranch, [...path, i])
+			}
+		}
+	})
 }
 
 function resolveTreeIndicesToTrees<T, B>(trees: Tree<T, B>[], indices: number[]): Tree<T, B>[] {

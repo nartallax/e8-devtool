@@ -9,7 +9,7 @@ export async function projectToTypescript(project: Project, actions: DevtoolActi
 	const classPaths = await gatherEntityClassPaths(actions.resolveProjectPath(project.config.entityClassesDirectoryPath))
 
 	const modelEntries = getAllProjectModelsWithFolders(project)
-		.map(([pathParts, model]) => [...pathParts, model.name])
+		.map(([pathParts]) => pathParts)
 
 	const sortedBindSets = getSortedProjectBinds(project)
 	const bindSetNames = sortedBindSets.map(bindSet => [bindSet.name])

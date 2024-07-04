@@ -11,7 +11,6 @@ import {Tree, isTreeBranch} from "common/tree"
 import {getHashUUID} from "common/uuid"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
-import {deepMerge} from "common/deep_merge"
 import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
@@ -27,9 +26,11 @@ export const getActions = (cli: CLIArgs) => {
 	const getProject = async(): Promise<Project> => {
 		let project: Project
 		try {
-			const rawProject: Project = JSON.parse(await Fs.readFile(cli.projectPath, "utf-8"))
-			const [mergedProject] = deepMerge(makeBlankProject(), rawProject)
-			project = mergedProject
+			// TODO: bring deepMerge() back
+			// const rawProject: Project = JSON.parse(await Fs.readFile(cli.projectPath, "utf-8"))
+			// const [mergedProject] = deepMerge(makeBlankProject(), rawProject)
+			// project = mergedProject
+			project = JSON.parse(await Fs.readFile(cli.projectPath, "utf-8"))
 		} catch(e){
 			if(!isEnoent(e)){
 				throw e

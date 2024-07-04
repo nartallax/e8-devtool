@@ -36,6 +36,10 @@ export function deepMerge<T>(base: T, patch: Partial<T>): [result: T, hasChange:
 		return [result, false]
 	}
 
+	// TODO: this is other reason why deepMerge() isn't really useful
+	// yes, throwing away extra keys is a good thing
+	// however, this prevents us from having map-objects in data with dynamic set of keys
+	// ...this problem will resolve itself after git-friedlining everything, but for now we won't use deepMerge()
 	const keys = new Set(Object.keys(base) as (keyof T)[])
 	for(const k of keys){
 		if(!(k in patch)){
