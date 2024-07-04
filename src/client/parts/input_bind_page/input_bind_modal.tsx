@@ -10,6 +10,7 @@ import {InputGroupModal} from "client/parts/input_bind_page/input_group_modal"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {NamedIdSelector} from "client/parts/named_id_selector/named_id_selector"
 import {useProject} from "client/parts/project_context"
+import {getRandomUUID} from "common/uuid"
 import {ProjectInputBind} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
@@ -31,7 +32,9 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 			onClose={onClose}
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}>
-			<Form onSubmit={() => onClose({...bind, isHold, group: groupId, defaultChords: chords})}>
+			<Form onSubmit={() => onClose({
+				...bind, isHold, group: groupId, defaultChords: chords
+			})}>
 				<Col gap grow stretch>
 					<CheckboxField label="Is hold action" value={isHold} onChange={setIsHold}/>
 					<NamedIdSelector
@@ -48,7 +51,8 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 						fromTree={({value}) => ({id: value.id, chord: chordFromString(value.name)})}
 						InlineEditor={InlineTreeChordEditor}
 						onChange={setChords}
-						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf({})}/>}
+						onLeafCreated={name => ({name, id: getRandomUUID()})}
+						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf()}/>}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>

@@ -8,7 +8,7 @@ import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
-import {UUID} from "common/uuid"
+import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectLayerDefinition, ProjectModel} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
@@ -52,7 +52,8 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 						values={project.layers}
 						toTree={layer => ({value: layer})}
 						fromTree={node => node.value}
-						buttons={controls => <Button text="Add layer" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf({type: layerType})}/>}
+						buttons={controls => <Button text="Add layer" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf()}/>}
+						onLeafCreated={name => ({id: getRandomUUID(), name, type: layerType})}
 						onChange={layers => setProject(project => ({...project, layers}))}
 						getLeafSublabel={(layer: ProjectLayerDefinition) => `(${layer.type})`}
 						onLeafDelete={onDelete}

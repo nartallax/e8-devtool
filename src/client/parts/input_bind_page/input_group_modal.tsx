@@ -5,7 +5,7 @@ import {Col} from "client/components/row_col/row_col"
 import {MappedNamedIdTreeView, NullableNamedId} from "client/components/tree_view/mapped_named_id_tree_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
-import {UUID} from "common/uuid"
+import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectInputGroup} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
@@ -43,7 +43,8 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 							...project,
 							inputGroups: inputGroups.filter(group => group.id !== null) as ProjectInputGroup[]
 						}))}
-						buttons={controls => <Button text="Add input group" icon={Icon.plus} onClick={() => controls.addRenameLeaf({})}/>}
+						onLeafCreated={name => ({name, id: getRandomUUID()})}
+						buttons={controls => <Button text="Add input group" icon={Icon.plus} onClick={() => controls.addRenameLeaf()}/>}
 						onLeafClick={group => setCurrentValue(group.id)}
 						onLeafDoubleclick={leaf => onClose(leaf.id)}
 					/>

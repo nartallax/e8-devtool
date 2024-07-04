@@ -8,7 +8,7 @@ import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_
 import {CollisionGridModal} from "client/parts/collision_groups/collision_grid_modal"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
-import {UUID} from "common/uuid"
+import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectCollisionGroup, ProjectModel} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
@@ -54,9 +54,10 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 						onChange={collisionGroups => setProject(project => ({...project, collisionGroups}))}
 						onLeafDelete={onDelete}
 						canBeChildOf={(_, parent) => !parent}
+						onLeafCreated={name => ({name, id: getRandomUUID()})}
 						buttons={controls => (
 							<>
-								<Button text="Add group" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf({})}/>
+								<Button text="Add group" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf()}/>
 								<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
 							</>
 						)}

@@ -5,7 +5,8 @@ import {InputBindModal} from "client/parts/input_bind_page/input_bind_modal"
 import {CentralColumn} from "client/parts/layouts/central_column"
 import {useProject} from "client/parts/project_context"
 import {isTreeBranch} from "common/tree"
-import {ProjectInputBind, ProjectInputBindSet} from "data/project"
+import {getRandomUUID} from "common/uuid"
+import {ProjectInputBind} from "data/project"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -48,17 +49,20 @@ export const InputBindPage = () => {
 						binds: branch.children.map(node => node.value)
 					})}
 					canBeChildOf={(child, parent) => isTreeBranch(child) ? parent === null : parent !== null}
-					makeNewChild={() => ({defaultChords: [], group: null, isHold: false})}
-					getLeafSublabel={bind => {
+					getLeafSublabel={(bind: ProjectInputBind) => {
 						const group = !bind.group ? null : groups.get(bind.group)
 						return !group ? null : `(${group.name})`
 					}}
 					onLeafDoubleclick={bind => setEditedBind(bind)}
-					buttons={(controls: MappedNamedIdTreeControls<ProjectInputBind, ProjectInputBindSet>) => (
+					onBranchCreated={name => ({name, id: getRandomUUID(), binds: []})}
+					onLeafCreated={name => ({
+						name, id: getRandomUUID(), defaultChords: [], group: null, isHold: false
+					})}
+					buttons={(controls: MappedNamedIdTreeControls) => (
 						<Button
 							text="Add bind set"
 							icon={Icon.filePlus}
-							onClick={() => controls.addRenameBranch({binds: []})}
+							onClick={() => controls.addRenameBranch()}
 						/>
 					)}
 				/>

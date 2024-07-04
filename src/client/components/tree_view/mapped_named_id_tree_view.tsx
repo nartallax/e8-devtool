@@ -3,7 +3,7 @@ import {Row} from "client/components/row_col/row_col"
 import {SearchInput} from "client/components/text_input/search_input"
 import {TreeControls, TreeView, TreeViewProps} from "client/components/tree_view/tree_view"
 import {AbortError} from "client/ui_utils/abort_error"
-import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, TreeLeaf, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf, getFirstTreeLeafPath} from "common/tree"
+import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf, getFirstTreeLeafPath, isTreeLeaf} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -15,6 +15,8 @@ export type NullableNamedId = Omit<NamedId, "id"> & {
 export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S> = Pick<TreeViewProps<L, B>, "canBeChildOf" | "getLeafSublabel" | "getBranchSublabel" | "onLeafClick" | "onLeafDoubleclick" | "onBranchClick" | "onBranchDoubleclick" | "InlineEditor" > & {
 	values: S[]
 	onChange?: (values: S[]) => void
+	// TODO: in great future, when we only have named id trees everywhere, we won't be needing as much mapping as this
+	// because we could then use trees directly
 	toTree: (sourceValue: S) => T
 	fromTree?: (tree: T) => S
 	// on..Delete handlers only exist for some special cases
@@ -22,31 +24,25 @@ export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends Nullable
 	// simple deletion could be performed without them
 	onLeafDelete?: (leaf: L) => void
 	onBranchDelete?: (branch: B) => void
-	buttons?: (controls: MappedNamedIdTreeControls<L, B>) => React.ReactNode
+	buttons?: (controls: MappedNamedIdTreeControls) => React.ReactNode
 	// rename handlers exist for cases when name is lost during mapping
 	onBranchRename?: (branch: B, name: string) => void
 	onLeafRename?: (leaf: L, name: string) => void
-	// in theory nothing is stopping us from making new branches here
-	// just branches could contain children, and it is unobvious how to resolve that
-	// because we imply that user will need to input name, and we can't input more than one name at a time
-	// (and if we only make leafs, no need to wrap it with `{value: ...}`)
-	makeNewChild?: () => NoNameId<L>
-	// called when user refuses to input name of new tree element
-	onLeafCreateCancel?: (id: UUID) => void
+	// called when user finished input of leaf's name
+	onLeafCreated?: (name: string, path: TreePath) => L
+	onBranchCreated?: (name: string, path: TreePath) => B
 	selectedValue?: UUID | null
 	isSearchable?: boolean
 }
 
-type NoNameId<T> = Omit<T, "name" | "id">
-
-export type MappedNamedIdTreeControls<L, B> = {
-	addRenameBranch: (branch: NoNameId<B>, path?: TreePath) => void
-	addRenameLeaf: (leaf: NoNameId<L>, path?: TreePath) => void
+export type MappedNamedIdTreeControls = {
+	addRenameBranch: (path?: TreePath) => void
+	addRenameLeaf: (path?: TreePath) => void
 }
 
 /** A wrap around TreeView, to provide more high-level functionality */
 export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({
-	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, makeNewChild, onLeafCreateCancel, selectedValue, isSearchable, ...props
+	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, onBranchRename, onLeafRename, buttons, selectedValue, isSearchable, onLeafCreated, onBranchCreated, ...props
 }: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
@@ -99,8 +95,23 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		const newTree = updateTreeByPath(tree, path, node => {
 			const id = node.value.id
 			isNew = id === newNode?.node.value.id
-			// I don't understand why do I need this cast. oh well.
-			return {...node, value: {...node.value, name}} as Tree<L, B>
+
+			if(!isNew){
+				// I don't understand why do I need this cast. oh well.
+				return {...node, value: {...node.value, name}} as Tree<L, B>
+			}
+
+			if(isTreeLeaf(node)){
+				if(!onLeafCreated){
+					throw new Error("New leaf is at the end of creation sequence, but we don't have onLeafCreated callback.")
+				}
+				return node = {...node, value: onLeafCreated(name, path)}
+			} else {
+				if(!onBranchCreated){
+					throw new Error("New branch is at the end of creation sequence, but we don't have onBranchCreated callback.")
+				}
+				return node = {...node, value: onBranchCreated(name, path)}
+			}
 		})
 		if(isNew){
 			setNewNode(null)
@@ -113,10 +124,6 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		const id = node.value.id
 		if(id === newNode?.node.value.id){
 			setNewNode(null)
-
-			if(!isTreeBranch(node) && onLeafCreateCancel && !!id){
-				onLeafCreateCancel(id)
-			}
 		}
 	}
 
@@ -140,19 +147,33 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		updateByTree(deleteFromTreeByPath(tree, path))
 	}
 
-	const addRenameNode = useCallback((node: Tree<L, B>, path: TreePath) => {
-		setNewNode({node, path})
+	const addRenameNode = useCallback((node: Tree<NullableNamedId, NullableNamedId>, path: TreePath) => {
+		// casting it like that is not great
+		// but the tree itself won't rely on anything other than ID and name
+		// and the object shouldn't ever be visible to outside world
+		// so, whatever
+		setNewNode({node: node as Tree<L, B>, path})
 		treeControls.current?.setInlineEditPath(path)
 	}, [])
 
-	const mappedControls: MappedNamedIdTreeControls<L, B> = {
-		addRenameBranch: (branch, path = [0]) => addRenameNode({
-			value: {name: "", id: getRandomUUID(), ...branch} as B,
-			children: []
-		}, path),
-		addRenameLeaf: (leaf, path = [0]) => addRenameNode({
-			value: {name: "", id: getRandomUUID(), ...leaf} as L
-		}, path)
+	const mappedControls: MappedNamedIdTreeControls = {
+		addRenameBranch: (path = [0]) => {
+			if(!onBranchCreated){
+				throw new Error("Cannot add a branch: onBranchCreated is not provided")
+			}
+			return addRenameNode({
+				value: {name: "", id: getRandomUUID()},
+				children: []
+			}, path)
+		},
+		addRenameLeaf: (path = [0]) => {
+			if(!onLeafCreated){
+				throw new Error("Cannot add a leaf: onLeafCreated is not provided")
+			}
+			addRenameNode({
+				value: {name: "", id: getRandomUUID()}
+			}, path)
+		}
 	}
 
 	const wrappedCanBeChildOf = !canBeChildOf ? undefined : (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => {
@@ -166,21 +187,14 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 	}
 
 	const onAddChild = useMemo(() => {
-		if(!makeNewChild){
-			return
+		if(!onLeafCreated){
+			return undefined
 		}
 		return (path: TreePath) => {
-			const value = makeNewChild()
-			const node: TreeLeaf<L> = {
-				value: {
-					name: "",
-					id: getRandomUUID(),
-					...value
-				} as L
-			}
+			const node = {value: {id: getRandomUUID(), name: ""} as L}
 			addRenameNode(node, [...path, 0])
 		}
-	}, [makeNewChild, addRenameNode])
+	}, [onLeafCreated, addRenameNode])
 
 	const [searchText, setSearchText] = useState("")
 	const [filteredTree, isForceExpanded] = useMemo(() => {

@@ -1,7 +1,7 @@
 import {Button} from "client/components/button/button"
 import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
-import {MappedNamedIdTreeControls, MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
+import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
 import {CentralColumn} from "client/parts/layouts/central_column"
 import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
@@ -24,7 +24,7 @@ export const ModelSelector = () => {
 	const {matchedUrl} = useRoutingContext()
 	const {showAlert} = useAlert()
 
-	const getModelWithDefaults = (): ProjectModel | null => {
+	const getModelWithDefaults = (name: string): ProjectModel => {
 		let collisionGroupId = findDefaultId(project.collisionGroups)
 		if(!collisionGroupId){
 			const id = collisionGroupId = getRandomUUID()
@@ -48,33 +48,21 @@ export const ModelSelector = () => {
 			void showAlert({
 				body: "Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first."
 			})
-			return null
+			throw new AbortError("Insufficient data.")
 		}
 
-		return makeBlankModel({collisionGroupId, layerId, textureId})
+		const result = makeBlankModel({collisionGroupId, layerId, textureId})
+		result.name = name
+		return result
 	}
 
-	const onAddModel = (controls: MappedNamedIdTreeControls<NamedId, NamedId>) => {
-		const model = getModelWithDefaults()
-		if(model){
-			setProject(project => ({
-				...project,
-				models: [...project.models, model]
-			}))
-			controls.addRenameLeaf({id: model.id})
-		}
-	}
-
-	const onAddModelToDirectory = () => {
-		const model = getModelWithDefaults()
-		if(model){
-			setProject(project => ({
-				...project,
-				models: [...project.models, model]
-			}))
-			return {id: model.id}
-		}
-		throw new AbortError("Cannot create a model.")
+	const onModelCreated = (name: string) => {
+		const model = getModelWithDefaults(name)
+		setProject(project => ({
+			...project,
+			models: [...project.models, model]
+		}))
+		return {id: model.id, name}
 	}
 
 	return (
@@ -88,19 +76,16 @@ export const ModelSelector = () => {
 				canBeChildOf={() => true}
 				buttons={controls => (
 					<>
-						<Button text="Add directory" icon={Icon.folderPlus} onClick={() => controls.addRenameBranch({})}/>
+						<Button text="Add directory" icon={Icon.folderPlus} onClick={() => controls.addRenameBranch()}/>
 						<Button
 							text="Add model"
 							icon={Icon.filePlus}
-							onClick={() => onAddModel(controls)}
+							onClick={() => controls.addRenameLeaf()}
 						/>
 					</>
 				)}
-				makeNewChild={onAddModelToDirectory}
-				onLeafCreateCancel={id => setProject(project => ({
-					...project,
-					models: project.models.filter(model => model.id !== id)
-				}))}
+				onLeafCreated={onModelCreated}
+				onBranchCreated={name => ({name, id: getRandomUUID()})}
 				onLeafDelete={leaf => setProject(project => ({
 					...project,
 					models: project.models.filter(model => model.id !== leaf.id)

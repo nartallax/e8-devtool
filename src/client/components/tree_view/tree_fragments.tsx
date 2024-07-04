@@ -128,7 +128,12 @@ const TreeRow = <T, B>({
 		buttons.push(<Button
 			variant="plain-icon"
 			icon={Icon.plus}
-			onClick={() => onAddChild(path)}
+			onClick={() => {
+				if(!isExpanded){
+					onExpandChange?.()
+				}
+				onAddChild(path)
+			}}
 			key="add-child"
 		/>)
 	}
