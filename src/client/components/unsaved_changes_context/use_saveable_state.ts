@@ -9,6 +9,8 @@ type UseSaveableStateResult<T> = {
 	markSaved: () => void
 }
 
+// TODO: actually deep-compare instead of just setting the flag each time
+// right now it's not possible because we'd have to compare whole project, which is a performance hit
 /** setState that tracks if it was saved
 "saved" here means "uploaded to some storage or parent state" */
 export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | Promise<void>): UseSaveableStateResult<T> => {

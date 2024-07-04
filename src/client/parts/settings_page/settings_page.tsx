@@ -42,7 +42,8 @@ export const SettingsPage = () => {
 						onChange={inworldUnitPixelSize => setSettings(settings => ({...settings, inworldUnitPixelSize}))}
 						label="Scale"
 						hint={scaleHint}
-						min={0}
+						step={0.01}
+						min={0.01}
 					/>
 					<Separator hint="All paths are calculated relative to directory that contains project definition file. It is advised to keep them relative for portability.">Paths</Separator>
 					<PathInputField
