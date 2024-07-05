@@ -2,12 +2,13 @@ import {Modal} from "client/components/modal/modal"
 import {UUID} from "common/uuid"
 import * as css from "./collision_grid_modal.module.scss"
 import {useProject} from "client/parts/project_context"
-import {useState} from "react"
+import {useMemo, useState} from "react"
 import {ProjectCollisionGroup} from "data/project"
 import {Col} from "client/components/row_col/row_col"
 import {Form} from "client/components/form/form"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Checkbox} from "client/components/checkbox/checkbox"
+import {buildIdToNameMap, mappedForestToArray} from "data/project_utils"
 
 type Props = {
 	onClose: () => void
@@ -40,7 +41,13 @@ const pairMapToArray = (map: PairMap): [UUID, UUID][] => {
 
 export const CollisionGridModal = ({onClose}: Props) => {
 	const [project, setProject] = useProject()
-	const [pairMap, setPairMap] = useState(buildPairMap(project.collisionGroups, project.collisionGroupPairs))
+	const {collisionGroupTree: groupsForest, collisionGroups: groupsMap} = project
+	const [nameMap, allGroups] = useMemo(() => [
+		buildIdToNameMap(groupsForest, groupsMap),
+		mappedForestToArray(groupsForest, groupsMap)
+	], [groupsForest, groupsMap])
+
+	const [pairMap, setPairMap] = useState(buildPairMap(allGroups, project.collisionGroupPairs))
 
 	const onChange = (pair: [UUID, UUID], isEnabled: boolean) => {
 		const newMap = new Map([...pairMap.entries()])
@@ -77,21 +84,21 @@ export const CollisionGridModal = ({onClose}: Props) => {
 					alignSelf="stretch">
 					<div className={css.rows}>
 						<div className={css.row} key='labels'>
-							{project.collisionGroups.map(group =>
+							{allGroups.map(group =>
 								(
 									<div className={css.topLabelContainer} key={group.id}>
 										<div className={css.topLabel}>
-											{group.name}
+											{nameMap.get(group.id)}
 										</div>
 									</div>
 								))}
 						</div>
-						{project.collisionGroups.map(groupA => (
+						{allGroups.map(groupA => (
 							<div className={css.row} key={groupA.id}>
 								<div key='name'>
-									{groupA.name}
+									{nameMap.get(groupA.id)}
 								</div>
-								{project.collisionGroups.map(groupB =>
+								{allGroups.map(groupB =>
 									(
 										<PairCheckbox
 											key={groupB.id}

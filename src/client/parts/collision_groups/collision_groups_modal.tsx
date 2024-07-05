@@ -1,18 +1,18 @@
-import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
 import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {CollisionGridModal} from "client/parts/collision_groups/collision_grid_modal"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectCollisionGroup} from "data/project"
-import {Icon} from "generated/icons"
 import {useState} from "react"
 import {namesOfModelsWhich} from "data/project_utils"
+import {StringForestMapObjectView} from "client/parts/string_tree_map_object_view/string_forest_map_object_view"
+import {Button} from "client/components/button/button"
+import {Icon} from "generated/icons"
 
 type Props = {
 	value: UUID
@@ -22,7 +22,9 @@ type Props = {
 export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 	const [project, setProject] = useProject()
 	const [isCollisonGridOpen, setCollisionGridOpen] = useState(false)
-	const [value, setValue] = useState(initialValue)
+	const [group, setGroup] = useState(() =>
+		Object.values(project.collisionGroups).find(group => group.id === initialValue) ?? null
+	)
 	const {showAlert} = useAlert()
 
 	const onDelete = (group: ProjectCollisionGroup) => {
@@ -42,25 +44,22 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(value)}>
+			<Form onSubmit={() => onClose(group?.id)}>
 				<Col gap stretch grow>
 					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
-					<MappedNamedIdTreeView
-						selectedValue={value}
-						onLeafClick={leaf => setValue(leaf.id)}
-						onLeafDoubleclick={leaf => onClose(leaf.id)}
-						values={project.collisionGroups}
-						toTree={group => ({value: group})}
-						fromTree={leaf => leaf.value}
-						onChange={collisionGroups => setProject(project => ({...project, collisionGroups}))}
-						onLeafDelete={onDelete}
-						canBeChildOf={(_, parent) => !parent}
-						onLeafCreated={name => ({name, id: getRandomUUID()})}
-						buttons={controls => (
-							<>
-								<Button text="Add group" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf()}/>
-								<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
-							</>
+					<StringForestMapObjectView
+						itemName="group"
+						forest={project.collisionGroupTree}
+						onForestChange={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}
+						mapObject={project.collisionGroups}
+						onMapChange={collisionGroups => setProject(project => ({...project, collisionGroups}))}
+						beforeItemDelete={onDelete}
+						createItem={() => ({id: getRandomUUID()})}
+						selectedItem={group}
+						onItemClick={group => setGroup(group)}
+						onItemDoubleclick={group => onClose(group.id)}
+						buttons={() => (
+							<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
 						)}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>

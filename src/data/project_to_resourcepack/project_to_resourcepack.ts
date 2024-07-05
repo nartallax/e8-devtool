@@ -1,5 +1,5 @@
 import {Project, NamedId} from "data/project"
-import {getAllProjectModels, getSortedProjectBinds} from "data/project_utils"
+import {getAllProjectModels, getSortedProjectBinds, mappedForestToArray} from "data/project_utils"
 import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
@@ -9,7 +9,7 @@ import {promises as Fs} from "fs"
 import * as Path from "path"
 import {UUID} from "crypto"
 import {omit} from "common/omit"
-import {getForestLeavesAsArray} from "common/tree"
+import {Tree, getForestLeavesAsArray} from "common/tree"
 import {DevtoolActions} from "server/actions"
 
 /** Convert project into ResourcePack structure. */
@@ -25,7 +25,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 
 	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.id, texture]))
 	const layers = namedIdsToIndexMap("layer", project.layers)
-	const collisionGroups = namedIdsToIndexMap("collision group", project.collisionGroups)
+	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
 	const inputGroups = namedIdsToIndexMap("input group", project.inputGroups)
 	const models = allModels.map((model): Model => {
 		const texture = textureByPath.get(model.textureId)!
@@ -64,7 +64,8 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		models,
 		inputBinds,
 		layers: project.layers.map(layer => ({type: layer.type})),
-		collisionGroupCount: project.collisionGroups.length,
+		// TODO: this is bad for modability
+		collisionGroupCount: Object.values(project.collisionGroups).length,
 		collisionGroupPairs: collisionGroupPairs
 	}
 }
@@ -80,6 +81,18 @@ export async function projectToAtlasLayout(project: Project, actions: DevtoolAct
 
 function namedIdsToIndexMap(name: string, ids: NamedId[]): (id: UUID) => number {
 	const map = new Map<UUID, number>(ids.map(({id}, index) => [id, index]))
+	return id => {
+		const index = map.get(id)
+		if(index === undefined){
+			throw new Error(`There's no ${name} with id = ${id}, but something is referencing it.`)
+		}
+		return index
+	}
+}
+
+// TODO: index maps in general are bad for modability
+const mappedForestToIndexMap = (name: string, forest: Tree<string, string>[], mapObj: Record<string, {id: UUID}>): (id: UUID) => number => {
+	const map = new Map<UUID, number>(mappedForestToArray(forest, mapObj).map(({id}, index) => [id, index]))
 	return id => {
 		const index = map.get(id)
 		if(index === undefined){

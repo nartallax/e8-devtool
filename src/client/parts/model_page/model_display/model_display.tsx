@@ -24,6 +24,7 @@ import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {TitlePart} from "client/components/title_context/title_context"
+import {StringForestIdSelector} from "client/parts/string_forest_id_selector/string_forest_id_selector"
 
 type Props = {
 	modelId: UUID
@@ -131,9 +132,10 @@ const ModelSidebar = ({
 				onChange={textureId => setModel(model => ({...model, textureId}))}
 				modal={onClose => <TexturesModal onClose={onClose} value={model.textureId}/>}
 			/>
-			<NamedIdSelector
+			<StringForestIdSelector
+				forest={project.collisionGroupTree}
+				map={project.collisionGroups}
 				label="Collision"
-				values={project.collisionGroups}
 				value={model.collisionGroupId}
 				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
 				modal={onClose => <CollisionGroupsModal onClose={onClose} value={model.collisionGroupId}/>}

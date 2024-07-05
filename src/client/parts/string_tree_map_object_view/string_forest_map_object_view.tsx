@@ -4,6 +4,7 @@ import {Tree, TreePath, mapTree} from "common/tree"
 import {getHashUUID} from "common/uuid"
 import {getTreePathStr} from "data/project_utils"
 import {Icon} from "generated/icons"
+import {useMemo} from "react"
 
 type Props<T> = {
 	itemName: string
@@ -12,11 +13,15 @@ type Props<T> = {
 	mapObject: Record<string, T>
 	onForestChange: (newForest: Tree<string, string>[]) => void
 	onMapChange: (newMap: Record<string, T>) => void
-	onItemDoubleclick?: (path: TreePath) => void
+	selectedItem?: T | null
+	onItemClick?: (item: T, path: TreePath) => void
+	onItemDoubleclick?: (item: T, path: TreePath) => void
+	beforeItemDelete?: (item: T) => void
+	buttons?: () => React.ReactNode
 }
 
 export function StringForestMapObjectView<T>({
-	forest, mapObject, onForestChange, itemName, createItem, onMapChange, onItemDoubleclick
+	forest, mapObject, onForestChange, itemName, createItem, onMapChange, onItemDoubleclick, beforeItemDelete, buttons, onItemClick, selectedItem
 }: Props<T>) {
 
 	const onItemCreated = (name: string, path: TreePath) => {
@@ -37,6 +42,18 @@ export function StringForestMapObjectView<T>({
 		}
 		onMapChange(map)
 	}
+
+	const selectedUUID = useMemo(() => {
+		if(selectedItem === null){
+			return null
+		}
+		for(const key in mapObject){
+			if(mapObject[key] === selectedItem){
+				return getHashUUID(key)
+			}
+		}
+		return null
+	}, [mapObject, selectedItem])
 
 	return (
 		<MappedNamedIdTreeView
@@ -64,6 +81,7 @@ export function StringForestMapObjectView<T>({
 						icon={Icon.filePlus}
 						onClick={() => controls.addRenameLeaf()}
 					/>
+					{buttons?.()}
 				</>
 			)}
 			onLeafCreated={onItemCreated}
@@ -72,12 +90,23 @@ export function StringForestMapObjectView<T>({
 				return {id: getHashUUID(pathStr), name}
 			}}
 			onLeafDelete={(_, path) => {
-				const map = {...mapObject}
 				const pathStr = getTreePathStr(forest, path)
+				if(beforeItemDelete){
+					const item = mapObject[pathStr]!
+					beforeItemDelete(item)
+				}
+				const map = {...mapObject}
 				delete map[pathStr]
 				onMapChange(map)
 			}}
-			onLeafDoubleclick={!onItemDoubleclick ? undefined : (_, path) => onItemDoubleclick(path)}
+			onLeafClick={!onItemClick ? undefined : (_, path) => {
+				const pathStr = getTreePathStr(forest, path)
+				onItemClick(mapObject[pathStr]!, path)
+			}}
+			onLeafDoubleclick={!onItemDoubleclick ? undefined : (_, path) => {
+				const pathStr = getTreePathStr(forest, path)
+				onItemDoubleclick(mapObject[pathStr]!, path)
+			}}
 			beforeBranchRename={(_, name, path) => {
 				const oldPrefix = getTreePathStr(forest, path, undefined, "branch")
 				const newPrefix = getTreePathStr(forest, path.slice(0, -1), name, "branch")
@@ -108,6 +137,7 @@ export function StringForestMapObjectView<T>({
 				const newPrefix = getTreePathStr(forest, newPath.slice(0, -1), branch.name, "branch")
 				onBranchRename(oldPrefix, newPrefix)
 			}}
+			selectedValue={selectedUUID}
 		/>
 	)
 }

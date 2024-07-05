@@ -9,10 +9,13 @@ import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
 import {NamedId, ProjectModel, makeBlankModel} from "data/project"
-import {getTreePathStr} from "data/project_utils"
 
-const findDefaultId = (values: NamedId[]): UUID | null => {
-	return values.find(value => value.name === "default")?.id ?? values[0]?.id ?? null
+const findDefaultId = (values: NamedId[] | Record<string, {id: UUID}>): UUID | null => {
+	if(Array.isArray(values)){
+		return values.find(value => value.name === "default")?.id ?? values[0]?.id ?? null
+	}
+	const entries = Object.entries(values)
+	return entries.find(([key]) => key === "default")?.[1].id ?? entries[0]?.[1].id ?? null
 }
 
 export const ModelSelector = () => {
@@ -27,7 +30,14 @@ export const ModelSelector = () => {
 			const id = collisionGroupId = getRandomUUID()
 			setProject(project => ({
 				...project,
-				collisionGroups: [...project.collisionGroups, {id, name: "default"}]
+				collisionGroupTree: [
+					...project.collisionGroupTree,
+					{value: "default"}
+				],
+				collisionGroups: {
+					...project.collisionGroups,
+					default: {id}
+				}
 			}))
 		}
 
@@ -60,9 +70,7 @@ export const ModelSelector = () => {
 				onMapChange={models => setProject(project => ({...project, models}))}
 				createItem={getModelWithDefaults}
 				itemName="model"
-				onItemDoubleclick={path => {
-					const pathStr = getTreePathStr(project.modelTree, path)
-					const model = project.models[pathStr]!
+				onItemDoubleclick={model => {
 					pushHistory(appendUrlPath(matchedUrl, `./${model.id}`))
 				}}
 			/>

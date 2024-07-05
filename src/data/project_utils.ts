@@ -89,3 +89,32 @@ export function namesOfModelsWhich(project: Project, predicate: (model: ProjectM
 	}
 	return names
 }
+
+export const buildIdToNameMap = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>): Map<UUID, string> => {
+	const result = new Map<UUID, string>()
+	for(const [branches, leaf] of getForestLeaves(forest)){
+		const fullPath = branches.map(x => x.value)
+		fullPath.push(leaf)
+		const pathStr = treePartsToPath(fullPath)
+		const item = map[pathStr]
+		if(!item){
+			throw new Error("No item for path " + pathStr)
+		}
+		result.set(item.id, leaf)
+	}
+	return result
+}
+
+export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Record<string, T>): T[] => {
+	const result: T[] = []
+	for(const [branches, leaf] of getForestLeaves(forest)){
+		const fullPath = branches.map(x => x.value)
+		fullPath.push(leaf)
+		const pathStr = treePartsToPath(fullPath)
+		const item = map[pathStr]
+		if(item){
+			result.push(item)
+		}
+	}
+	return result
+}

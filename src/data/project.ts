@@ -14,12 +14,13 @@ export interface Project {
 	// maybe then abolish NamedId alltogeter
 	// map full path -> model
 	models: Record<string, ProjectModel>
-	particles: ProjectParticleDefinition[]
 	modelTree: Tree<string, string>[]
+	particles: ProjectParticleDefinition[]
 	// TODO: create a tree for everything. layers, groups etc.
 	// store names in tree only
 	// this will allow for more uniform editing experience
-	collisionGroups: ProjectCollisionGroup[]
+	collisionGroups: Record<string, ProjectCollisionGroup>
+	collisionGroupTree: Tree<string, string>[]
 	inputGroups: ProjectInputGroup[]
 	/** Couples of groups that should be colliding. */
 	collisionGroupPairs: [UUID, UUID][]
@@ -48,7 +49,9 @@ type ProjectConfig = {
 }
 
 export type ProjectInputGroup = NamedId
-export type ProjectCollisionGroup = NamedId
+export type ProjectCollisionGroup = {
+	id: UUID
+}
 
 export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
 	/** This only matters to devtool and calculation of `.amount`
@@ -76,13 +79,12 @@ export type ProjectChord = {
 }
 
 export function makeBlankProject(): Project {
-	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID(), name: "default"}
+	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID()}
 	const modelLayer: ProjectLayerDefinition = {id: getRandomUUID(), name: "model", type: "model"}
 	const particleLayer: ProjectLayerDefinition = {id: getRandomUUID(), name: "model", type: "model"}
 	return {
 		config: {
 			inworldUnitPixelSize: 100,
-			// TODO: path resolving and how to approach that
 			resourcePackPath: "./generated/resource_pack.e8.bin",
 			textureDirectoryPath: "./textures",
 			entityClassesDirectoryPath: "./entities",
@@ -95,7 +97,8 @@ export function makeBlankProject(): Project {
 				particleEnumName: "Particles"
 			}
 		},
-		collisionGroups: [collisionGroup],
+		collisionGroups: {default: collisionGroup},
+		collisionGroupTree: [{value: "default"}],
 		collisionGroupPairs: [[collisionGroup.id, collisionGroup.id]],
 		layers: [modelLayer, particleLayer],
 		models: {},
