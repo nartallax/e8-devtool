@@ -42,6 +42,8 @@ const resolveUrl = (url: URL | string): URL => {
 	}
 }
 
+
+// TODO: don't. use routing context utils
 export const pushHistory = (url: URL) => {
 	window.history.pushState(null, "", url)
 }
