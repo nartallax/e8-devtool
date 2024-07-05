@@ -9,25 +9,31 @@ import {getRandomUUID} from "common/uuid"
  * and is not used anywhere in the actual engine runtime  */
 export interface Project {
 	config: ProjectConfig
+
 	// TODO: think about reorganizing this array to map-object
 	// and other arrays, why not
 	// maybe then abolish NamedId alltogeter
 	// map full path -> model
 	models: Record<string, ProjectModel>
 	modelTree: Tree<string, string>[]
-	particles: ProjectParticleDefinition[]
+
+	particles: Record<string, ProjectParticleDefinition>
+	particleTree: Tree<string, string>[]
+
 	// TODO: create a tree for everything. layers, groups etc.
 	// store names in tree only
 	// this will allow for more uniform editing experience
 	collisionGroups: Record<string, ProjectCollisionGroup>
 	collisionGroupTree: Tree<string, string>[]
-	inputGroups: ProjectInputGroup[]
-	/** Couples of groups that should be colliding. */
 	collisionGroupPairs: [UUID, UUID][]
+
+	/** Couples of groups that should be colliding. */
 	layers: Record<string, ProjectLayerDefinition>
 	layerTree: Tree<string, string>[]
+
 	// TODO: redo input binds. make bind group optional/multiple; it'll act as selector
 	// this will also make binds more tree-like, which is good
+	inputGroups: ProjectInputGroup[]
 	inputBinds: ProjectInputBindSet[]
 }
 
@@ -54,7 +60,8 @@ export type ProjectCollisionGroup = {
 	id: UUID
 }
 
-export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
+export interface ProjectParticleDefinition extends ParticleDefinition {
+	id: UUID
 	/** This only matters to devtool and calculation of `.amount`
 	 * in runtime emission type is determined by usage */
 	emissionType: "once" | "continuous"
@@ -105,7 +112,8 @@ export function makeBlankProject(): Project {
 		layers: {model: modelLayer, particle: particleLayer},
 		layerTree: [{value: "model"}, {value: "particle"}],
 		models: {},
-		particles: [],
+		particles: {},
+		particleTree: [],
 		modelTree: [],
 		inputBinds: [{
 			id: getRandomUUID(),

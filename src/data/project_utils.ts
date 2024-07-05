@@ -118,3 +118,17 @@ export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Reco
 	}
 	return result
 }
+
+export const mappedForestToArrayWithPath = <T>(forest: Tree<string, string>[], map: Record<string, T>): [T, string[]][] => {
+	const result: [T, string[]][] = []
+	for(const [branches, leaf] of getForestLeaves(forest)){
+		const fullPath = branches.map(x => x.value)
+		fullPath.push(leaf)
+		const pathStr = treePartsToPath(fullPath)
+		const item = map[pathStr]
+		if(item){
+			result.push([item, fullPath])
+		}
+	}
+	return result
+}

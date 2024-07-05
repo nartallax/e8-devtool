@@ -1,5 +1,5 @@
 import {Project} from "data/project"
-import {getAllProjectModelsWithFolders, getSortedProjectBinds} from "data/project_utils"
+import {getAllProjectModelsWithFolders, getSortedProjectBinds, mappedForestToArrayWithPath} from "data/project_utils"
 import {capitalize} from "common/capitalize"
 import {readdirAsArray} from "common/readdir_as_array"
 import * as Path from "path"
@@ -13,7 +13,7 @@ export async function projectToTypescript(project: Project, actions: DevtoolActi
 
 	const sortedBindSets = getSortedProjectBinds(project)
 	const bindSetNames = sortedBindSets.map(bindSet => [bindSet.name])
-	const particleNames = project.particles.map(particle => [particle.name])
+	const particleNames = mappedForestToArrayWithPath(project.particleTree, project.particles).map(([, path]) => path)
 	const modelEnumName = project.config.ts.entityEnumName
 	const bindSetsEnumName = project.config.ts.inputBindSetEnumName
 	const bindSetsNamespaceName = project.config.ts.inputBindsNamespaceName

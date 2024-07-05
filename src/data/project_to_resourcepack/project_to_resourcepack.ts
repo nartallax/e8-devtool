@@ -59,7 +59,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 
 	return {
 		inworldUnitPixelSize: project.config.inworldUnitPixelSize,
-		particles: project.particles.map(def => omit(def, "emissionType")),
+		particles: mappedForestToArray(project.particleTree, project.particles).map(def => omit(def, "emissionType")),
 		atlasses: [atlas],
 		models,
 		inputBinds,

@@ -1,3 +1,16 @@
+// TODO: deepMerge is not very useful
+// it cannot handle:
+// - empty arrays in template object
+// - map-objects with variable keys
+// - recursive structures
+// and maybe something else
+// we need to use something like Ribcage for this purpose I think, but how to auto-fix problems...?
+// I need to think about this
+// alternatives are -
+// 1. let's teach Ribcage how to fix stuff
+// 2. let's not break stuff, and have explicit migrations when we do
+// 3. let's not use any of the complex stuff deepMerge can't handle
+
 /** Merge two objects.
  * Think of it like {...a, ...b}, just deep - it does the same for nested objects
  * Intended for cases when you have ethalon value, like default values of config (@param base),
@@ -21,7 +34,6 @@ export function deepMerge<T>(base: T, patch: Partial<T>): [result: T, hasChange:
 		}
 		if(base.length < 1){
 			return [patch as T, false]
-			// TODO: bring this back
 			// to do this, we should be able to have built-in textures
 			// until then we're not able to make a "blank" model if we don't have texture directory
 			// throw new Error("Cannot deep-merge with 0 elements in example array.")
@@ -36,10 +48,6 @@ export function deepMerge<T>(base: T, patch: Partial<T>): [result: T, hasChange:
 		return [result, false]
 	}
 
-	// TODO: this is other reason why deepMerge() isn't really useful
-	// yes, throwing away extra keys is a good thing
-	// however, this prevents us from having map-objects in data with dynamic set of keys
-	// ...this problem will resolve itself after git-friedlining everything, but for now we won't use deepMerge()
 	const keys = new Set(Object.keys(base) as (keyof T)[])
 	for(const k of keys){
 		if(!(k in patch)){
