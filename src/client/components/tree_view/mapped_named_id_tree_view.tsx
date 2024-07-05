@@ -17,7 +17,7 @@ export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends Nullable
 	onChange?: (values: S[]) => void
 	// TODO: in great future, when we only have named id trees everywhere, we won't be needing as much mapping as this
 	// because we could then use trees directly
-	toTree: (sourceValue: S, index: number) => T
+	toTree: (sourceValue: S, path: TreePath) => T
 	fromTree?: (tree: T) => S
 	// on..Delete handlers only exist for some special cases
 	// for example, validations - they can throw AbortError, and it will be handled
@@ -31,6 +31,8 @@ export type MappedNamedIdTreeProps<L extends NullableNamedId, B extends Nullable
 	// called when user finished input of leaf's name
 	onLeafCreated?: (name: string, path: TreePath) => L
 	onBranchCreated?: (name: string, path: TreePath) => B
+	beforeLeafDragCompleted?: (oldPath: TreePath, newPath: TreePath, leaf: L) => void
+	beforeBranchDragCompleted?: (oldPath: TreePath, newPath: TreePath, branch: B) => void
 	selectedValue?: UUID | null
 	isSearchable?: boolean
 }
@@ -42,7 +44,7 @@ export type MappedNamedIdTreeControls = {
 
 /** A wrap around TreeView, to provide more high-level functionality */
 export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends NullableNamedId, T extends Tree<L, B>, S>({
-	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, beforeBranchRename, beforeLeafRename, buttons, selectedValue, isSearchable, onLeafCreated, onBranchCreated, ...props
+	values, toTree, fromTree, onChange, canBeChildOf, onLeafDelete, onBranchDelete, beforeBranchRename, beforeLeafRename, buttons, selectedValue, isSearchable, onLeafCreated, onBranchCreated, beforeBranchDragCompleted, beforeLeafDragCompleted, ...props
 }: MappedNamedIdTreeProps<L, B, T, S>) => {
 	const [newNode, setNewNode] = useState<{
 		node: Tree<L, B>
@@ -50,7 +52,7 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 	} | null>(null)
 
 	const tree = useMemo(() => {
-		let tree: Tree<L, B>[] = values.map(toTree)
+		let tree: Tree<L, B>[] = values.map((value, i) => toTree(value, [i]))
 		if(newNode){
 			tree = addTreeByPath(tree, newNode.node, newNode.path)
 		}
@@ -229,6 +231,23 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 		}
 	}
 
+	const onDragCompleted = (from: TreePath, to: TreePath) => {
+		const node = getTreeByPath(tree, from)
+		try {
+			if(isTreeBranch(node)){
+				beforeBranchDragCompleted?.(from, to, node.value)
+			} else {
+				beforeLeafDragCompleted?.(from, to, node.value)
+			}
+		} catch(e){
+			if(AbortError.isAbortError(e)){
+				return
+			}
+			throw e
+		}
+		updateByTree(moveTreeByPath(tree, from, to))
+	}
+
 	return (
 		<>
 			{!!buttons && <Row justify="start" gap>
@@ -252,7 +271,7 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 				leafLabelValidators={validatorFactory}
 				branchLabelValidators={validatorFactory}
 				canBeChildOf={wrappedCanBeChildOf}
-				onDrag={!canBeChildOf || !canUpdateValues ? undefined : (from, to) => updateByTree(moveTreeByPath(tree, from, to))}
+				onDrag={!canBeChildOf || !canUpdateValues ? undefined : onDragCompleted}
 				onBranchLabelEdit={!canUpdateValues ? undefined : editName}
 				onLeafLabelEdit={!canUpdateValues ? undefined : editName}
 				onLeafLabelEditCancel={cancelEditName}

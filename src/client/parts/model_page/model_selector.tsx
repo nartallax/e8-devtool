@@ -64,6 +64,18 @@ export const ModelSelector = () => {
 		return {name, id: model.id}
 	}
 
+	const onBranchRename = (project: Project, oldPrefix: string, newPrefix: string) => {
+		const models: Project["models"] = {}
+		for(const [oldModelPath, model] of Object.entries(project.models)){
+			let modelPath = oldModelPath
+			if(modelPath.startsWith(oldPrefix)){
+				modelPath = newPrefix + modelPath.substring(oldPrefix.length)
+			}
+			models[modelPath] = model
+		}
+		return {...project, models}
+	}
+
 	return (
 		<CentralColumn>
 			<MappedNamedIdTreeView
@@ -81,7 +93,7 @@ export const ModelSelector = () => {
 					},
 					index
 				)}
-				fromTree={node => mapTree(node, namedId => namedId.name, namedId => namedId.name)}
+				fromTree={node => mapTree(node, namedId => namedId.name, namedId => namedId.name, [])}
 				onChange={modelTree => setProject(project => ({...project, modelTree}))}
 				canBeChildOf={() => true}
 				buttons={controls => (
@@ -109,15 +121,7 @@ export const ModelSelector = () => {
 				beforeBranchRename={(_, name, path) => setProject(project => {
 					const oldPrefix = getTreePathStr(project.modelTree, path, undefined, "branch")
 					const newPrefix = getTreePathStr(project.modelTree, path.slice(0, -1), name, "branch")
-					const models: Project["models"] = {}
-					for(const [oldModelPath, model] of Object.entries(project.models)){
-						let modelPath = oldModelPath
-						if(modelPath.startsWith(oldPrefix)){
-							modelPath = newPrefix + modelPath.substring(0, oldPrefix.length)
-						}
-						models[modelPath] = model
-					}
-					return {...project, models}
+					return onBranchRename(project, oldPrefix, newPrefix)
 				})}
 				beforeLeafRename={(_, name, path) => setProject(project => {
 					const models = {...project.models}
@@ -128,6 +132,22 @@ export const ModelSelector = () => {
 					models[newPathStr] = model
 					return {...project, models}
 				})}
+				beforeLeafDragCompleted={(oldPath, newPath, leaf) => setProject(project => {
+					const models = {...project.models}
+					const oldPathStr = getTreePathStr(project.modelTree, oldPath)
+					const newPathStr = getTreePathStr(project.modelTree, newPath.slice(0, -1), leaf.name)
+					if(oldPathStr === newPathStr){
+						return project
+					}
+					models[newPathStr] = models[oldPathStr]!
+					delete models[oldPathStr]
+					return {...project, models}
+				})}
+				beforeBranchDragCompleted={(oldPath, newPath, branch) => {
+					const oldPrefix = getTreePathStr(project.modelTree, oldPath, undefined, "branch")
+					const newPrefix = getTreePathStr(project.modelTree, newPath.slice(0, -1), branch.name, "branch")
+					return onBranchRename(project, oldPrefix, newPrefix)
+				}}
 			/>
 		</CentralColumn>
 	)

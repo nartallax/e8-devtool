@@ -166,21 +166,18 @@ export function mapTreeLeaves<T, B, R>(tree: Tree<T, B>, map: (value: T, path: T
 	return {children: newChildren, value: tree.value}
 }
 
-export function mapTree<T, B, TT, BB>(tree: Tree<T, B>, mapLeaf: (value: T, path: TreePath) => TT, mapBranch: (value: B, path: TreePath) => BB, index?: number): Tree<TT, BB> {
-	return mapForest([tree], mapLeaf, mapBranch, index === undefined ? [] : [index])[0]!
+export function mapTree<T, B, TT, BB>(tree: Tree<T, B>, mapLeaf: (value: T, path: TreePath) => TT, mapBranch: (value: B, path: TreePath) => BB, treePath: TreePath): Tree<TT, BB> {
+	if(isTreeLeaf(tree)){
+		return {value: mapLeaf(tree.value, treePath)}
+	}
+	return {
+		value: mapBranch(tree.value, treePath),
+		children: mapForest(tree.children, mapLeaf, mapBranch, treePath)
+	}
 }
 
 export function mapForest<T, B, TT, BB>(forest: Tree<T, B>[], mapLeaf: (value: T, path: TreePath) => TT, mapBranch: (value: B, path: TreePath) => BB, path: TreePath = []): Tree<TT, BB>[] {
-	return forest.map((tree, i) => {
-		if(isTreeLeaf(tree)){
-			return {value: mapLeaf(tree.value, path)}
-		} else {
-			return {
-				value: mapBranch(tree.value, path),
-				children: mapForest(tree.children, mapLeaf, mapBranch, [...path, i])
-			}
-		}
-	})
+	return forest.map((tree, i) => mapTree(tree, mapLeaf, mapBranch, [...path, i]))
 }
 
 function resolveTreeIndicesToTrees<T, B>(trees: Tree<T, B>[], indices: number[]): Tree<T, B>[] {

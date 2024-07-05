@@ -27,7 +27,9 @@ type TreeDragParams<T, B> = {
 	canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
 }
 
-export const useTreeViewDragProps = <T, B>({onDrag: _onDrag, rootRef, canBeChildOf, tree}: TreeDragParams<T, B>) => {
+export const useTreeViewDragProps = <T, B>({
+	onDrag: _onDrag, rootRef, canBeChildOf, tree
+}: TreeDragParams<T, B>) => {
 	const offset = useRef({x: 0, y: 0})
 	const destination = useRef<DragDestination<T, B> | null>(null)
 	const draggedRow = useRef<RowElPath | null>(null)
@@ -153,7 +155,9 @@ const getDragDestination = <T, B>(tree: Tree<T, B>[], event: AnyPointerEvent): D
 		// if we don't make this alteration - result will point outside of the branch, which feels weird
 		disp = "inside"
 	}
-	return {path, tree: targetTree, disposition: disp, rect: targetRect}
+	return {
+		path, tree: targetTree, disposition: disp, rect: targetRect
+	}
 }
 
 const getRowPath = (event: AnyPointerEvent): RowElPath | null => {

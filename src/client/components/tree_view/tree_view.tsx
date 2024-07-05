@@ -65,7 +65,9 @@ export const TreeView = <L, B>({
 		controlRef.current = controls
 	}
 
-	const dragProps = useTreeViewDragProps({canBeChildOf, tree, onDrag, rootRef})
+	const dragProps = useTreeViewDragProps({
+		canBeChildOf, tree, onDrag, rootRef
+	})
 
 
 	return (
