@@ -18,10 +18,11 @@ type Props<T> = {
 	onItemDoubleclick?: (item: T, path: TreePath) => void
 	beforeItemDelete?: (item: T) => void
 	buttons?: () => React.ReactNode
+	getItemSublabel?: (item: T) => string
 }
 
-export function StringForestMapObjectView<T>({
-	forest, mapObject, onForestChange, itemName, createItem, onMapChange, onItemDoubleclick, beforeItemDelete, buttons, onItemClick, selectedItem
+export function MappedForestView<T>({
+	forest, mapObject, onForestChange, itemName, createItem, onMapChange, onItemDoubleclick, beforeItemDelete, buttons, onItemClick, selectedItem, getItemSublabel
 }: Props<T>) {
 
 	const onItemCreated = (name: string, path: TreePath) => {
@@ -138,6 +139,10 @@ export function StringForestMapObjectView<T>({
 				onBranchRename(oldPrefix, newPrefix)
 			}}
 			selectedValue={selectedUUID}
+			getLeafSublabel={!getItemSublabel ? undefined : (_, path) => {
+				const pathStr = getTreePathStr(forest, path)
+				return getItemSublabel(mapObject[pathStr]!)
+			}}
 		/>
 	)
 }

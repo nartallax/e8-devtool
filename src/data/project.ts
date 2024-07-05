@@ -24,7 +24,8 @@ export interface Project {
 	inputGroups: ProjectInputGroup[]
 	/** Couples of groups that should be colliding. */
 	collisionGroupPairs: [UUID, UUID][]
-	layers: ProjectLayerDefinition[]
+	layers: Record<string, ProjectLayerDefinition>
+	layerTree: Tree<string, string>[]
 	// TODO: redo input binds. make bind group optional/multiple; it'll act as selector
 	// this will also make binds more tree-like, which is good
 	inputBinds: ProjectInputBindSet[]
@@ -59,7 +60,8 @@ export interface ProjectParticleDefinition extends ParticleDefinition, NamedId {
 	emissionType: "once" | "continuous"
 }
 
-export interface ProjectLayerDefinition extends NamedId {
+export interface ProjectLayerDefinition {
+	id: UUID
 	type: LayerType
 }
 
@@ -80,8 +82,8 @@ export type ProjectChord = {
 
 export function makeBlankProject(): Project {
 	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID()}
-	const modelLayer: ProjectLayerDefinition = {id: getRandomUUID(), name: "model", type: "model"}
-	const particleLayer: ProjectLayerDefinition = {id: getRandomUUID(), name: "model", type: "model"}
+	const modelLayer: ProjectLayerDefinition = {id: getRandomUUID(), type: "model"}
+	const particleLayer: ProjectLayerDefinition = {id: getRandomUUID(), type: "particle"}
 	return {
 		config: {
 			inworldUnitPixelSize: 100,
@@ -100,7 +102,8 @@ export function makeBlankProject(): Project {
 		collisionGroups: {default: collisionGroup},
 		collisionGroupTree: [{value: "default"}],
 		collisionGroupPairs: [[collisionGroup.id, collisionGroup.id]],
-		layers: [modelLayer, particleLayer],
+		layers: {model: modelLayer, particle: particleLayer},
+		layerTree: [{value: "model"}, {value: "particle"}],
 		models: {},
 		particles: [],
 		modelTree: [],

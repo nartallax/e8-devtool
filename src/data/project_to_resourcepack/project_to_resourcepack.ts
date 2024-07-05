@@ -24,7 +24,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	}
 
 	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.id, texture]))
-	const layers = namedIdsToIndexMap("layer", project.layers)
+	const layers = mappedForestToIndexMap("layer", project.layerTree, project.layers)
 	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
 	const inputGroups = namedIdsToIndexMap("input group", project.inputGroups)
 	const models = allModels.map((model): Model => {
@@ -63,7 +63,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		atlasses: [atlas],
 		models,
 		inputBinds,
-		layers: project.layers.map(layer => ({type: layer.type})),
+		layers: mappedForestToArray(project.layerTree, project.layers).map(layer => ({type: layer.type})),
 		// TODO: this is bad for modability
 		collisionGroupCount: Object.values(project.collisionGroups).length,
 		collisionGroupPairs: collisionGroupPairs

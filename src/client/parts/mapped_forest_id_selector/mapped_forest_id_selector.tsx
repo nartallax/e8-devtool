@@ -36,7 +36,7 @@ type ForestProps = {
 const isGetLabelProps = (props: unknown): props is GetLabelProps => !!props && typeof(props) === "object" && "getLabel" in props
 const isForestProps = (props: unknown): props is ForestProps => !!props && typeof(props) === "object" && "forest" in props
 
-export const StringForestIdSelector = ({
+export const MappedForestIdSelector = ({
 	value, onChange, modal, absentValueLabel = "<none>", isNullable, ...props
 }: Props) => {
 	const [isOpen, setOpen] = useState(false)

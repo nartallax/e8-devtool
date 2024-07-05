@@ -19,7 +19,7 @@ type BaseProps<L, B> = {
 	getBranchLabel?: (branch: B) => string
 	getBranchSublabel?: (leaf: B) => string
 	getLeafLabel: (leaf: L) => string
-	getLeafSublabel?: (leaf: L) => React.ReactNode
+	getLeafSublabel?: (leaf: L, path: TreePath) => React.ReactNode
 	onLeafClick?: (leaf: L, path: TreePath) => void
 	onLeafDoubleclick?: (leaf: L, path: TreePath) => void
 	onBranchClick?: (branch: B, path: TreePath) => void
@@ -112,7 +112,7 @@ const TreeRow = <T, B>({
 			/>
 		)
 	} else {
-		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value) : getLeafSublabel?.(row.value)
+		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value) : getLeafSublabel?.(row.value, path)
 
 		labelOrEditor = (
 			<div className={css.rowLabel}>

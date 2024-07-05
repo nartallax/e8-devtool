@@ -10,9 +10,9 @@ import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectCollisionGroup} from "data/project"
 import {useState} from "react"
 import {namesOfModelsWhich} from "data/project_utils"
-import {StringForestMapObjectView} from "client/parts/string_tree_map_object_view/string_forest_map_object_view"
 import {Button} from "client/components/button/button"
 import {Icon} from "generated/icons"
+import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 
 type Props = {
 	value: UUID
@@ -47,7 +47,7 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 			<Form onSubmit={() => onClose(group?.id)}>
 				<Col gap stretch grow>
 					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
-					<StringForestMapObjectView
+					<MappedForestView
 						itemName="group"
 						forest={project.collisionGroupTree}
 						onForestChange={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}

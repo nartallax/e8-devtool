@@ -1,11 +1,12 @@
 import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
 import {CentralColumn} from "client/parts/layouts/central_column"
+import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {useProject} from "client/parts/project_context"
-import {StringForestMapObjectView} from "client/parts/string_tree_map_object_view/string_forest_map_object_view"
 import {useTextures} from "client/parts/texture_tree_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
+import {filterObject} from "common/filter_object"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
 import {NamedId, ProjectModel, makeBlankModel} from "data/project"
@@ -41,12 +42,15 @@ export const ModelSelector = () => {
 			}))
 		}
 
-		let layerId = findDefaultId(project.layers.filter(layer => layer.type === "model"))
+		let layerId = findDefaultId(filterObject(project.layers, (_, layer) => layer.type === "model"))
 		if(!layerId){
 			const id = layerId = getRandomUUID()
 			setProject(project => ({
 				...project,
-				layers: [...project.layers, {id, name: "default", type: "model"}]
+				layers: {
+					...project.layers,
+					default: {id, type: "model"}
+				}
 			}))
 		}
 
@@ -63,7 +67,7 @@ export const ModelSelector = () => {
 
 	return (
 		<CentralColumn>
-			<StringForestMapObjectView
+			<MappedForestView
 				forest={project.modelTree}
 				onForestChange={modelTree => setProject(project => ({...project, modelTree}))}
 				mapObject={project.models}

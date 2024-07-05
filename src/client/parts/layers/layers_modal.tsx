@@ -1,17 +1,15 @@
 import {LayerType} from "@nartallax/e8"
-import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
 import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
+import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectLayerDefinition} from "data/project"
 import {namesOfModelsWhich} from "data/project_utils"
-import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
@@ -22,7 +20,9 @@ type Props = {
 
 export const LayersModal = ({value: initialValue, onClose, layerType}: Props) => {
 	const [project, setProject] = useProject()
-	const [value, setValue] = useState(initialValue)
+	const [layer, setLayer] = useState(() =>
+		Object.values(project.layers).find(group => group.id === initialValue) ?? null
+	)
 	const {showAlert} = useAlert()
 
 	const onDelete = (layer: ProjectLayerDefinition) => {
@@ -44,21 +44,20 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(value)}>
+			<Form onSubmit={() => onClose(layer?.id)}>
 				<Col gap stretch grow>
-					<MappedNamedIdTreeView
-						selectedValue={value}
-						onLeafClick={leaf => leaf.type === layerType && setValue(leaf.id)}
-						onLeafDoubleclick={leaf => leaf.type === layerType && onClose(leaf.id)}
-						values={project.layers}
-						toTree={layer => ({value: layer})}
-						fromTree={node => node.value}
-						buttons={controls => <Button text="Add layer" icon={Icon.filePlus} onClick={() => controls.addRenameLeaf()}/>}
-						onLeafCreated={name => ({id: getRandomUUID(), name, type: layerType})}
-						onChange={layers => setProject(project => ({...project, layers}))}
-						getLeafSublabel={(layer: ProjectLayerDefinition) => `(${layer.type})`}
-						onLeafDelete={onDelete}
-						canBeChildOf={(_, parent) => !parent}
+					<MappedForestView
+						itemName="layer"
+						createItem={() => ({id: getRandomUUID(), type: layerType})}
+						forest={project.layerTree}
+						onForestChange={layerTree => setProject(project => ({...project, layerTree}))}
+						mapObject={project.layers}
+						onMapChange={layers => setProject(project => ({...project, layers}))}
+						selectedItem={layer}
+						onItemClick={item => item.type === layerType && setLayer(item)}
+						onItemDoubleclick={item => item.type === layerType && onClose(item.id)}
+						getItemSublabel={layer => `(${layer.type})`}
+						beforeItemDelete={onDelete}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
