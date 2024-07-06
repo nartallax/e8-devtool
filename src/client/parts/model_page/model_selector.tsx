@@ -9,19 +9,18 @@ import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
 import {filterObject} from "common/filter_object"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
-import {NamedId, ProjectModel, makeBlankModel} from "data/project"
+import {ProjectModel, makeBlankModel} from "data/project"
 
-const findDefaultId = (values: NamedId[] | Record<string, {id: UUID}>): UUID | null => {
-	if(Array.isArray(values)){
-		return values.find(value => value.name === "default")?.id ?? values[0]?.id ?? null
-	}
+const findDefaultId = (values: Record<string, {id: UUID}>): UUID | null => {
 	const entries = Object.entries(values)
 	return entries.find(([key]) => key === "default")?.[1].id ?? entries[0]?.[1].id ?? null
 }
 
+const findDefaultTexture = (paths: string[]): string | null => paths[0] ?? null
+
 export const ModelSelector = () => {
 	const [project, setProject] = useProject()
-	const {textureFiles} = useTextures()
+	const {texturePaths} = useTextures()
 	const {matchedUrl} = useRoutingContext()
 	const {showAlert} = useAlert()
 
@@ -54,15 +53,15 @@ export const ModelSelector = () => {
 			}))
 		}
 
-		const textureId = findDefaultId(textureFiles)
-		if(!textureId){
+		const texturePath = findDefaultTexture(texturePaths)
+		if(!texturePath){
 			void showAlert({
 				body: "Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first."
 			})
 			throw new AbortError("Insufficient data.")
 		}
 
-		return makeBlankModel({collisionGroupId, layerId, textureId})
+		return makeBlankModel({collisionGroupId, layerId, texturePath})
 	}
 
 	return (

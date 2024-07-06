@@ -14,7 +14,6 @@ import {ModelGridLayer} from "client/parts/model_page/model_display/model_grid_l
 import {ModelShapeLayer} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_layer"
 import {ModelTextureLayer} from "client/parts/model_page/model_display/model_texture_layer"
 import {TexturesModal} from "client/parts/textures/textures_modal"
-import {NamedIdSelector} from "client/parts/named_id_selector/named_id_selector"
 import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
 import {UUID, getRandomUUID} from "common/uuid"
@@ -25,6 +24,7 @@ import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {TitlePart} from "client/components/title_context/title_context"
 import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
+import {ForestPathSelector} from "client/parts/forest_path_selector/forest_path_selector"
 
 type Props = {
 	modelId: UUID
@@ -91,7 +91,7 @@ const ModelSidebar = ({
 	}
 
 	const addAutoShape = async() => {
-		const texUrl = getTextureUrl(model.textureId)
+		const texUrl = getTextureUrl(model.texturePath)
 		const resolution = inworldUnitPixelSize * 10 // this allows for better quality
 		let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, resolution)
 		points = points.map(point => roundToGrain(point))
@@ -120,17 +120,17 @@ const ModelSidebar = ({
 		setModel(model => ({...model, size: {x, y}}))
 	}
 
-	const {textureFiles} = useTextures()
+	const {textureTree} = useTextures()
 
 
 	return (
 		<TitlePart part={" - " + modelName}>
-			<NamedIdSelector
+			<ForestPathSelector
 				label="Texture"
-				values={textureFiles}
-				value={model.textureId}
-				onChange={textureId => setModel(model => ({...model, textureId}))}
-				modal={onClose => <TexturesModal onClose={onClose} value={model.textureId}/>}
+				forest={textureTree}
+				value={model.texturePath}
+				onChange={texturePath => setModel(model => ({...model, texturePath}))}
+				modal={onClose => <TexturesModal onClose={onClose} value={model.texturePath}/>}
 			/>
 			<MappedForestIdSelector
 				forest={project.collisionGroupTree}

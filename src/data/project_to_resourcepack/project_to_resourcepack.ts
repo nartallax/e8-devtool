@@ -9,7 +9,7 @@ import {promises as Fs} from "fs"
 import * as Path from "path"
 import {UUID} from "crypto"
 import {omit} from "common/omit"
-import {Tree, getForestLeavesAsArray} from "common/tree"
+import {Tree} from "common/tree"
 import {DevtoolActions} from "server/actions"
 
 /** Convert project into ResourcePack structure. */
@@ -23,12 +23,12 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		pictures: [{extension: "svg", data: atlasSvg}]
 	}
 
-	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.id, texture]))
+	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.path, texture]))
 	const layers = mappedForestToIndexMap("layer", project.layerTree, project.layers)
 	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
 	const inputGroups = mappedForestToIndexMap("input group", project.inputGroupTree, project.inputGroups)
 	const models = allModels.map((model): Model => {
-		const texture = textureByPath.get(model.textureId)!
+		const texture = textureByPath.get(model.texturePath)!
 		return {
 			size: [model.size.x, model.size.y],
 			texture: {
@@ -70,8 +70,8 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 
 export async function projectToAtlasLayout(project: Project, actions: DevtoolActions): Promise<(SvgTextureFile & XY)[]> {
 	const allModels = getAllProjectModels(project)
-	const allTextureIds = [...new Set(allModels.map(model => model.textureId))]
-	const allTextures = await readAllTextures(allTextureIds, project, actions)
+	const allTexturePaths = [...new Set(allModels.map(model => model.texturePath))]
+	const allTextures = await readAllTextures(allTexturePaths, project, actions)
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that
 	return buildAtlasLayout(allTextures, 1)
@@ -101,22 +101,15 @@ function glueSvgsIntoAtlas(textures: (SvgTextureFile & XY)[], sideLength: number
 	return compoundSvg
 }
 
-async function readAllTextures(ids: UUID[], project: Project, actions: DevtoolActions): Promise<SvgTextureFile[]> {
-	const result = new Array<SvgTextureFile>(ids.length)
-	const textureTree = await actions.getTextureTree()
-	const textureFiles = getForestLeavesAsArray(textureTree)
-	const textureMap = new Map(textureFiles.map(file => [file.id, file.fullPath]))
-	await Promise.all(ids.map(async(id, index) => {
-		const path = textureMap.get(id)
-		if(!path){
-			throw new Error("Failed to resolve texture by ID: unknown UUID: " + id)
-		}
+async function readAllTextures(paths: string[], project: Project, actions: DevtoolActions): Promise<SvgTextureFile[]> {
+	const result = new Array<SvgTextureFile>(paths.length)
+	await Promise.all(paths.map(async(path, index) => {
 		if(!path.toLowerCase().endsWith(".svg")){
-			throw new Error("Only svgs are supported; got " + id)
+			throw new Error("Only svgs are supported; got " + path)
 		}
 		const texturesRoot = actions.resolveProjectPath(project.config.textureDirectoryPath)
 		const fileContent = await Fs.readFile(Path.resolve(texturesRoot, path), "utf-8")
-		result[index] = {...optimizeSvg(fileContent, id), id}
+		result[index] = {...optimizeSvg(fileContent, path), path}
 	}))
 	return result
 }

@@ -10,9 +10,12 @@ type Props<T> = FormInputProps<T> & {
 	getLabel: (value: T) => string
 	onRequestValueChange: () => void
 	isDisabled?: boolean
+	onClear?: () => void
 }
 
-export function ValueSelectorField<T>({value, onRequestValueChange, getLabel, isDisabled, ...props}: Props<T>) {
+export function ValueSelectorField<T>({
+	value, onRequestValueChange, getLabel, isDisabled, onClear, ...props
+}: Props<T>) {
 	const {id} = useRegisterField({value, ...props})
 	const requestChangeIfNotDisabled = useCallback(() => {
 		if(!isDisabled){
@@ -24,11 +27,8 @@ export function ValueSelectorField<T>({value, onRequestValueChange, getLabel, is
 		<FormField id={id} onLabelClick={requestChangeIfNotDisabled}>
 			<div className={css.valueSelector} onClick={requestChangeIfNotDisabled}>
 				{getLabel(value)}
-				<Button
-					icon={Icon.pencil}
-					onClick={onRequestValueChange}
-					isDisabled={isDisabled}
-				/>
+				<Button icon={Icon.pencil} onClick={onRequestValueChange} isDisabled={isDisabled}/>
+				{onClear && <Button icon={Icon.close} onClick={onClear} isDisabled={isDisabled}/>}
 			</div>
 		</FormField>
 	)

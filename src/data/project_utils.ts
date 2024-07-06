@@ -104,6 +104,17 @@ export const mappedForestToNameMap = (forest: Tree<string, string>[], map: Recor
 	return result
 }
 
+export const forestToNameMap = (forest: Tree<string, string>[]): Map<string, string> => {
+	const result = new Map<string, string>()
+	for(const [branches, leaf] of getForestLeaves(forest)){
+		const fullPath = branches.map(x => x.value)
+		fullPath.push(leaf)
+		const pathStr = treePartsToPath(fullPath)
+		result.set(pathStr, leaf)
+	}
+	return result
+}
+
 export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Record<string, T>): T[] => {
 	const result: T[] = []
 	for(const [branches, leaf] of getForestLeaves(forest)){
@@ -128,6 +139,17 @@ export const mappedForestToArrayWithPath = <T>(forest: Tree<string, string>[], m
 		if(item){
 			result.push([item, fullPath])
 		}
+	}
+	return result
+}
+
+export const getForestPaths = (forest: Tree<string, string>[]): [string, string[]][] => {
+	const result: [string, string[]][] = []
+	for(const [branches, leaf] of getForestLeaves(forest)){
+		const fullPath = branches.map(x => x.value)
+		fullPath.push(leaf)
+		const pathStr = treePartsToPath(fullPath)
+		result.push([pathStr, fullPath])
 	}
 	return result
 }

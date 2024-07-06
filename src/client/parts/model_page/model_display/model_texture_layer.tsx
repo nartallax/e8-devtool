@@ -16,7 +16,7 @@ export const ModelTextureLayer = () => {
 	return (
 		<img
 			className={css.workbenchLayer}
-			src={getTextureUrl(model.textureId)}
+			src={getTextureUrl(model.texturePath)}
 			style={{
 				width: naturalSize.width,
 				height: naturalSize.height,

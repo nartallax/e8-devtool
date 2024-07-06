@@ -76,10 +76,10 @@ export const getActions = (cli: CLIArgs) => {
 		return forest.map(tree => convert(tree, []))
 	}
 
-	const getTextureTree = async(path?: string | null): Promise<Tree<TextureFile, NamedId>[]> => {
+	const getTextureTree = async(): Promise<Tree<string, string>[]> => {
 		const project = await getProject()
-		const fileTree = await readdirAsTree(resolveProjectPath(path ?? project.config.textureDirectoryPath))
-		return convertTextureForest(fileTree)
+		const fileTree = await readdirAsTree(resolveProjectPath(project.config.textureDirectoryPath))
+		return fileTree
 	}
 
 	const produceResourcePack = async() => {

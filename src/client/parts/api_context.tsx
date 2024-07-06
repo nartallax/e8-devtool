@@ -6,7 +6,7 @@ import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
 import {Tree} from "common/tree"
 import {getRandomUUID} from "common/uuid"
-import {NamedId, Project, TextureFile} from "data/project"
+import {NamedId, Project} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
@@ -18,7 +18,7 @@ class DevtoolApiClient extends ApiClient {
 
 	getProject = () => this.call<Project>({name: "getProject"})
 	saveAndProduce = (project: Project) => this.call({name: "saveAndProduce", body: [project]})
-	getTextureFiles = (path?: string) => this.call<Tree<TextureFile, NamedId>[]>({name: "getTextureFiles", body: [path ?? null]})
+	getTextureFiles = () => this.call<Tree<string, string>[]>({name: "getTextureFiles"})
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	projectToAtlasLayout = (project: Project) => this.call<(SvgTextureFile & XY)[]>({name: "projectToAtlasLayout", body: [project]})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})

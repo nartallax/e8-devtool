@@ -17,6 +17,7 @@ type Props = {
 	onClose: (newValue?: UUID | null) => void
 }
 
+// TODO: get rid of this, we have clear button now
 const nullGroup: ProjectInputGroup = {
 	id: getRandomUUID()
 }

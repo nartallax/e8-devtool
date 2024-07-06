@@ -1,11 +1,10 @@
 import {XY} from "@nartallax/e8"
-import {UUID} from "common/uuid"
 
 export interface SvgTextureFile {
 	width: number
 	height: number
 	svg: string
-	id: UUID
+	path: string
 }
 
 

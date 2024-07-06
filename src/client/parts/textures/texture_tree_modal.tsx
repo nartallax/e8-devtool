@@ -2,25 +2,33 @@ import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col, Row} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
+import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Tree} from "common/tree"
-import {UUID} from "common/uuid"
-import {NamedId, TextureFile} from "data/project"
+import {getForestPaths} from "data/project_utils"
 import {Icon} from "generated/icons"
-import {useState} from "react"
+import {useMemo, useState} from "react"
 
 type Props = {
-	value?: UUID
-	onClose: (value?: UUID) => void
+	value?: string
+	onClose: (value?: string) => void
 	isSelectionModal?: boolean
-	textureForest: Tree<TextureFile, NamedId>[]
+	textureForest: Tree<string, string>[]
 }
 
 export const TextureTreeModal = ({
 	value: initialValue, onClose, textureForest, isSelectionModal = false
 }: Props) => {
 	const [value, setValue] = useState(initialValue)
+
+	// it's easier to create map to reuse <MappedForestView> than to create new component just for this
+	const map = useMemo(() => {
+		const map: Record<string, string> = {}
+		for(const [path] of getForestPaths(textureForest)){
+			map[path] = path
+		}
+		return map
+	}, [textureForest])
 
 	return (
 		<Modal
@@ -30,13 +38,12 @@ export const TextureTreeModal = ({
 			onClose={onClose}>
 			<Form onSubmit={() => onClose(value)}>
 				<Col gap stretch grow>
-					<MappedNamedIdTreeView
-						values={textureForest}
-						toTree={x => x}
-						fromTree={x => x}
-						selectedValue={!isSelectionModal ? undefined : value}
-						onLeafClick={!isSelectionModal ? undefined : (leaf: TextureFile) => setValue(leaf.id)}
-						onLeafDoubleclick={!isSelectionModal ? undefined : (leaf: TextureFile) => onClose(leaf.id)}
+					<MappedForestView
+						forest={textureForest}
+						mapObject={map}
+						selectedItem={!isSelectionModal ? undefined : value}
+						onItemClick={!isSelectionModal ? undefined : (leaf: string) => setValue(leaf)}
+						onItemDoubleclick={!isSelectionModal ? undefined : (leaf: string) => onClose(leaf)}
 					/>
 					{isSelectionModal
 						? <ModalSubmitCancelButtons onCancel={onClose}/>

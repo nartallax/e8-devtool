@@ -10,19 +10,12 @@ import {getRandomUUID} from "common/uuid"
 export interface Project {
 	config: ProjectConfig
 
-	// TODO: think about reorganizing this array to map-object
-	// and other arrays, why not
-	// maybe then abolish NamedId alltogeter
-	// map full path -> model
 	models: Record<string, ProjectModel>
 	modelTree: Tree<string, string>[]
 
 	particles: Record<string, ProjectParticleDefinition>
 	particleTree: Tree<string, string>[]
 
-	// TODO: create a tree for everything. layers, groups etc.
-	// store names in tree only
-	// this will allow for more uniform editing experience
 	collisionGroups: Record<string, ProjectCollisionGroup>
 	collisionGroupTree: Tree<string, string>[]
 	collisionGroupPairs: [UUID, UUID][]
@@ -31,13 +24,10 @@ export interface Project {
 	layers: Record<string, ProjectLayerDefinition>
 	layerTree: Tree<string, string>[]
 
-	// TODO: redo input binds. make bind group optional/multiple; it'll act as selector
-	// this will also make binds more tree-like, which is good
 	inputGroups: Record<string, ProjectInputGroup>
 	inputGroupTree: Tree<string, string>[]
 	inputBinds: Record<string, ProjectInputBind>
 	inputBindTree: Tree<string, string>[]
-
 }
 
 type ProjectConfig = {
@@ -136,15 +126,15 @@ export function makeBlankProject(): Project {
 type BlankModelParams = {
 	collisionGroupId: UUID
 	layerId: UUID
-	textureId: UUID
+	texturePath: string
 }
 
-export const makeBlankModel = ({collisionGroupId, layerId, textureId}: BlankModelParams): ProjectModel => ({
+export const makeBlankModel = ({collisionGroupId, layerId, texturePath}: BlankModelParams): ProjectModel => ({
 	id: getRandomUUID(),
 	layerId,
 	collisionGroupId,
 	size: {x: 1, y: 1},
-	textureId,
+	texturePath,
 	isStatic: false,
 	shapes: []
 })
@@ -160,8 +150,8 @@ export interface ProjectModel {
 	shapes: ProjectShape[]
 	collisionGroupId: UUID
 	layerId: UUID
-	// TODO: this should be path
-	textureId: UUID
+	// TODO: make nullable
+	texturePath: string
 	size: XY
 }
 
@@ -170,6 +160,7 @@ export interface ProjectShape {
 	points: [x: number, y: number][]
 }
 
+// TODO: do we still need this?
 // name is filename, like the last portion of the file path
 export interface TextureFile extends NamedId {
 	fullPath: string

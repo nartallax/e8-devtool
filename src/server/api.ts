@@ -1,4 +1,4 @@
-import {Project, NamedId, TextureFile} from "data/project"
+import {Project, NamedId} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Lock} from "common/lock"
 import {Tree} from "common/tree"
@@ -21,9 +21,9 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 			return await actions.getProject()
 		},
 
-		async getTextureFiles(path: string | null): Promise<Tree<TextureFile, NamedId>[]> {
+		async getTextureFiles(): Promise<Tree<string, string>[]> {
 			try {
-				return await actions.getTextureTree(path)
+				return await actions.getTextureTree()
 			} catch(e){
 				if(!isEnoent(e)){
 					throw e
@@ -52,6 +52,7 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 			})
 		},
 
+		// TODO: should be string forest
 		async getProjectRootForest(): Promise<Tree<NamedId, NamedId>[]> {
 			const forest = await readdirAsTree(actions.resolveProjectPath("."))
 			return actions.convertTextureForest(forest)
