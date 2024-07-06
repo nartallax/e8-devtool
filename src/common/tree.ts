@@ -379,3 +379,14 @@ export const treePathToValues = <T, B>(forest: Tree<T, B>[], path: TreePath): (T
 	}
 	return result
 }
+
+
+export function* allTreeNodes <T, B>(forest: Tree<T, B>[], parents: Tree<T, B>[] = []): IterableIterator<Tree<T, B>[]> {
+	for(const tree of forest){
+		const arr = [...parents, tree]
+		yield arr
+		if(isTreeBranch(tree)){
+			yield* allTreeNodes(tree.children, arr)
+		}
+	}
+}

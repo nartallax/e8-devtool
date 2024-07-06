@@ -1,7 +1,7 @@
 import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
+import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 import {CentralColumn} from "client/parts/layouts/central_column"
-import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
 import {AbortError} from "client/ui_utils/abort_error"
@@ -10,6 +10,7 @@ import {filterObject} from "common/filter_object"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "crypto"
 import {ProjectModel, makeBlankModel} from "data/project"
+import {treePartsToPath} from "data/project_utils"
 
 const findDefaultId = (values: Record<string, {id: UUID}>): UUID | null => {
 	const entries = Object.entries(values)
@@ -67,6 +68,7 @@ export const ModelSelector = () => {
 	return (
 		<CentralColumn>
 			<MappedForestView
+				getObjectKey={treePartsToPath}
 				forest={project.modelTree}
 				onForestChange={modelTree => setProject(project => ({...project, modelTree}))}
 				mapObject={project.models}

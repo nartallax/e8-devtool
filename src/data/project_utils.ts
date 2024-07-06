@@ -1,6 +1,6 @@
 import {Project, ProjectInputBind, ProjectModel} from "data/project"
 import {sortBy} from "common/sort_by"
-import {Tree, TreePath, getForestLeaves, treePathToValues} from "common/tree"
+import {Tree, TreePath, allTreeNodes, getForestLeaves, isTreeBranch, treePathToValues} from "common/tree"
 import {UUID} from "crypto"
 
 // only this function should be used to get all project modals
@@ -23,21 +23,21 @@ export function getSortedProjectBinds(project: Project): [ProjectInputBind, stri
 	return arr
 }
 
-export function treePartsToPath(parts: string[]): string {
-	return parts.join("/")
+export function treePartsToPath(parts: string[], isPrefix?: boolean): string {
+	let result = parts.join("/")
+	if(isPrefix){
+		result += "/"
+	}
+	return result
 }
 
-export function getTreePathStr(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
+export function treePathToString(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
 	const parts = treePathToValues(forest, path)
 	if(addedPart){
 		parts.push(addedPart)
 	}
 
-	let result = treePartsToPath(parts)
-	if(type === "branch"){
-		result += "/"
-	}
-	return result
+	return treePartsToPath(parts, type === "branch")
 }
 
 export const pathById = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>, id: UUID): TreePath => {
@@ -143,13 +143,21 @@ export const mappedForestToArrayWithPath = <T>(forest: Tree<string, string>[], m
 	return result
 }
 
-export const getForestPaths = (forest: Tree<string, string>[]): [string, string[]][] => {
+export const getForestPaths = (forest: Tree<string, string>[], includeBranches?: boolean): [string, string[]][] => {
 	const result: [string, string[]][] = []
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
-		const pathStr = treePartsToPath(fullPath)
-		result.push([pathStr, fullPath])
+	if(!includeBranches){
+		for(const [branches, leaf] of getForestLeaves(forest)){
+			const fullPath = branches.map(x => x.value)
+			fullPath.push(leaf)
+			const pathStr = treePartsToPath(fullPath)
+			result.push([pathStr, fullPath])
+		}
+	} else {
+		for(const nodes of allTreeNodes(forest)){
+			const fullPath = nodes.map(x => x.value)
+			const pathStr = treePartsToPath(fullPath, isTreeBranch(nodes[nodes.length - 1]!))
+			result.push([pathStr, fullPath])
+		}
 	}
 	return result
 }

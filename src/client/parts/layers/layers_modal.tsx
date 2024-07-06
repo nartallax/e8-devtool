@@ -3,13 +3,13 @@ import {Form} from "client/components/form/form"
 import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
+import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectLayerDefinition} from "data/project"
-import {namesOfModelsWhich} from "data/project_utils"
+import {namesOfModelsWhich, treePartsToPath} from "data/project_utils"
 import {useState} from "react"
 
 type Props = {
@@ -47,6 +47,7 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			<Form onSubmit={() => onClose(layer?.id)}>
 				<Col gap stretch grow>
 					<MappedForestView
+						getObjectKey={treePartsToPath}
 						itemName="layer"
 						createItem={() => ({id: getRandomUUID(), type: layerType})}
 						forest={project.layerTree}

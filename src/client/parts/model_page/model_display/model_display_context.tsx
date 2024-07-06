@@ -10,7 +10,7 @@ import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
 import {getLeafByPath} from "common/tree"
 import {UUID} from "common/uuid"
 import {ProjectShape} from "data/project"
-import {getTreePathStr, pathById} from "data/project_utils"
+import {treePathToString, pathById} from "data/project_utils"
 import {useCallback, useMemo, useRef, useState} from "react"
 
 type ShapeStateMeta = {
@@ -36,7 +36,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 		const inworldUnitPixelSize = project.config.inworldUnitPixelSize
 		const modelPath = pathById(project.modelTree, project.models, modelId)
 		const modelName = getLeafByPath(project.modelTree, modelPath).value
-		const modelPathStr = getTreePathStr(project.modelTree, modelPath)
+		const modelPathStr = treePathToString(project.modelTree, modelPath)
 		const _model = project.models[modelPathStr]!
 		if(!_model){
 			throw new Error("No model for ID = " + modelId)

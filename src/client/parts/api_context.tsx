@@ -6,7 +6,7 @@ import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
 import {Tree} from "common/tree"
 import {getRandomUUID} from "common/uuid"
-import {NamedId, Project} from "data/project"
+import {Project} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
@@ -22,7 +22,7 @@ class DevtoolApiClient extends ApiClient {
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	projectToAtlasLayout = (project: Project) => this.call<(SvgTextureFile & XY)[]>({name: "projectToAtlasLayout", body: [project]})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
-	getProjectRootForest = () => this.call<Tree<NamedId, NamedId>[]>({name: "getProjectRootForest"})
+	getProjectRootForest = () => this.call<Tree<string, string>[]>({name: "getProjectRootForest"})
 }
 
 const apiErrorToastId = getRandomUUID()

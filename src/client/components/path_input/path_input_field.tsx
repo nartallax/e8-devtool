@@ -1,21 +1,17 @@
-import {Tree, TreePath, getTreeByPath, treePathToValues, treeValuesToTreePath} from "common/tree"
+import {Tree, TreePath, getTreeByPath, isTreeBranch} from "common/tree"
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {TextInput} from "client/components/text_input/text_input"
 import {FormField} from "client/components/form/form_field"
-import {useCallback, useMemo, useRef, useState} from "react"
+import {useCallback, useRef, useState} from "react"
 import {Icon} from "generated/icons"
-import {UUID} from "crypto"
 import {Modal} from "client/components/modal/modal"
 import {Form} from "client/components/form/form"
 import {Col} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
-
-// duplicating this type here just for sake of decoupling this component from devtool
-type NamedId = {name: string, id: UUID}
+import {StringForestView} from "client/components/tree_view/string_forest_view"
 
 type Props = FormInputProps<string> & {
-	fsForest: Tree<NamedId, NamedId>[] | null
+	forest: Tree<string, string>[] | null
 	value: string
 	onChange: (newValue: string) => void
 	pathSeparator?: string
@@ -27,39 +23,32 @@ type Props = FormInputProps<string> & {
 }
 
 export const PathInputField = ({
-	fsForest, value, onChange, pathSeparator = "/", pathPrefix = "", canSelectDirectory, canSelectFile, isDisabled, placeholder, ...props
+	forest, value, onChange, pathSeparator = "/", pathPrefix = "", canSelectDirectory, canSelectFile, isDisabled, placeholder, ...props
 }: Props) => {
 	const [isSelectionModalOpen, setSelectionModalOpen] = useState(false)
 	const {id, hasError} = useRegisterField({value, ...props})
 	const inputRef = useRef<HTMLInputElement | null>(null)
 
-	const fsPathAsTreePath = useMemo(() => {
-		if(!value.startsWith(pathPrefix) || !fsForest){
-			return null
-		}
-		const pathParts = value.substring(pathPrefix.length).split(pathSeparator)
-		return treeValuesToTreePath(fsForest, pathParts, ({name}, pathPart) => name === pathPart)
-	}, [fsForest, value, pathPrefix, pathSeparator])
-
-	const onSelectModalClose = useCallback((path?: TreePath | null) => {
+	const onSelectModalClose = useCallback((path?: string | null) => {
 		setSelectionModalOpen(false)
-		if(!path || !fsForest){
+		if(!path || !forest){
 			return
 		}
-		const result = pathPrefix + treePathToValues(fsForest, path).map(x => x.name).join(pathSeparator)
+		const result = pathPrefix + path
 		if(inputRef.current){
 			inputRef.current.value = result
 		}
 		onChange(result)
-	}, [pathPrefix, pathSeparator, fsForest, onChange])
+	}, [pathPrefix, forest, onChange])
 
 	return (
 		<FormField id={id} onLabelClick={() => setSelectionModalOpen(true)}>
-			{isSelectionModalOpen && fsForest && <PathSelectionModal
-				fsForest={fsForest}
+			{isSelectionModalOpen && forest && <PathSelectionModal
+				pathSeparator={pathSeparator}
+				forest={forest}
 				canSelectBranch={canSelectDirectory}
 				canSelectLeaf={canSelectFile}
-				value={fsPathAsTreePath}
+				value={value.substring(pathPrefix.length)}
 				onClose={onSelectModalClose}
 			/>}
 			<TextInput
@@ -69,7 +58,7 @@ export const PathInputField = ({
 				placeholder={placeholder}
 				value={value}
 				onChange={onChange}
-				icon={!fsForest ? undefined : Icon.filesystem}
+				icon={!forest ? undefined : Icon.filesystem}
 				onIconClick={() => setSelectionModalOpen(true)}
 			/>
 		</FormField>
@@ -78,18 +67,31 @@ export const PathInputField = ({
 
 
 type PathSelectionModalProps = {
-	value: TreePath | null
-	onClose: (value?: TreePath | null) => void
+	value: string | null
+	onClose: (value?: string | null) => void
 	canSelectLeaf?: boolean
 	canSelectBranch?: boolean
-	fsForest: Tree<NamedId, NamedId>[]
+	forest: Tree<string, string>[]
+	pathSeparator: string
 }
 
 export const PathSelectionModal = ({
-	value: initialPath, onClose, fsForest, canSelectBranch, canSelectLeaf
+	value: initialPath, onClose, forest, canSelectBranch, canSelectLeaf, pathSeparator
 }: PathSelectionModalProps) => {
 	const [path, setPath] = useState(initialPath)
-	const pathValue = useMemo(() => !path ? null : getTreeByPath(fsForest, path), [fsForest, path])
+
+	const getOnSelect = (shouldClose: boolean) => !canSelectLeaf && !canSelectBranch ? undefined : (path: string, treePath: TreePath) => {
+		const node = getTreeByPath(forest, treePath)
+		const isBranch = isTreeBranch(node)
+		if((isBranch && !canSelectBranch) || (!isBranch && !canSelectLeaf)){
+			return
+		}
+		if(shouldClose){
+			onClose(path)
+		} else {
+			setPath(path)
+		}
+	}
 
 	return (
 		<Modal
@@ -99,15 +101,13 @@ export const PathSelectionModal = ({
 			onClose={onClose}>
 			<Form onSubmit={() => onClose(path)}>
 				<Col gap stretch grow>
-					<MappedNamedIdTreeView
-						values={fsForest}
-						toTree={x => x}
-						fromTree={x => x}
-						selectedValue={pathValue?.value.id ?? null}
-						onLeafClick={!canSelectLeaf ? undefined : (_, path) => setPath(path)}
-						onLeafDoubleclick={!canSelectLeaf ? undefined : (_, path) => onClose(path)}
-						onBranchClick={!canSelectBranch ? undefined : (_, path) => setPath(path)}
-						onBranchDoubleclick={!canSelectBranch ? undefined : (_, path) => onClose(path)}
+					<StringForestView
+						getObjectKey={(parts, isPrefix) => parts.join(pathSeparator) + (isPrefix ? pathSeparator : "")}
+						forest={forest}
+						selectedItem={path ?? null}
+						canSelectBranches={canSelectBranch}
+						onItemClick={getOnSelect(false)}
+						onItemDoubleclick={getOnSelect(true)}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>

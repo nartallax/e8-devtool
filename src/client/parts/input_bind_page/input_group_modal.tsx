@@ -2,14 +2,14 @@ import {Form} from "client/components/form/form"
 import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
+import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {filterObject} from "common/filter_object"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectInputGroup} from "data/project"
-import {mappedForestToArrayWithPath} from "data/project_utils"
+import {mappedForestToArrayWithPath, treePartsToPath} from "data/project_utils"
 import {useMemo, useState} from "react"
 
 type Props = {
@@ -66,6 +66,7 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 			<Form onSubmit={() => submit(inputGroup?.id)}>
 				<Col gap grow align="stretch">
 					<MappedForestView
+						getObjectKey={treePartsToPath}
 						itemName="input group"
 						forest={forest}
 						onForestChange={treeWithNull => setProject(project => ({

@@ -9,10 +9,10 @@ import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectCollisionGroup} from "data/project"
 import {useState} from "react"
-import {namesOfModelsWhich} from "data/project_utils"
+import {namesOfModelsWhich, treePartsToPath} from "data/project_utils"
 import {Button} from "client/components/button/button"
 import {Icon} from "generated/icons"
-import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
+import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 
 type Props = {
 	value: UUID
@@ -48,6 +48,7 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 				<Col gap stretch grow>
 					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
 					<MappedForestView
+						getObjectKey={treePartsToPath}
 						itemName="collision group"
 						forest={project.collisionGroupTree}
 						onForestChange={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}

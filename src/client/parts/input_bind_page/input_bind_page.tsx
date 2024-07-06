@@ -1,7 +1,7 @@
 import {TitlePart} from "client/components/title_context/title_context"
+import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 import {InputBindModal} from "client/parts/input_bind_page/input_bind_modal"
 import {CentralColumn} from "client/parts/layouts/central_column"
-import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {useProject} from "client/parts/project_context"
 import {treePathToValues} from "common/tree"
 import {getRandomUUID} from "common/uuid"
@@ -32,6 +32,7 @@ export const InputBindPage = () => {
 			<CentralColumn>
 				{editedBind ? <InputBindModal bind={editedBind.bind} path={editedBind.path} onClose={onBindModalClose}/> : null}
 				<MappedForestView
+					getObjectKey={treePartsToPath}
 					itemName="bind"
 					createItem={(): ProjectInputBind => ({
 						id: getRandomUUID(), defaultChords: [], group: null, isHold: false
