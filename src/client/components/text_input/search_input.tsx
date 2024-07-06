@@ -26,6 +26,8 @@ export const SearchInput = ({
 			}
 			onChange("")
 		} else if(e.code === "Enter"){
+			e.preventDefault()
+			e.stopPropagation()
 			if(onAccept){
 				onAccept()
 			}

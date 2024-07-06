@@ -8,7 +8,7 @@ import {Col} from "client/components/row_col/row_col"
 import {Form} from "client/components/form/form"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Checkbox} from "client/components/checkbox/checkbox"
-import {buildIdToNameMap, mappedForestToArray} from "data/project_utils"
+import {mappedForestToNameMap, mappedForestToArray} from "data/project_utils"
 
 type Props = {
 	onClose: () => void
@@ -43,7 +43,7 @@ export const CollisionGridModal = ({onClose}: Props) => {
 	const [project, setProject] = useProject()
 	const {collisionGroupTree: groupsForest, collisionGroups: groupsMap} = project
 	const [nameMap, allGroups] = useMemo(() => [
-		buildIdToNameMap(groupsForest, groupsMap),
+		mappedForestToNameMap(groupsForest, groupsMap),
 		mappedForestToArray(groupsForest, groupsMap)
 	], [groupsForest, groupsMap])
 

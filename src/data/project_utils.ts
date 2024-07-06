@@ -90,7 +90,7 @@ export function namesOfModelsWhich(project: Project, predicate: (model: ProjectM
 	return names
 }
 
-export const buildIdToNameMap = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>): Map<UUID, string> => {
+export const mappedForestToNameMap = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>): Map<UUID, string> => {
 	const result = new Map<UUID, string>()
 	for(const [branches, leaf] of getForestLeaves(forest)){
 		const fullPath = branches.map(x => x.value)

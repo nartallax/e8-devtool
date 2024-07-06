@@ -11,7 +11,9 @@ type Props = {
 	validators?: ValidatorsMaybeFactory<string, TreePath>
 }
 
-export const InlineTreeElementEditor = ({initialValue, onComplete, validators, treePath}: Props) => {
+export const InlineTreeElementEditor = ({
+	initialValue, onComplete, validators, treePath
+}: Props) => {
 	// this state is just to make it rerender-resistant
 	const [value, setValue] = useState(initialValue)
 	const [isShaking, setShaking] = useState(0)

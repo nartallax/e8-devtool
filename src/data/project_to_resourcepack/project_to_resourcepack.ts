@@ -1,4 +1,4 @@
-import {Project, NamedId} from "data/project"
+import {Project} from "data/project"
 import {getAllProjectModels, getSortedProjectBinds, mappedForestToArray} from "data/project_utils"
 import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
@@ -26,7 +26,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.id, texture]))
 	const layers = mappedForestToIndexMap("layer", project.layerTree, project.layers)
 	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
-	const inputGroups = namedIdsToIndexMap("input group", project.inputGroups)
+	const inputGroups = mappedForestToIndexMap("input group", project.inputGroupTree, project.inputGroups)
 	const models = allModels.map((model): Model => {
 		const texture = textureByPath.get(model.textureId)!
 		return {
@@ -77,17 +77,6 @@ export async function projectToAtlasLayout(project: Project, actions: DevtoolAct
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that
 	return buildAtlasLayout(allTextures, 1)
-}
-
-function namedIdsToIndexMap(name: string, ids: NamedId[]): (id: UUID) => number {
-	const map = new Map<UUID, number>(ids.map(({id}, index) => [id, index]))
-	return id => {
-		const index = map.get(id)
-		if(index === undefined){
-			throw new Error(`There's no ${name} with id = ${id}, but something is referencing it.`)
-		}
-		return index
-	}
 }
 
 // TODO: index maps in general are bad for modability

@@ -7,8 +7,8 @@ import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id
 import {chordFromString, chordToString} from "client/parts/chord_input/chord_input"
 import {InlineTreeChordEditor} from "client/parts/input_bind_page/inline_tree_chord_editor"
 import {InputGroupModal} from "client/parts/input_bind_page/input_group_modal"
+import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
-import {NamedIdSelector} from "client/parts/named_id_selector/named_id_selector"
 import {useProject} from "client/parts/project_context"
 import {getRandomUUID} from "common/uuid"
 import {ProjectInputBind} from "data/project"
@@ -37,10 +37,11 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 			})}>
 				<Col gap grow stretch>
 					<CheckboxField label="Is hold action" value={isHold} onChange={setIsHold}/>
-					<NamedIdSelector
+					<MappedForestIdSelector
 						isNullable
 						label="Group"
-						values={project.inputGroups}
+						forest={project.inputGroupTree}
+						map={project.inputGroups}
 						value={groupId}
 						onChange={setGroupId}
 						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}

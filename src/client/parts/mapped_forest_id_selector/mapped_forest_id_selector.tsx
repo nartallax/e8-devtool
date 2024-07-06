@@ -2,7 +2,7 @@ import {FormInputProps} from "client/components/form/form_context"
 import {ValueSelectorField} from "client/components/value_selector/value_selector"
 import {Tree} from "common/tree"
 import {UUID} from "common/uuid"
-import {buildIdToNameMap} from "data/project_utils"
+import {mappedForestToNameMap} from "data/project_utils"
 import {useCallback, useMemo, useState} from "react"
 
 type Props = NullableProps | NonNullableProps
@@ -58,7 +58,7 @@ export const MappedForestIdSelector = ({
 		}
 
 		if(forest && mapObject){
-			const map = buildIdToNameMap(forest, mapObject)
+			const map = mappedForestToNameMap(forest, mapObject)
 			return (uuid: UUID | null) => uuid === null ? absentValueLabel : map.get(uuid) ?? "<unknown UUID>"
 		}
 

@@ -33,7 +33,8 @@ export interface Project {
 
 	// TODO: redo input binds. make bind group optional/multiple; it'll act as selector
 	// this will also make binds more tree-like, which is good
-	inputGroups: ProjectInputGroup[]
+	inputGroups: Record<string, ProjectInputGroup>
+	inputGroupTree: Tree<string, string>[]
 	inputBinds: ProjectInputBindSet[]
 }
 
@@ -55,7 +56,10 @@ type ProjectConfig = {
 	}
 }
 
-export type ProjectInputGroup = NamedId
+export type ProjectInputGroup = {
+	id: UUID
+}
+
 export type ProjectCollisionGroup = {
 	id: UUID
 }
@@ -129,7 +133,8 @@ export function makeBlankProject(): Project {
 				}]
 			}]
 		}],
-		inputGroups: [{id: getRandomUUID(), name: "default input group"}]
+		inputGroups: {"default input group": {id: getRandomUUID()}},
+		inputGroupTree: [{value: "default input group"}]
 	}
 }
 

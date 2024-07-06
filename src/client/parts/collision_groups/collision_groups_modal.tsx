@@ -48,7 +48,7 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 				<Col gap stretch grow>
 					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
 					<MappedForestView
-						itemName="group"
+						itemName="collision group"
 						forest={project.collisionGroupTree}
 						onForestChange={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}
 						mapObject={project.collisionGroups}

@@ -32,6 +32,7 @@ type ValuesProps = {
 const isGetLabelProps = (props: unknown): props is GetLabelProps => !!props && typeof(props) === "object" && "getLabel" in props
 const isValuesProps = (props: unknown): props is ValuesProps => !!props && typeof(props) === "object" && "values" in props
 
+// TODO: consider removing
 export const NamedIdSelector = ({
 	value, onChange, modal, absentValueLabel = "<none>", isNullable, ...props
 }: Props) => {

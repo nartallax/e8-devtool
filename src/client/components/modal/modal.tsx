@@ -15,7 +15,9 @@ type Props = {
 	hotkeyPriority?: ModalHotkeyPriority
 }
 
-export const Modal = ({header, onClose, contentWidth, contentHeight, children, hotkeyPriority}: PropsWithChildren<Props>) => {
+export const Modal = ({
+	header, onClose, contentWidth, contentHeight, children, hotkeyPriority
+}: PropsWithChildren<Props>) => {
 
 	const bodyStyle = {
 		...resolveMinMaxableSize("width", contentWidth),

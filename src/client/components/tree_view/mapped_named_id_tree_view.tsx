@@ -9,6 +9,8 @@ import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
 
 export type NullableNamedId = Omit<NamedId, "id"> & {
+	// TODO: I think this doesn't need to be nullable anymore
+	// it was nullable because of input group modal, but it became obsolete after transition to mapped string forests
 	id: UUID | null
 }
 

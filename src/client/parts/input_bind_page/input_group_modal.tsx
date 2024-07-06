@@ -1,56 +1,104 @@
-import {Button} from "client/components/button/button"
 import {Form} from "client/components/form/form"
+import {useAlert} from "client/components/modal/alert_modal"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView, NullableNamedId} from "client/components/tree_view/mapped_named_id_tree_view"
+import {MappedForestView} from "client/parts/mapped_forest_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
+import {AbortError} from "client/ui_utils/abort_error"
+import {filterObject} from "common/filter_object"
 import {UUID, getRandomUUID} from "common/uuid"
-import {ProjectInputGroup} from "data/project"
-import {Icon} from "generated/icons"
-import {useState} from "react"
+import {Project, ProjectInputGroup} from "data/project"
+import {useMemo, useState} from "react"
 
 type Props = {
 	value: UUID | null
 	onClose: (newValue?: UUID | null) => void
 }
 
-const nullGroup = {
-	id: null,
-	name: "<none>"
+const nullGroup: ProjectInputGroup = {
+	id: getRandomUUID()
 }
+const nullName = "<none>"
 
 export const InputGroupModal = ({value, onClose}: Props) => {
 	const [project, setProject] = useProject()
-	const [currentValue, setCurrentValue] = useState(value)
+	const [inputGroup, setInputGroup] = useState(() =>
+		Object.values(project.inputGroups).find(group => group.id === value) ?? nullGroup
+	)
 
-	const values: NullableNamedId[] = [nullGroup, ...project.inputGroups]
+	const srcForest = project.inputGroupTree
+	const forest = useMemo(() => [
+		{value: nullName},
+		...srcForest
+	], [srcForest])
+
+	const srcMap = project.inputGroups
+	const map = useMemo(() => ({
+		[nullName]: nullGroup,
+		...srcMap
+	}), [srcMap])
+
+	const submit = (id?: UUID) => {
+		onClose(id === nullGroup.id ? null : id)
+	}
+
+	const {showAlert} = useAlert()
+	const onDelete = (group: ProjectInputGroup) => {
+		const msg = getDeletionConflictMessage(project, group.id)
+		if(msg){
+			void showAlert({
+				header: "This input group is in use",
+				body: msg
+			})
+			throw new AbortError("Has conflicts")
+		}
+	}
 
 	return (
 		<Modal
 			header="Input groups"
-			onClose={onClose}
+			onClose={submit}
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}>
-			<Form onSubmit={() => onClose(currentValue)}>
+			<Form onSubmit={() => submit(inputGroup?.id)}>
 				<Col gap grow align="stretch">
-					<MappedNamedIdTreeView
-						selectedValue={currentValue}
-						values={values}
-						toTree={value => ({value})}
-						fromTree={({value}) => value}
-						onChange={inputGroups => setProject(project => ({
+					<MappedForestView
+						itemName="input group"
+						forest={forest}
+						onForestChange={treeWithNull => setProject(project => ({
 							...project,
-							inputGroups: inputGroups.filter(group => group.id !== null) as ProjectInputGroup[]
+							inputGroupTree: treeWithNull.filter(x => x.value !== nullName)
 						}))}
-						onLeafCreated={name => ({name, id: getRandomUUID()})}
-						buttons={controls => <Button text="Add input group" icon={Icon.plus} onClick={() => controls.addRenameLeaf()}/>}
-						onLeafClick={group => setCurrentValue(group.id)}
-						onLeafDoubleclick={leaf => onClose(leaf.id)}
+						mapObject={map}
+						onMapChange={mapWithNull => setProject(project => ({
+							...project,
+							inputGroups: filterObject(mapWithNull, (_, group) => group.id !== nullGroup.id)
+						}))}
+						createItem={() => ({id: getRandomUUID()})}
+						selectedItem={inputGroup}
+						onItemClick={setInputGroup}
+						onItemDoubleclick={group => submit(group.id)}
+						beforeItemDelete={onDelete}
 					/>
-					<ModalSubmitCancelButtons onCancel={onClose}/>
+					<ModalSubmitCancelButtons onCancel={submit}/>
 				</Col>
 			</Form>
 		</Modal>
 	)
+}
+
+const getDeletionConflictMessage = (project: Project, groupId: string): string | null => {
+	const binds = project.inputBinds.flatMap(bind => bind.binds).filter(bind => bind.group === groupId)
+	const allNames = binds.map(bind => bind.name)
+	if(allNames.length === 0){
+		return null
+	}
+	const firstFewNames = allNames.slice(0, 10)
+	if(firstFewNames.length < allNames.length){
+		firstFewNames.push(`...and ${allNames.length - firstFewNames.length} more.`)
+	}
+	const namesStr = firstFewNames.join("\n\t")
+
+	return `This input group is already used in some binds: \n\t${namesStr}\nYou should remove binds from this input group before deleting it.`
 }
