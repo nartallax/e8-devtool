@@ -9,6 +9,7 @@ import {AbortError} from "client/ui_utils/abort_error"
 import {filterObject} from "common/filter_object"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectInputGroup} from "data/project"
+import {mappedForestToArrayWithPath} from "data/project_utils"
 import {useMemo, useState} from "react"
 
 type Props = {
@@ -89,8 +90,8 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 }
 
 const getDeletionConflictMessage = (project: Project, groupId: string): string | null => {
-	const binds = project.inputBinds.flatMap(bind => bind.binds).filter(bind => bind.group === groupId)
-	const allNames = binds.map(bind => bind.name)
+	const binds = mappedForestToArrayWithPath(project.inputBindTree, project.inputBinds).filter(([bind]) => bind.group === groupId)
+	const allNames = binds.map(([, path]) => path[path.length - 1])
 	if(allNames.length === 0){
 		return null
 	}

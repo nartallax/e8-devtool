@@ -35,7 +35,9 @@ export interface Project {
 	// this will also make binds more tree-like, which is good
 	inputGroups: Record<string, ProjectInputGroup>
 	inputGroupTree: Tree<string, string>[]
-	inputBinds: ProjectInputBindSet[]
+	inputBinds: Record<string, ProjectInputBind>
+	inputBindTree: Tree<string, string>[]
+
 }
 
 type ProjectConfig = {
@@ -48,8 +50,7 @@ type ProjectConfig = {
 	entityClassesDirectoryPath: string
 	ts: {
 		entityEnumName: string
-		inputBindSetEnumName: string
-		inputBindsNamespaceName: string
+		inputBindsEnumName: string
 		loaderVariableName: string
 		particleEnumName: string
 		path: string
@@ -76,11 +77,8 @@ export interface ProjectLayerDefinition {
 	type: LayerType
 }
 
-export interface ProjectInputBindSet extends NamedId {
-	binds: ProjectInputBind[]
-}
-
-export interface ProjectInputBind extends NamedId {
+export interface ProjectInputBind {
+	id: UUID
 	group: UUID | null
 	isHold: boolean
 	defaultChords: ProjectChord[]
@@ -103,8 +101,7 @@ export function makeBlankProject(): Project {
 			entityClassesDirectoryPath: "./entities",
 			ts: {
 				path: "./generated/resource_pack_content.e8.ts",
-				inputBindSetEnumName: "BindSet",
-				inputBindsNamespaceName: "BindSets",
+				inputBindsEnumName: "Bind",
 				loaderVariableName: "loader",
 				entityEnumName: "Entities",
 				particleEnumName: "Particles"
@@ -119,20 +116,18 @@ export function makeBlankProject(): Project {
 		particles: {},
 		particleTree: [],
 		modelTree: [],
-		inputBinds: [{
-			id: getRandomUUID(),
-			name: "default bind set",
-			binds: [{
+		inputBindTree: [{value: "default bind"}],
+		inputBinds: {
+			"default bind": {
 				id: getRandomUUID(),
 				group: null,
 				isHold: false,
-				name: "default bind",
 				defaultChords: [{
 					id: getRandomUUID(),
 					chord: ["Ctrl", "W"]
 				}]
-			}]
-		}],
+			}
+		},
 		inputGroups: {"default input group": {id: getRandomUUID()}},
 		inputGroupTree: [{value: "default input group"}]
 	}
@@ -165,6 +160,7 @@ export interface ProjectModel {
 	shapes: ProjectShape[]
 	collisionGroupId: UUID
 	layerId: UUID
+	// TODO: this should be path
 	textureId: UUID
 	size: XY
 }

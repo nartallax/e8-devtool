@@ -1,5 +1,5 @@
-import {Project, ProjectInputBindSet, ProjectModel} from "data/project"
-import {copySortBy, sortBy} from "common/sort_by"
+import {Project, ProjectInputBind, ProjectModel} from "data/project"
+import {sortBy} from "common/sort_by"
 import {Tree, TreePath, getForestLeaves, treePathToValues} from "common/tree"
 import {UUID} from "crypto"
 
@@ -17,11 +17,10 @@ export function getAllProjectModels(project: Project): ProjectModel[] {
 	return getAllProjectModelsWithFolders(project).map(x => x[1])
 }
 
-export function getSortedProjectBinds(project: Project): ProjectInputBindSet[] {
-	return copySortBy(project.inputBinds, x => x.id).map(bindSet => ({
-		...bindSet,
-		binds: copySortBy(bindSet.binds, x => x.id)
-	}))
+export function getSortedProjectBinds(project: Project): [ProjectInputBind, string[]][] {
+	const arr = mappedForestToArrayWithPath(project.inputBindTree, project.inputBinds)
+	sortBy(arr, ([bind]) => bind.id)
+	return arr
 }
 
 export function treePartsToPath(parts: string[]): string {

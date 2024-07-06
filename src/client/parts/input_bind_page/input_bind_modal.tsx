@@ -16,11 +16,12 @@ import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
+	path: string[]
 	bind: ProjectInputBind
-	onClose: (updatedBind?: ProjectInputBind) => void
+	onClose: (updatedBind?: ProjectInputBind, path?: string[]) => void
 }
 
-export const InputBindModal = ({bind, onClose}: Props) => {
+export const InputBindModal = ({bind, path, onClose}: Props) => {
 	const [project] = useProject()
 	const [groupId, setGroupId] = useState(bind.group)
 	const [isHold, setIsHold] = useState(bind.isHold)
@@ -28,13 +29,13 @@ export const InputBindModal = ({bind, onClose}: Props) => {
 
 	return (
 		<Modal
-			header={`Input bind: ${bind.name}`}
+			header={`Input bind: ${path[path.length - 1]}`}
 			onClose={onClose}
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}>
 			<Form onSubmit={() => onClose({
 				...bind, isHold, group: groupId, defaultChords: chords
-			})}>
+			}, path)}>
 				<Col gap grow stretch>
 					<CheckboxField label="Is hold action" value={isHold} onChange={setIsHold}/>
 					<MappedForestIdSelector

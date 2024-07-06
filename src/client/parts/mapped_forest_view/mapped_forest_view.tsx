@@ -18,7 +18,7 @@ type Props<T> = {
 	onItemDoubleclick?: (item: T, path: TreePath) => void
 	beforeItemDelete?: (item: T) => void
 	buttons?: () => React.ReactNode
-	getItemSublabel?: (item: T) => string
+	getItemSublabel?: (item: T) => string | null
 }
 
 export function MappedForestView<T>({

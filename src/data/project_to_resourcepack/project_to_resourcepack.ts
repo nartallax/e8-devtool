@@ -4,7 +4,7 @@ import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
-import {Atlas, InputBindSetDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
+import {Atlas, InputBindDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 import {UUID} from "crypto"
@@ -47,14 +47,12 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 
 	const collisionGroupPairs = project.collisionGroupPairs.map(([a, b]) => [collisionGroups(a), collisionGroups(b)] as const)
 
-	const inputBinds: InputBindSetDefinition[] = getSortedProjectBinds(project).map(bindSet => ({
-		binds: bindSet.binds.map(bind => ({
-			group: bind.group === null ? null : inputGroups(bind.group),
-			isHold: bind.isHold,
-			defaultChords: bind.defaultChords
-				.map(chord => chord.chord)
-				.filter(chord => chord.length > 0)
-		}))
+	const inputBinds: InputBindDefinition[] = getSortedProjectBinds(project).map(([bind]) => ({
+		group: bind.group === null ? null : inputGroups(bind.group),
+		isHold: bind.isHold,
+		defaultChords: bind.defaultChords
+			.map(chord => chord.chord)
+			.filter(chord => chord.length > 0)
 	}))
 
 	return {

@@ -96,15 +96,9 @@ export const SettingsPage = () => {
 						validators={ValidatorSets.nonEmpty}
 					/>
 					<TextInputField
-						value={settings.ts.inputBindSetEnumName}
-						onChange={inputBindSetEnumName => setSettings(settings => ({...settings, ts: {...settings.ts, inputBindSetEnumName}}))}
+						value={settings.ts.inputBindsEnumName}
+						onChange={inputBindsEnumName => setSettings(settings => ({...settings, ts: {...settings.ts, inputBindsEnumName}}))}
 						label="Input binds enum"
-						validators={ValidatorSets.nonEmpty}
-					/>
-					<TextInputField
-						value={settings.ts.inputBindsNamespaceName}
-						onChange={inputBindsNamespaceName => setSettings(settings => ({...settings, ts: {...settings.ts, inputBindsNamespaceName}}))}
-						label="Input binds namespace"
 						validators={ValidatorSets.nonEmpty}
 					/>
 					<TextInputField
