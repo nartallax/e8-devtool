@@ -139,11 +139,6 @@ export const makeBlankModel = ({collisionGroupId, layerId, texturePath}: BlankMo
 	shapes: []
 })
 
-export interface NamedId {
-	name: string
-	id: UUID
-}
-
 export interface ProjectModel {
 	id: UUID
 	isStatic: boolean
@@ -158,10 +153,4 @@ export interface ProjectModel {
 export interface ProjectShape {
 	id: UUID
 	points: [x: number, y: number][]
-}
-
-// TODO: do we still need this?
-// name is filename, like the last portion of the file path
-export interface TextureFile extends NamedId {
-	fullPath: string
 }

@@ -5,10 +5,10 @@ import {TreeControls, TreeView, TreeViewProps} from "client/components/tree_view
 import {AbortError} from "client/ui_utils/abort_error"
 import {Tree, TreePath, addTreeByPath, getTreeSiblings, getTreeByPath, moveTreeByPath, updateTreeByPath, isTreeBranch, deleteFromTreeByPath, TreeBranch, findTreeNodePath, filterForestLeaves, getFirstTreeLeaf, getFirstTreeLeafPath, isTreeLeaf} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
-import {NamedId} from "data/project"
 import {useCallback, useMemo, useRef, useState} from "react"
 
-export type NullableNamedId = Omit<NamedId, "id"> & {
+export type NullableNamedId = {
+	name: string
 	// TODO: I think this doesn't need to be nullable anymore
 	// it was nullable because of input group modal, but it became obsolete after transition to mapped string forests
 	id: UUID | null
