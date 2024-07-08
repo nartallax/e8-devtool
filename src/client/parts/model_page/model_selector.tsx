@@ -8,7 +8,7 @@ import {AbortError} from "client/ui_utils/abort_error"
 import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
 import {filterObject} from "common/filter_object"
 import {getRandomUUID} from "common/uuid"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {ProjectModel, makeBlankModel} from "data/project"
 import {treePartsToPath} from "data/project_utils"
 

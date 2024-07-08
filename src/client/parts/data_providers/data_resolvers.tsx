@@ -1,5 +1,5 @@
 import {useProject} from "client/parts/project_context"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {Project} from "data/project"
 import {useMemo} from "react"
 

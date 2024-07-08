@@ -1,7 +1,7 @@
 import {makeProjectMapIdResolver, makeProjectMapPathResolver} from "client/parts/data_providers/data_resolvers"
 import {makeProjectSaveableDataWrapper} from "client/parts/data_providers/project_saveable_data"
 import {makeProjectSaveableForestWrapper} from "client/parts/data_providers/project_saveable_forest"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {ProjectCollisionGroup, ProjectConfig, ProjectInputGroup, ProjectLayerDefinition, ProjectModel, ProjectParticleDefinition} from "data/project"
 
 export const withInputGroupForest = makeProjectSaveableForestWrapper<ProjectInputGroup>({

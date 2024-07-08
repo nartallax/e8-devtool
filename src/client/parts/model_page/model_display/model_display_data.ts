@@ -1,4 +1,4 @@
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {XY} from "@nartallax/e8"
 
 /** Find index in the array at which point should be inserted

@@ -1,5 +1,5 @@
 import {Tree} from "common/tree"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
 

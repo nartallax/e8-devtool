@@ -1,5 +1,5 @@
 import {useFormField} from "client/components/form/form_context"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 import {PropsWithChildren} from "react"
 
 import * as css from "./form.module.scss"

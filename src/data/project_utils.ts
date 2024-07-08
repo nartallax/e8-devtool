@@ -1,7 +1,7 @@
 import {Project, ProjectInputBind, ProjectModel} from "data/project"
 import {sortBy} from "common/sort_by"
 import {Tree, TreePath, allTreeNodes, getForestLeaves, isTreeBranch, treePathToValues} from "common/tree"
-import {UUID} from "crypto"
+import {UUID} from "common/uuid"
 
 // only this function should be used to get all project modals
 // because it will guarantee that the order is the same each time
