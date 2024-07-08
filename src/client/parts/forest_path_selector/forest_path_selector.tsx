@@ -49,7 +49,7 @@ export const ForestPathSelector = ({
 				{...props}
 				value={value!}
 				onRequestValueChange={() => setOpen(true)}
-				getLabel={resolver}
+				displayValue={resolver(value)}
 				onClear={!isNullable ? undefined : () => onChange(null)}
 			/>
 		</>

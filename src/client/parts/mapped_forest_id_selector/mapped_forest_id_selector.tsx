@@ -25,6 +25,7 @@ type PropsFor<T> = FormInputProps<T> & {
 	map: Record<string, {id: UUID}>
 }
 
+// TODO: cleanup?
 export const MappedForestIdSelector = ({
 	value, onChange, onClear, modal, absentValueLabel = "<none>", isNullable, forest, map: mapObject, ...props
 }: Props) => {
@@ -50,7 +51,7 @@ export const MappedForestIdSelector = ({
 				{...props}
 				value={value!}
 				onRequestValueChange={() => setOpen(true)}
-				getLabel={resolver}
+				displayValue={resolver(value)}
 				onClear={onClear}
 			/>
 		</>

@@ -38,6 +38,11 @@ export function splitPath(path: string): string[] {
 	return path.split("/")
 }
 
+export function getLastPathPart(path: string): string {
+	const parts = splitPath(path)
+	return parts[parts.length - 1]!
+}
+
 export function treePathToString(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
 	const parts = treePathToValues(forest, path)
 	if(addedPart){
