@@ -6,44 +6,24 @@ import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
-import {filterObject} from "common/filter_object"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectInputGroup} from "data/project"
 import {mappedForestToArrayWithPath, mergePath} from "data/project_utils"
-import {useMemo, useState} from "react"
+import {useState} from "react"
 
 type Props = {
 	value: UUID | null
 	onClose: (newValue?: UUID | null) => void
 }
 
-// TODO: get rid of this, we have clear button now
-const nullGroup: ProjectInputGroup = {
-	id: getRandomUUID()
-}
-const nullName = "<none>"
-
 export const InputGroupModal = ({value, onClose}: Props) => {
 	const [project, setProject] = useProject()
 	const [inputGroup, setInputGroup] = useState(() =>
-		Object.values(project.inputGroups).find(group => group.id === value) ?? nullGroup
+		Object.values(project.inputGroups).find(group => group.id === value) ?? null
 	)
 
-	const srcForest = project.inputGroupTree
-	const forest = useMemo(() => [
-		{value: nullName},
-		...srcForest
-	], [srcForest])
-
-	const srcMap = project.inputGroups
-	const map = useMemo(() => ({
-		[nullName]: nullGroup,
-		...srcMap
-	}), [srcMap])
-
-	const submit = (id?: UUID) => {
-		onClose(id === nullGroup.id ? null : id)
-	}
+	const forest = project.inputGroupTree
+	const map = project.inputGroups
 
 	const {showAlert} = useAlert()
 	const onDelete = (group: ProjectInputGroup) => {
@@ -60,31 +40,31 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 	return (
 		<Modal
 			header="Input groups"
-			onClose={submit}
+			onClose={onClose}
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}>
-			<Form onSubmit={() => submit(inputGroup?.id)}>
+			<Form onSubmit={() => onClose(inputGroup?.id)}>
 				<Col gap grow align="stretch">
 					<MappedForestView
 						getObjectKey={mergePath}
 						itemName="input group"
 						forest={forest}
-						setForest={treeWithNull => setProject(project => ({
+						setForest={forest => setProject(project => ({
 							...project,
-							inputGroupTree: treeWithNull.filter(x => x.value !== nullName)
+							inputGroupTree: forest
 						}))}
 						map={map}
-						setMap={mapWithNull => setProject(project => ({
+						setMap={map => setProject(project => ({
 							...project,
-							inputGroups: filterObject(mapWithNull, (_, group) => group.id !== nullGroup.id)
+							inputGroups: map
 						}))}
 						createItem={() => ({id: getRandomUUID()})}
 						selectedItem={inputGroup}
 						onItemClick={setInputGroup}
-						onItemDoubleclick={group => submit(group.id)}
+						onItemDoubleclick={group => onClose(group.id)}
 						beforeItemDelete={onDelete}
 					/>
-					<ModalSubmitCancelButtons onCancel={submit}/>
+					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
 			</Form>
 		</Modal>

@@ -24,3 +24,4 @@ export function nodeOrParentThatMatches(node: Node, matcher: (node: Node) => boo
 }
 
 export const isInButton = (node: Node): boolean => !!nodeOrParentThatMatches(node, node => node instanceof HTMLButtonElement)
+export const isEventInButton = (e: React.MouseEvent | MouseEvent): boolean => e.target instanceof Node && isInButton(e.target)

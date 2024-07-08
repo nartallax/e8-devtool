@@ -43,6 +43,7 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						map={project.inputGroups}
 						value={groupId}
 						onChange={setGroupId}
+						onClear={() => setGroupId(null)}
 						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}
 					/>
 					<ArrayView
@@ -55,15 +56,6 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						setValues={setChords}
 						getKey={chord => chord.id}
 					/>
-					{/* <MappedNamedIdTreeView
-						values={chords}
-						toTree={chord => ({value: {id: chord.id, name: chordToString(chord.chord)}})}
-						fromTree={({value}) => ({id: value.id, chord: chordFromString(value.name)})}
-						InlineEditor={InlineTreeChordEditor}
-						onChange={setChords}
-						onLeafCreated={name => ({name, id: getRandomUUID()})}
-						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf()}/>}
-					/> */}
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
 			</Form>

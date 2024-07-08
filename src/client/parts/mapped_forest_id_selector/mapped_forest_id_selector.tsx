@@ -18,6 +18,7 @@ type NullableProps = PropsFor<UUID | null> & {
 type PropsFor<T> = FormInputProps<T> & {
 	value: T
 	onChange: (value: T) => void
+	onClear?: () => void
 	modal: (onClose: (newValue?: T) => void) => React.ReactNode
 	absentValueLabel?: string
 	forest: Tree<string, string>[]
@@ -25,7 +26,7 @@ type PropsFor<T> = FormInputProps<T> & {
 }
 
 export const MappedForestIdSelector = ({
-	value, onChange, modal, absentValueLabel = "<none>", isNullable, forest, map: mapObject, ...props
+	value, onChange, onClear, modal, absentValueLabel = "<none>", isNullable, forest, map: mapObject, ...props
 }: Props) => {
 	const [isOpen, setOpen] = useState(false)
 	const onClose = useCallback((newValue?: UUID | null) => {
@@ -50,6 +51,7 @@ export const MappedForestIdSelector = ({
 				value={value!}
 				onRequestValueChange={() => setOpen(true)}
 				getLabel={resolver}
+				onClear={onClear}
 			/>
 		</>
 	)

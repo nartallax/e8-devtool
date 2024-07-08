@@ -9,7 +9,7 @@ import {cn} from "client/ui_utils/classname"
 
 type Props = {
 	id: UUID
-	onLabelClick?: () => void
+	onLabelClick?: (e: React.MouseEvent) => void
 }
 
 export const FormField = ({id, onLabelClick, children}: PropsWithChildren<Props>) => {
