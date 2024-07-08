@@ -15,7 +15,7 @@ type ProjectSaveableForestProps = {
 type ProjectSaveableForestAddedProps = {
 	forest: Tree<string, string>[]
 	setForest: SetState<Tree<string, string>[]>
-	onNodeCreated: (node: Tree<string, string>, path: TreePath, name: string) => Promise<void>
+	onNodeCreated: (node: Tree<string, string>, path: TreePath) => Promise<void>
 	onNodeMoved: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
 	onNodeRenamed: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
 	onNodeDeleted: (node: Tree<string, string>, path: TreePath) => Promise<void>
@@ -75,13 +75,13 @@ export function makeProjectSaveableForestWrapper<T>({
 				setMap(newMap)
 			}
 
-			const onNodeCreated = async(node: Tree<string, string>, path: TreePath, name: string) => {
+			const onNodeCreated = async(node: Tree<string, string>, path: TreePath) => {
 				if(isTreeLeaf(node)){
-					const pathStr = treePathToString(forest, path.slice(0, -1), name)
+					const pathStr = treePathToString(forest, path.slice(0, -1), node.value)
 					const item = createItem(props)
 					setMap(map => ({...map, [pathStr]: item}))
 				}
-				setForest(forest => addTreeByPath(forest, {value: name, children: []}, path))
+				setForest(forest => addTreeByPath(forest, node, path))
 			}
 
 			const onNodeMoved = async(node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => {

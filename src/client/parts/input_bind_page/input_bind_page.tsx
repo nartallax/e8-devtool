@@ -6,7 +6,7 @@ import {useProject} from "client/parts/project_context"
 import {treePathToValues} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {ProjectInputBind} from "data/project"
-import {mappedForestToNameMap, treePartsToPath} from "data/project_utils"
+import {mappedForestToNameMap, mergePath} from "data/project_utils"
 import {useState} from "react"
 
 export const InputBindPage = () => {
@@ -21,7 +21,7 @@ export const InputBindPage = () => {
 				...project,
 				inputBinds: {
 					...project.inputBinds,
-					[treePartsToPath(path)]: bind
+					[mergePath(path)]: bind
 				}
 			}))
 		}
@@ -32,7 +32,7 @@ export const InputBindPage = () => {
 			<CentralColumn>
 				{editedBind ? <InputBindModal bind={editedBind.bind} path={editedBind.path} onClose={onBindModalClose}/> : null}
 				<MappedForestView
-					getObjectKey={treePartsToPath}
+					getObjectKey={mergePath}
 					itemName="bind"
 					createItem={(): ProjectInputBind => ({
 						id: getRandomUUID(), defaultChords: [], group: null, isHold: false

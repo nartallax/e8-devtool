@@ -9,7 +9,7 @@ import {AbortError} from "client/ui_utils/abort_error"
 import {filterObject} from "common/filter_object"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectInputGroup} from "data/project"
-import {mappedForestToArrayWithPath, treePartsToPath} from "data/project_utils"
+import {mappedForestToArrayWithPath, mergePath} from "data/project_utils"
 import {useMemo, useState} from "react"
 
 type Props = {
@@ -66,7 +66,7 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 			<Form onSubmit={() => submit(inputGroup?.id)}>
 				<Col gap grow align="stretch">
 					<MappedForestView
-						getObjectKey={treePartsToPath}
+						getObjectKey={mergePath}
 						itemName="input group"
 						forest={forest}
 						setForest={treeWithNull => setProject(project => ({

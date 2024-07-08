@@ -10,7 +10,7 @@ import {filterObject} from "common/filter_object"
 import {getRandomUUID} from "common/uuid"
 import {UUID} from "common/uuid"
 import {ProjectModel, makeBlankModel} from "data/project"
-import {treePartsToPath} from "data/project_utils"
+import {mergePath} from "data/project_utils"
 
 const findDefaultId = (values: Record<string, {id: UUID}>): UUID | null => {
 	const entries = Object.entries(values)
@@ -68,7 +68,7 @@ export const ModelSelector = () => {
 	return (
 		<CentralColumn>
 			<MappedForestView
-				getObjectKey={treePartsToPath}
+				getObjectKey={mergePath}
 				forest={project.modelTree}
 				setForest={modelTree => setProject(project => ({...project, modelTree}))}
 				map={project.models}

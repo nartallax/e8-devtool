@@ -274,12 +274,9 @@ export const MappedNamedIdTreeView = <L extends NullableNamedId, B extends Nulla
 				branchLabelValidators={validatorFactory}
 				canBeChildOf={wrappedCanBeChildOf}
 				onDrag={!canBeChildOf || !canUpdateValues ? undefined : onDragCompleted}
-				onBranchLabelEdit={!canUpdateValues ? undefined : editName}
-				onLeafLabelEdit={!canUpdateValues ? undefined : editName}
-				onLeafLabelEditCancel={cancelEditName}
-				onBranchLabelEditCancel={cancelEditName}
-				onLeafDelete={!canUpdateValues ? undefined : deleteNode}
-				onBranchDelete={!canUpdateValues ? undefined : deleteNode}
+				onLabelEdit={!canUpdateValues ? undefined : editName}
+				onLabelEditCancel={cancelEditName}
+				onDelete={!canUpdateValues ? undefined : deleteNode}
 				onAddChild={!canUpdateValues ? undefined : onAddChild}
 				selectedPath={selectedPath}
 			/>

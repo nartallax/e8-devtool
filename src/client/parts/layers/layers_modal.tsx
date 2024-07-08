@@ -9,7 +9,7 @@ import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {UUID, getRandomUUID} from "common/uuid"
 import {Project, ProjectLayerDefinition} from "data/project"
-import {namesOfModelsWhich, treePartsToPath} from "data/project_utils"
+import {namesOfModelsWhich, mergePath} from "data/project_utils"
 import {useState} from "react"
 
 type Props = {
@@ -47,7 +47,7 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 			<Form onSubmit={() => onClose(layer?.id)}>
 				<Col gap stretch grow>
 					<MappedForestView
-						getObjectKey={treePartsToPath}
+						getObjectKey={mergePath}
 						itemName="layer"
 						createItem={() => ({id: getRandomUUID(), type: layerType})}
 						forest={project.layerTree}

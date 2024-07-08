@@ -13,13 +13,13 @@ import {ValidatorsMaybeFactory} from "client/components/form/validators"
 
 type BaseProps<L, B> = {
 	// eslint-disable-next-line react/no-unused-prop-types
-	getBranchKey?: (branch: B) => string
+	getBranchKey?: (branch: B, path: TreePath, node: Tree<L, B>) => string
 	// eslint-disable-next-line react/no-unused-prop-types
-	getLeafKey: (leaf: L) => string
-	getBranchLabel?: (branch: B) => string
-	getBranchSublabel?: (leaf: B) => string
-	getLeafLabel: (leaf: L) => string
-	getLeafSublabel?: (leaf: L, path: TreePath) => React.ReactNode
+	getLeafKey: (leaf: L, path: TreePath, node: Tree<L, B>) => string
+	getBranchLabel?: (branch: B, path: TreePath, node: Tree<L, B>) => string
+	getBranchSublabel?: (leaf: B, path: TreePath, node: Tree<L, B>) => string
+	getLeafLabel: (leaf: L, path: TreePath, node: Tree<L, B>) => string
+	getLeafSublabel?: (leaf: L, path: TreePath, node: Tree<L, B>) => React.ReactNode
 	onLeafClick?: (leaf: L, path: TreePath) => void
 	onLeafDoubleclick?: (leaf: L, path: TreePath) => void
 	onBranchClick?: (branch: B, path: TreePath) => void
@@ -97,9 +97,9 @@ const TreeRow = <T, B>({
 		if(!getBranchLabel){
 			throw new Error("Cannot get branch label: no function provided.")
 		}
-		label = getBranchLabel(row.value)
+		label = getBranchLabel(row.value, path, row)
 	} else {
-		label = getLeafLabel(row.value)
+		label = getLeafLabel(row.value, path, row)
 	}
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
@@ -112,7 +112,7 @@ const TreeRow = <T, B>({
 			/>
 		)
 	} else {
-		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value) : getLeafSublabel?.(row.value, path)
+		const sublabel = isTreeBranch(row) ? getBranchSublabel?.(row.value, path, row) : getLeafSublabel?.(row.value, path, row)
 
 		labelOrEditor = (
 			<div className={css.rowLabel}>
@@ -270,7 +270,7 @@ export const TreeBranchChildren = <T, B>({
 					return (
 						<TreeBranch
 							branch={tree}
-							key={getBranchKey(tree.value)}
+							key={getBranchKey(tree.value, path, tree)}
 							squares={squares}
 							path={newPath}
 							{...props}
@@ -280,7 +280,7 @@ export const TreeBranchChildren = <T, B>({
 					return (
 						<TreeRow
 							row={tree}
-							key={getLeafKey(tree.value)}
+							key={getLeafKey(tree.value, path, tree)}
 							squares={squares}
 							path={newPath}
 							{...props}

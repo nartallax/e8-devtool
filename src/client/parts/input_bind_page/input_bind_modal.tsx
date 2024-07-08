@@ -1,9 +1,8 @@
-import {Button} from "client/components/button/button"
 import {CheckboxField} from "client/components/checkbox/checkbox"
 import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {MappedNamedIdTreeView} from "client/components/tree_view/mapped_named_id_tree_view"
+import {ArrayView} from "client/components/tree_view/array_view"
 import {chordFromString, chordToString} from "client/parts/chord_input/chord_input"
 import {InlineTreeChordEditor} from "client/parts/input_bind_page/inline_tree_chord_editor"
 import {InputGroupModal} from "client/parts/input_bind_page/input_group_modal"
@@ -12,7 +11,6 @@ import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_
 import {useProject} from "client/parts/project_context"
 import {getRandomUUID} from "common/uuid"
 import {ProjectInputBind} from "data/project"
-import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
@@ -47,7 +45,17 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						onChange={setGroupId}
 						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}
 					/>
-					<MappedNamedIdTreeView
+					<ArrayView
+						itemName="default chord"
+						createItem={name => ({chord: chordFromString(name), id: getRandomUUID()})}
+						getLabel={chord => chordToString(chord.chord)}
+						renameItem={(item, name) => ({...item, chord: chordFromString(name)})}
+						InlineEditor={InlineTreeChordEditor}
+						values={chords}
+						setValues={setChords}
+						getKey={chord => chord.id}
+					/>
+					{/* <MappedNamedIdTreeView
 						values={chords}
 						toTree={chord => ({value: {id: chord.id, name: chordToString(chord.chord)}})}
 						fromTree={({value}) => ({id: value.id, chord: chordFromString(value.name)})}
@@ -55,7 +63,7 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						onChange={setChords}
 						onLeafCreated={name => ({name, id: getRandomUUID()})}
 						buttons={controls => <Button text="Add default chord" icon={Icon.plus} onClick={() => controls.addRenameLeaf()}/>}
-					/>
+					/> */}
 					<ModalSubmitCancelButtons onCancel={onClose}/>
 				</Col>
 			</Form>

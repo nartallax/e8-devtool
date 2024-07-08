@@ -1,4 +1,4 @@
-import {Tree, TreeBranch, TreePath, isTreeBranch} from "common/tree"
+import {Tree, TreeBranch, TreePath} from "common/tree"
 import * as css from "./tree_view.module.scss"
 import {TreeBranchChildren, TreeBranchChildrenProps} from "client/components/tree_view/tree_fragments"
 import {MutableRefObject, useCallback, useMemo, useRef, useState} from "react"
@@ -7,14 +7,11 @@ import {useTreeViewDragProps} from "client/components/tree_view/tree_drag"
 
 export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
 	controlRef?: MutableRefObject<TreeControls | null>
-	onBranchLabelEdit?: (path: TreePath, newLabel: string) => void
-	onBranchLabelEditCancel?: (path: TreePath) => void
-	onLeafLabelEdit?: (path: TreePath, newLabel: string) => void
-	onLeafLabelEditCancel?: (path: TreePath) => void
-	onBranchDelete?: (path: TreePath) => void
-	onLeafDelete?: (path: TreePath) => void
+	onLabelEdit?: (path: TreePath, newLabel: string, node: Tree<L, B>) => void
+	onLabelEditCancel?: (path: TreePath, node: Tree<L, B>) => void
+	onDelete?: (path: TreePath, node: Tree<L, B>) => void
 	onDrag?: (from: TreePath, to: TreePath) => void
-	/** Allows to control if @param child can be dragged to be child of @param parent. Defaults to () => true.  */
+	/** Allows to control if @param child can be dragged to be child of @param parent. Defaults to () => true. */
 	canBeChildOf?: (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => boolean
 }
 
@@ -27,7 +24,7 @@ export type TreeControls = {
 }
 
 export const TreeView = <L, B>({
-	onBranchLabelEdit, onLeafLabelEdit, onBranchDelete, onLeafDelete, onDrag, canBeChildOf, onBranchLabelEditCancel, onLeafLabelEditCancel,
+	onLabelEdit, onDelete, onDrag, canBeChildOf, onLabelEditCancel,
 	controlRef, tree, ...props
 }: TreeViewProps<L, B>) => {
 	const rootRef = useRef<HTMLDivElement | null>(null)
@@ -40,26 +37,16 @@ export const TreeView = <L, B>({
 	const onLabelEditComplete = useCallback((path: TreePath, tree: Tree<L, B>, newLabel: string | null) => {
 		setInlineEditPath(null)
 		if(newLabel?.trim()){
-			if(isTreeBranch(tree)){
-				onBranchLabelEdit?.(path, newLabel)
-			} else {
-				onLeafLabelEdit?.(path, newLabel)
-			}
-		} else if(isTreeBranch(tree)){
-			onBranchLabelEditCancel?.(path)
+			onLabelEdit?.(path, newLabel, tree)
 		} else {
-			onLeafLabelEditCancel?.(path)
+			onLabelEditCancel?.(path, tree)
 		}
-	}, [onBranchLabelEdit, onLeafLabelEdit, onBranchLabelEditCancel, onLeafLabelEditCancel])
+	}, [onLabelEdit, onLabelEditCancel])
 
 	const onNodeDelete = useCallback((path: TreePath, tree: Tree<L, B>) => {
 		setInlineEditPath(null) // just to avoid weird state
-		if(isTreeBranch(tree)){
-			onBranchDelete?.(path)
-		} else {
-			onLeafDelete?.(path)
-		}
-	}, [onBranchDelete, onLeafDelete])
+		onDelete?.(path, tree)
+	}, [onDelete])
 
 	if(controlRef){
 		controlRef.current = controls
@@ -77,12 +64,12 @@ export const TreeView = <L, B>({
 				path={[]}
 				inlineEditPath={inlineEditPath}
 				onLabelEditComplete={onLabelEditComplete}
-				canEditBranchLabel={!!onBranchLabelEdit}
-				canEditLeafLabel={!!onLeafLabelEdit}
+				canEditBranchLabel={!!onLabelEdit}
+				canEditLeafLabel={!!onLabelEdit}
 				setInlineEditPath={setInlineEditPath}
 				onNodeDelete={onNodeDelete}
-				canDeleteBranch={!!onBranchDelete}
-				canDeleteLeaf={!!onLeafDelete}
+				canDeleteBranch={!!onDelete}
+				canDeleteLeaf={!!onDelete}
 				tree={tree}
 			/>
 		</div>

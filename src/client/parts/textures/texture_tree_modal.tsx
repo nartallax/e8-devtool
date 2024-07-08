@@ -5,7 +5,7 @@ import {Col, Row} from "client/components/row_col/row_col"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Tree} from "common/tree"
-import {treePartsToPath} from "data/project_utils"
+import {mergePath} from "data/project_utils"
 import {Icon} from "generated/icons"
 import {useState} from "react"
 
@@ -30,7 +30,7 @@ export const TextureTreeModal = ({
 			<Form onSubmit={() => onClose(value)}>
 				<Col gap stretch grow>
 					<StringForestView
-						getObjectKey={treePartsToPath}
+						getObjectKey={mergePath}
 						forest={textureForest}
 						selectedItem={!isSelectionModal ? undefined : value}
 						onItemClick={!isSelectionModal ? undefined : (leaf: string) => setValue(leaf)}
