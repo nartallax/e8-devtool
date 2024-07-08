@@ -28,7 +28,7 @@ export const StringForestView = ({
 	return (
 		<MappedForestView
 			forest={forest}
-			mapObject={map}
+			map={map}
 			onItemClick={onItemClick}
 			onItemDoubleclick={onItemDoubleclick}
 			onBranchClick={!canSelectBranches || !onItemClick ? undefined : (item, path) => item && onItemClick(item, path)}

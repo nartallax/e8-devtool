@@ -70,9 +70,9 @@ export const ModelSelector = () => {
 			<MappedForestView
 				getObjectKey={treePartsToPath}
 				forest={project.modelTree}
-				onForestChange={modelTree => setProject(project => ({...project, modelTree}))}
-				mapObject={project.models}
-				onMapChange={models => setProject(project => ({...project, models}))}
+				setForest={modelTree => setProject(project => ({...project, modelTree}))}
+				map={project.models}
+				setMap={models => setProject(project => ({...project, models}))}
 				createItem={getModelWithDefaults}
 				itemName="model"
 				onItemDoubleclick={model => {

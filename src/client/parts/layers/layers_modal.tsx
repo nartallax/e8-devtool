@@ -51,9 +51,9 @@ export const LayersModal = ({value: initialValue, onClose, layerType}: Props) =>
 						itemName="layer"
 						createItem={() => ({id: getRandomUUID(), type: layerType})}
 						forest={project.layerTree}
-						onForestChange={layerTree => setProject(project => ({...project, layerTree}))}
-						mapObject={project.layers}
-						onMapChange={layers => setProject(project => ({...project, layers}))}
+						setForest={layerTree => setProject(project => ({...project, layerTree}))}
+						map={project.layers}
+						setMap={layers => setProject(project => ({...project, layers}))}
 						selectedItem={layer}
 						onItemClick={item => item.type === layerType && setLayer(item)}
 						onItemDoubleclick={item => item.type === layerType && onClose(item.id)}

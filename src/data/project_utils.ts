@@ -31,6 +31,13 @@ export function treePartsToPath(parts: string[], isPrefix?: boolean): string {
 	return result
 }
 
+export function splitPath(path: string): string[] {
+	if(path.endsWith("/")){
+		path = path.substring(0, path.length - 1)
+	}
+	return path.split("/")
+}
+
 export function treePathToString(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
 	const parts = treePathToValues(forest, path)
 	if(addedPart){

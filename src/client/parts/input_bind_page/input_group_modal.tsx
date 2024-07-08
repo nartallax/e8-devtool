@@ -69,12 +69,12 @@ export const InputGroupModal = ({value, onClose}: Props) => {
 						getObjectKey={treePartsToPath}
 						itemName="input group"
 						forest={forest}
-						onForestChange={treeWithNull => setProject(project => ({
+						setForest={treeWithNull => setProject(project => ({
 							...project,
 							inputGroupTree: treeWithNull.filter(x => x.value !== nullName)
 						}))}
-						mapObject={map}
-						onMapChange={mapWithNull => setProject(project => ({
+						map={map}
+						setMap={mapWithNull => setProject(project => ({
 							...project,
 							inputGroups: filterObject(mapWithNull, (_, group) => group.id !== nullGroup.id)
 						}))}

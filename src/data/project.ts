@@ -30,7 +30,7 @@ export interface Project {
 	inputBindTree: Tree<string, string>[]
 }
 
-type ProjectConfig = {
+export type ProjectConfig = {
 	/** Resolution of one inworld unit (on x1 zoom)
 	Used to determine how to render vector textures, if there are any, and some other values related to resolution. */
 	inworldUnitPixelSize: number

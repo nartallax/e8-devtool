@@ -14,18 +14,33 @@ type NestedProps = {
 	isUnsaved: boolean
 	save: () => void | Promise<void>
 	alwaysRun?: boolean
+	saveOnUnmount?: boolean
 }
 
 const {RootProvider: _UnsavedChangesProvider, NestedProvider: _UnsavedChanges, useRootContext: _useUnsavedChanges} = defineNestedTreeContext({
 	name: "UnsavedChangesContext",
-	useNestedValue: ({isUnsaved, save, alwaysRun = false}: NestedProps) => {
+
+	useNestedValue: ({
+		isUnsaved, save, alwaysRun = false, saveOnUnmount = false
+	}: NestedProps) => {
+
 		const saveRef = useRef(save)
 		saveRef.current = save
 		const saveCallback = useCallback(async() => {
 			await Promise.resolve(saveRef.current())
 		}, [])
+
+		const saveOnUnmountRef = useRef(saveOnUnmount)
+		saveOnUnmountRef.current = saveOnUnmount
+		useEffect(() => () => {
+			if(saveOnUnmountRef.current){
+				void saveRef.current()
+			}
+		}, [])
+
 		return useMemoObject({isUnsaved, save: saveCallback, alwaysRun})
 	},
+
 	useRootValue: ({preventUnsavedClose = false}: Props, treeServices) => {
 		const treeRef = useRef(treeServices)
 		treeRef.current = treeServices

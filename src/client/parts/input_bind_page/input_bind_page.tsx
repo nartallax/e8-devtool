@@ -38,9 +38,9 @@ export const InputBindPage = () => {
 						id: getRandomUUID(), defaultChords: [], group: null, isHold: false
 					})}
 					forest={project.inputBindTree}
-					onForestChange={inputBindTree => setProject(project => ({...project, inputBindTree}))}
-					mapObject={project.inputBinds}
-					onMapChange={inputBinds => setProject(project => ({...project, inputBinds}))}
+					setForest={inputBindTree => setProject(project => ({...project, inputBindTree}))}
+					map={project.inputBinds}
+					setMap={inputBinds => setProject(project => ({...project, inputBinds}))}
 					getItemSublabel={(bind: ProjectInputBind) => {
 						const groupName = !bind.group ? null : groupNames.get(bind.group)
 						return !groupName ? null : `(${groupName})`

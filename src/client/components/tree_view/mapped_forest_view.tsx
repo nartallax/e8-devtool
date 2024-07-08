@@ -9,7 +9,7 @@ type Props<T> = ReadonlyProps<T> | MutableProps<T>
 
 type ReadonlyProps<T> = {
 	forest: Tree<string, string>[]
-	mapObject: Record<string, T>
+	map: Record<string, T>
 	getObjectKey: (parts: string[], isPrefix: boolean) => string
 	selectedItem?: T | null
 	onItemClick?: (item: T, path: TreePath) => void
@@ -23,8 +23,8 @@ type ReadonlyProps<T> = {
 type MutableProps<T> = ReadonlyProps<T> & {
 	itemName: string
 	createItem: () => T
-	onForestChange: (newForest: Tree<string, string>[]) => void
-	onMapChange: (newMap: Record<string, T>) => void
+	setForest: (newForest: Tree<string, string>[]) => void
+	setMap: (newMap: Record<string, T>) => void
 	beforeItemDelete?: (item: T) => void
 }
 
@@ -37,7 +37,7 @@ Paths are expected to be hierarchical and have separators, root goes first.
 No other assumptions about paths are made;
 @param getObjectKey is supposed to be a converter from array of tree elements to path (or prefix) in @param mapObject */
 export function MappedForestView<T>({
-	getObjectKey, forest, mapObject, onItemDoubleclick, buttons, onItemClick, selectedItem, getItemSublabel, onBranchClick, onBranchDoubleClick, ...props
+	getObjectKey, forest, map: mapObject, onItemDoubleclick, buttons, onItemClick, selectedItem, getItemSublabel, onBranchClick, onBranchDoubleClick, ...props
 }: Props<T>) {
 
 	const getPathString = (path: TreePath, addedPart?: string, isPrefix?: boolean): string => {
@@ -107,13 +107,13 @@ export function MappedForestView<T>({
 
 	if(arePropsMutable(props)){
 		const {
-			itemName, createItem, onForestChange, onMapChange, beforeItemDelete
+			itemName, createItem, setForest, setMap, beforeItemDelete
 		} = props
 
 		const onItemCreated = (name: string, path: TreePath) => {
 			const pathStr = getPathString(path.slice(0, -1), name)
 			const item = createItem()
-			onMapChange({...mapObject, [pathStr]: item})
+			setMap({...mapObject, [pathStr]: item})
 			return {name, id: getHashUUID(pathStr)}
 		}
 
@@ -126,12 +126,12 @@ export function MappedForestView<T>({
 				}
 				map[pathStr] = model
 			}
-			onMapChange(map)
+			setMap(map)
 		}
 
 		nestedProps = {
 			...nestedProps,
-			onChange: onForestChange,
+			onChange: setForest,
 			canBeChildOf: () => true,
 			buttons: controls => (
 				<>
@@ -156,7 +156,7 @@ export function MappedForestView<T>({
 				}
 				const map = {...mapObject}
 				delete map[pathStr]
-				onMapChange(map)
+				setMap(map)
 			},
 			beforeBranchRename: (_, name, path) => {
 				const oldPrefix = getPathString(path, undefined, true)
@@ -170,7 +170,7 @@ export function MappedForestView<T>({
 				delete map[oldPathStr]
 				const newPathStr = getPathString(path.slice(0, -1), name)
 				map[newPathStr] = item
-				onMapChange(map)
+				setMap(map)
 			},
 			beforeLeafDragCompleted: (oldPath, newPath, leaf) => {
 				const map = {...mapObject}
@@ -181,7 +181,7 @@ export function MappedForestView<T>({
 				}
 				map[newPathStr] = map[oldPathStr]!
 				delete map[oldPathStr]
-				onMapChange(map)
+				setMap(map)
 			},
 			beforeBranchDragCompleted: (oldPath, newPath, branch) => {
 				const oldPrefix = getPathString(oldPath, undefined, true)

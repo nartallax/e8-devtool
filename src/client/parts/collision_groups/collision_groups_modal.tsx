@@ -51,9 +51,9 @@ export const CollisionGroupsModal = ({value: initialValue, onClose}: Props) => {
 						getObjectKey={treePartsToPath}
 						itemName="collision group"
 						forest={project.collisionGroupTree}
-						onForestChange={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}
-						mapObject={project.collisionGroups}
-						onMapChange={collisionGroups => setProject(project => ({...project, collisionGroups}))}
+						setForest={collisionGroupTree => setProject(project => ({...project, collisionGroupTree}))}
+						map={project.collisionGroups}
+						setMap={collisionGroups => setProject(project => ({...project, collisionGroups}))}
 						beforeItemDelete={onDelete}
 						createItem={() => ({id: getRandomUUID()})}
 						selectedItem={group}
