@@ -1,4 +1,4 @@
-import {Tree, TreePath, getTreeByPath, isTreeBranch} from "common/tree"
+import {Tree} from "common/tree"
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {TextInput} from "client/components/text_input/text_input"
 import {FormField} from "client/components/form/form_field"
@@ -80,9 +80,7 @@ export const PathSelectionModal = ({
 }: PathSelectionModalProps) => {
 	const [path, setPath] = useState(initialPath)
 
-	const getOnSelect = (shouldClose: boolean) => !canSelectLeaf && !canSelectBranch ? undefined : (path: string, treePath: TreePath) => {
-		const node = getTreeByPath(forest, treePath)
-		const isBranch = isTreeBranch(node)
+	const getOnSelect = (shouldClose: boolean) => !canSelectLeaf && !canSelectBranch ? undefined : (path: string, isBranch: boolean) => {
 		if((isBranch && !canSelectBranch) || (!isBranch && !canSelectLeaf)){
 			return
 		}
@@ -102,10 +100,10 @@ export const PathSelectionModal = ({
 			<Form onSubmit={() => onClose(path)}>
 				<Col gap stretch grow>
 					<StringForestView
-						getObjectKey={(parts, isPrefix) => parts.join(pathSeparator) + (isPrefix ? pathSeparator : "")}
+						makePath={(parts, isPrefix) => parts.join(pathSeparator) + (isPrefix ? pathSeparator : "")}
 						forest={forest}
-						selectedItem={path ?? null}
-						canSelectBranches={canSelectBranch}
+						selectedPath={path ?? null}
+						isBranchClickable={canSelectBranch}
 						onItemClick={getOnSelect(false)}
 						onItemDoubleclick={getOnSelect(true)}
 					/>

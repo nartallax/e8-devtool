@@ -1,7 +1,7 @@
 import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
-import {StringForestView} from "client/components/tree_view/string_forest_view2"
+import {StringForestView} from "client/components/tree_view/string_forest_view"
 import {useInputBindsWithGroupByPath, withInputGroupForest} from "client/parts/data_providers/data_providers"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useReferrersError} from "client/parts/use_referrers_error"

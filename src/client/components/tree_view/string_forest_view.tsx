@@ -1,39 +1,70 @@
-import {MappedForestView} from "client/components/tree_view/mapped_forest_view"
-import {Tree, TreePath} from "common/tree"
-import {getForestPaths} from "data/project_utils"
+import {TreeViewWithCreationProps, TreeViewWithElementCreation} from "client/components/tree_view/tree_view_with_element_creation"
+import {Tree, TreePath, getTreeByPath, treePathToValues, treeValuesToTreePath} from "common/tree"
+import {splitPath} from "data/project_utils"
 import {useMemo} from "react"
 
-type Props = {
+type Props = ReadonlyProps | MutableProps
+
+type ReadonlyProps = {
 	forest: Tree<string, string>[]
-	canSelectBranches?: boolean
-	getObjectKey: (parts: string[], isPrefix: boolean) => string
-	selectedItem?: string | null
-	onItemClick?: (item: string, path: TreePath) => void
-	onItemDoubleclick?: (item: string, path: TreePath) => void
+	makePath: (parts: string[], isPrefix: boolean) => string
+	selectedPath?: string | null
+	onItemClick?: (path: string, isBranch: boolean) => void
+	onItemDoubleclick?: (path: string, isBranch: boolean) => void
+	isBranchClickable?: boolean
 }
 
-/** Readonly treeview of string tree */
+type MutableProps = ReadonlyProps & {
+	itemName: string
+	// those handlers are a bit too verbose, but that's fine, because they are supposed to come from data provider
+	// actual end-user of this component shouldn't ever need to define those handlers
+	onNodeCreated: (node: Tree<string, string>, path: TreePath) => void
+	onNodeMoved: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => void
+	onNodeRenamed: (node: Tree<string, string>, path: TreePath, newName: string) => void
+	onNodeDeleted: (node: Tree<string, string>, path: TreePath) => void
+}
+
+const arePropsMutable = (x: unknown): x is MutableProps => !!x && typeof(x) === "object" && !!(x as MutableProps).onNodeMoved
+
 export const StringForestView = ({
-	forest, canSelectBranches, onItemClick, onItemDoubleclick, ...props
+	forest, makePath, selectedPath, onItemClick, onItemDoubleclick, isBranchClickable, ...props
 }: Props) => {
-	// it's easier to create map to reuse <MappedForestView> than to create new component just for this
-	const map = useMemo(() => {
-		const map: Record<string, string> = {}
-		for(const [path] of getForestPaths(forest, canSelectBranches)){
-			map[path] = path
+
+	const selectedTreePath = useMemo(() =>
+		!selectedPath ? undefined : treeValuesToTreePath(forest, splitPath(selectedPath)) ?? undefined
+	, [forest, selectedPath])
+
+	let innerProps: TreeViewWithCreationProps<string, string> = {
+		tree: forest,
+		getLeafKey: (_, path) => makePath(treePathToValues(forest, path), false),
+		getBranchKey: (_, path) => makePath(treePathToValues(forest, path), true),
+		getLeafLabel: str => str,
+		getBranchLabel: str => str,
+		itemName: "item",
+		onLeafClick: !onItemClick ? undefined : (_, path) => onItemClick(makePath(treePathToValues(forest, path), false), false),
+		onLeafDoubleclick: !onItemDoubleclick ? undefined : (_, path) => onItemDoubleclick(makePath(treePathToValues(forest, path), false), false),
+		onBranchClick: !onItemClick || !isBranchClickable ? undefined : (_, path) => onItemClick(makePath(treePathToValues(forest, path), true), true),
+		onBranchDoubleclick: !onItemDoubleclick || !isBranchClickable ? undefined : (_, path) => onItemDoubleclick(makePath(treePathToValues(forest, path), true), true),
+		selectedPath: selectedTreePath
+	}
+
+	if(arePropsMutable(props)){
+		const {
+			itemName, onNodeCreated, onNodeDeleted, onNodeMoved, onNodeRenamed
+		} = props
+		innerProps = {
+			...innerProps,
+			itemName,
+			onLeafCreated: (name, path) => onNodeCreated({value: name}, path),
+			onBranchCreated: (name, path) => onNodeCreated({value: name, children: []}, path),
+			onDelete: (path, node) => onNodeDeleted(node, path),
+			onDrag: (from, to) => onNodeMoved(getTreeByPath(forest, from), from, to),
+			onRename: (path, name, node) => onNodeRenamed(node, path, name)
 		}
-		return map
-	}, [forest, canSelectBranches])
+	}
 
 	return (
-		<MappedForestView
-			forest={forest}
-			map={map}
-			onItemClick={onItemClick}
-			onItemDoubleclick={onItemDoubleclick}
-			onBranchClick={!canSelectBranches || !onItemClick ? undefined : (item, path) => item && onItemClick(item, path)}
-			onBranchDoubleClick={!canSelectBranches || !onItemDoubleclick ? undefined : (item, path) => item && onItemDoubleclick(item, path)}
-			{...props}
-		/>
+		<TreeViewWithElementCreation {...innerProps}/>
 	)
+
 }

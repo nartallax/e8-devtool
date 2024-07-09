@@ -30,9 +30,9 @@ export const TextureTreeModal = ({
 			<Form onSubmit={() => onClose(value)}>
 				<Col gap stretch grow>
 					<StringForestView
-						getObjectKey={mergePath}
+						makePath={mergePath}
 						forest={textureForest}
-						selectedItem={!isSelectionModal ? undefined : value}
+						selectedPath={!isSelectionModal ? undefined : value}
 						onItemClick={!isSelectionModal ? undefined : (leaf: string) => setValue(leaf)}
 						onItemDoubleclick={!isSelectionModal ? undefined : (leaf: string) => onClose(leaf)}
 					/>
