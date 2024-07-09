@@ -20,7 +20,7 @@ type PropsFor<T> = FormInputProps<T> & {
 	usePath: (id: UUID | null) => string | null
 	value: T
 	onChange: (value: T) => void
-	modal: (onClose: (newPath?: string | null) => void) => React.ReactNode
+	modal: (path: string | null, onClose: (newPath?: string | null) => void) => React.ReactNode
 	absentValueLabel?: string
 	loadingValueLabel?: string
 	forest: Tree<string, string>[]
@@ -47,7 +47,7 @@ export const StringForestIdSelector = ({
 
 	return (
 		<>
-			{!!isOpen && modal(onClose)}
+			{!!isOpen && (value === null || path !== null) && modal(path, onClose)}
 			<ValueSelectorField
 				{...props}
 				value={value!}

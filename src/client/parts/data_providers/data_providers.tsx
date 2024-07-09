@@ -1,8 +1,8 @@
-import {makeProjectMapIdResolverFactory, makeProjectMapPathResolver} from "client/parts/data_providers/data_resolvers"
+import {makeProjectMapIdResolverFactory, makeProjectMapPathResolver, makeProjectObjectReferrersResolver} from "client/parts/data_providers/data_resolvers"
 import {makeProjectSaveableDataWrapper} from "client/parts/data_providers/project_saveable_data"
 import {makeProjectSaveableForestWrapper} from "client/parts/data_providers/project_saveable_forest"
 import {UUID} from "common/uuid"
-import {ProjectCollisionGroup, ProjectConfig, ProjectInputGroup, ProjectLayerDefinition, ProjectModel, ProjectParticleDefinition} from "data/project"
+import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayerDefinition, ProjectModel, ProjectParticleDefinition} from "data/project"
 
 export const withInputGroupForest = makeProjectSaveableForestWrapper<ProjectInputGroup>({
 	forestName: "inputGroupTree",
@@ -24,6 +24,13 @@ export const withLayersForest = makeProjectSaveableForestWrapper<ProjectLayerDef
 })
 export const useLayerIdResolver = makeProjectMapIdResolverFactory("layers")
 export const useLayerPath = makeProjectMapPathResolver("layers")
+
+export const withInputBindForest = makeProjectSaveableForestWrapper<ProjectInputBind>({
+	forestName: "inputBindTree",
+	mapName: "inputBinds"
+})
+export const useInputBindsWithGroupByPath = makeProjectObjectReferrersResolver("input bind", "group", useInputGroupIdResolver)
+
 
 export const withModelForest = makeProjectSaveableForestWrapper<ProjectModel>({
 	forestName: "modelTree",

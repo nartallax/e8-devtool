@@ -13,7 +13,7 @@ export const ModalSubmitCancelButtons = ({onCancel}: Props) => {
 			<Button
 				text="Cancel"
 				icon={Icon.close}
-				onClick={onCancel}
+				onClick={() => onCancel()}
 				hotkey={e => e.key === "Escape"}
 			/>
 			<SubmitButton text="OK" icon={Icon.check}/>

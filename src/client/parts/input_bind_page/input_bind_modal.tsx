@@ -4,11 +4,12 @@ import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
 import {ArrayView} from "client/components/tree_view/array_view"
 import {chordFromString, chordToString} from "client/parts/chord_input/chord_input"
+import {useInputGroupIdResolver, useInputGroupPath} from "client/parts/data_providers/data_providers"
 import {InlineTreeChordEditor} from "client/parts/input_bind_page/inline_tree_chord_editor"
 import {InputGroupModal} from "client/parts/input_bind_page/input_group_modal"
-import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {useProject} from "client/parts/project_context"
+import {StringForestIdSelector} from "client/parts/string_forest_id_selector/string_forest_id_selector"
 import {getRandomUUID} from "common/uuid"
 import {ProjectInputBind} from "data/project"
 import {useState} from "react"
@@ -36,15 +37,15 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 			}, path)}>
 				<Col gap grow stretch>
 					<CheckboxField label="Is hold action" value={isHold} onChange={setIsHold}/>
-					<MappedForestIdSelector
+					<StringForestIdSelector
 						isNullable
 						label="Group"
 						forest={project.inputGroupTree}
-						map={project.inputGroups}
 						value={groupId}
+						useIdResolver={useInputGroupIdResolver}
+						usePath={useInputGroupPath}
 						onChange={setGroupId}
-						onClear={() => setGroupId(null)}
-						modal={onClose => <InputGroupModal onClose={onClose} value={groupId}/>}
+						modal={(path, onClose) => <InputGroupModal onClose={onClose} value={path}/>}
 					/>
 					<ArrayView
 						itemName="default chord"

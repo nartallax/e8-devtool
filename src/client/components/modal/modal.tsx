@@ -40,7 +40,7 @@ export const Modal = ({
 									{!!onClose && <Button
 										icon={Icon.close}
 										variant="plain-icon"
-										onClick={onClose}
+										onClick={() => onClose()}
 										hotkey={e => e.key === "Escape"}
 									/>}
 								</div>
