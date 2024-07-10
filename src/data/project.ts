@@ -1,6 +1,6 @@
 import {Tree} from "common/tree"
 import {UUID} from "common/uuid"
-import {XY, Chord, LayerType, ParticleDefinition} from "@nartallax/e8"
+import {XY, Chord, LayerType, StartEnd, DeviatingValueRange} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
 
 /** Project is source data for resource pack
@@ -55,11 +55,22 @@ export type ProjectCollisionGroup = {
 	id: UUID
 }
 
-export interface ProjectParticleDefinition extends ParticleDefinition {
+export interface ProjectParticleDefinition {
 	id: UUID
 	/** This only matters to devtool and calculation of `.amount`
 	 * in runtime emission type is determined by usage */
 	emissionType: "once" | "continuous"
+	layerId: UUID
+	texturePath: string
+	amount: number
+	size: StartEnd<XY>
+	rotation: StartEnd<number>
+	color: StartEnd<number>
+	distance: DeviatingValueRange & {
+		progressPower: number
+	}
+	lifetime: DeviatingValueRange
+	angle: number
 }
 
 export interface ProjectLayerDefinition {

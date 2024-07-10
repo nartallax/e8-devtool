@@ -7,27 +7,27 @@ import {useCallback, useState} from "react"
 
 type Props = NullableProps | NonNullableProps
 
-type NonNullableProps = PropsFor<UUID> & {
+type NonNullableProps = PropsFor<UUID, string> & {
 	isNullable?: false
 }
 
-type NullableProps = PropsFor<UUID | null> & {
+type NullableProps = PropsFor<UUID | null, string | null> & {
 	isNullable: true
 }
 
-type PropsFor<T> = FormInputProps<T> & {
-	useIdResolver: () => (path: string) => Promise<UUID>
+type PropsFor<T, P> = FormInputProps<T> & {
+	useResolver: () => (path: string) => Promise<{id: UUID}>
 	usePath: (id: UUID | null) => string | null
 	value: T
 	onChange: (value: T) => void
-	modal: (path: string | null, onClose: (newPath?: string | null) => void) => React.ReactNode
+	modal: (path: P, onClose: (newPath?: P) => void) => React.ReactNode
 	absentValueLabel?: string
 	loadingValueLabel?: string
 	forest: Tree<string, string>[]
 }
 
 export const StringForestIdSelector = ({
-	useIdResolver, usePath, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
+	useResolver: useIdResolver, usePath, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
 }: Props) => {
 	const getIdByPath = useIdResolver()
 
@@ -36,7 +36,7 @@ export const StringForestIdSelector = ({
 		setOpen(false)
 		if(newPath !== undefined){
 			if(isNullable || newPath !== null){
-				const id = newPath === null ? null : await getIdByPath(newPath)
+				const id = newPath === null ? null : (await getIdByPath(newPath)).id
 				onChange(id!)
 			}
 		}
@@ -47,7 +47,7 @@ export const StringForestIdSelector = ({
 
 	return (
 		<>
-			{!!isOpen && (value === null || path !== null) && modal(path, onClose)}
+			{!!isOpen && (value === null || path !== null) && modal(path!, onClose)}
 			<ValueSelectorField
 				{...props}
 				value={value!}

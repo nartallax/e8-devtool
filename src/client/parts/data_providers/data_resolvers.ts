@@ -5,21 +5,6 @@ import {Project, ProjectInputBind, ProjectModel, ProjectParticleDefinition} from
 import {mappedForestToArrayWithPath, mergePath} from "data/project_utils"
 import {useCallback, useMemo} from "react"
 
-export const makeProjectMapIdResolverFactory = (propName: keyof Project) => {
-	const useIdByPathFactory = () => {
-		const [project] = useProject()
-		const map = project[propName] as Record<string, {id: UUID}>
-		return useCallback(async(path: string): Promise<UUID> => {
-			const item = map[path]
-			if(!item){
-				throw new Error("Cannot resolve path " + path)
-			}
-			return item.id
-		}, [map])
-	}
-	return useIdByPathFactory
-}
-
 export const makeProjectMapPathResolver = (propName: keyof Project) => {
 	const usePathById = (id: UUID | null): string | null => {
 		const [project] = useProject()
@@ -49,24 +34,24 @@ type ProjectObjectReferrerMap = {
 }
 export type ProjectObjectReferrer = {path: string, type: ProjectObjectReferrerType}
 export const makeProjectObjectReferrersResolver = <T extends ProjectObjectReferrerType>(
-	type: T, referrerPropName: keyof ProjectObjectReferrerMap[T], useIdResolver: () => (path: string) => Promise<UUID>
+	type: T, referrerPropName: keyof ProjectObjectReferrerMap[T], useIdResolver: () => (path: string) => Promise<{id: UUID}>
 ): (path: string | null) => Promise<ProjectObjectReferrer[]> => {
 
 	const useReferrers = (path: string | null) => {
 		const [project] = useProject()
 		const [forest, map] = getProjectReferrers(type, project)
-		const resolveId = useIdResolver()
+		const resolveItem = useIdResolver()
 		return useMemo(async() => {
 			if(path === null){
 				return []
 			}
 
-			const id = await resolveId(path)
+			const id = (await resolveItem(path)).id
 
 			return mappedForestToArrayWithPath(forest, map)
 				.filter(([obj]) => obj[referrerPropName] === id)
 				.map(([,path]) => ({path: mergePath(path), type}))
-		}, [resolveId, path, forest, map])
+		}, [resolveItem, path, forest, map])
 	}
 
 	return useReferrers
@@ -79,4 +64,19 @@ const getProjectReferrers = <T extends ProjectObjectReferrerType>(type: T, proje
 		case "particle": return [project.particleTree, project.particles] as any
 	}
 	throw new Error("unreachable")
+}
+
+export const makeProjectValueByPathResolver = <T>(mapProp: keyof Project) => {
+	const useItemByPathFactory = () => {
+		const [project] = useProject()
+		const map = project[mapProp] as Record<string, T>
+		return useCallback(async(path: string): Promise<T> => {
+			const item = map[path]
+			if(!item){
+				throw new Error("Cannot resolve path " + path)
+			}
+			return item
+		}, [map])
+	}
+	return useItemByPathFactory
 }

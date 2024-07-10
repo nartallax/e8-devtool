@@ -25,6 +25,8 @@ import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {TitlePart} from "client/components/title_context/title_context"
 import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
 import {ForestPathSelector} from "client/parts/forest_path_selector/forest_path_selector"
+import {StringForestIdSelector} from "client/parts/string_forest_id_selector/string_forest_id_selector"
+import {useLayerPath, useLayerResolver} from "client/parts/data_providers/data_providers"
 
 type Props = {
 	modelId: UUID
@@ -140,13 +142,14 @@ const ModelSidebar = ({
 				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
 				modal={onClose => <CollisionGroupsModal onClose={onClose} value={model.collisionGroupId}/>}
 			/>
-			<MappedForestIdSelector
+			<StringForestIdSelector
+				usePath={useLayerPath}
+				useResolver={useLayerResolver}
 				label="Layer"
 				forest={project.layerTree}
-				map={project.layers}
 				value={model.layerId}
 				onChange={layerId => setModel(model => ({...model, layerId}))}
-				modal={onClose => <LayersModal onClose={onClose} value={model.layerId} layerType='model'/>}
+				modal={(path, onClose) => <LayersModal onClose={onClose} value={path} layerType='model'/>}
 			/>
 			<CheckboxField label="Is static" value={model.isStatic} onChange={isStatic => setModel(model => ({...model, isStatic}))}/>
 			<NumberInputField

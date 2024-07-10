@@ -4,7 +4,7 @@ import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
-import {Atlas, InputBindDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
+import {AltasPartWithLayer, Atlas, InputBindDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 import {UUID} from "common/uuid"
@@ -24,19 +24,23 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	}
 
 	const textureByPath = new Map(texturesWithPositions.map(texture => [texture.path, texture]))
+	const getAtlasPart = (layerId: UUID, path: string): AltasPartWithLayer => {
+		const texture = textureByPath.get(path)!
+		return {
+			atlasIndex: 0, // only one atlas so far, so whatever
+			layer: layers(layerId),
+			position: [texture.x / atlas.size[0], texture.y / atlas.size[1]],
+			size: [texture.width / atlas.size[0], texture.height / atlas.size[1]]
+		}
+	}
+
 	const layers = mappedForestToIndexMap("layer", project.layerTree, project.layers)
 	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
 	const inputGroups = mappedForestToIndexMap("input group", project.inputGroupTree, project.inputGroups)
 	const models = allModels.map((model): Model => {
-		const texture = textureByPath.get(model.texturePath)!
 		return {
 			size: [model.size.x, model.size.y],
-			texture: {
-				atlasIndex: 0, // only one atlas so far, so whatever
-				layer: layers(model.layerId),
-				position: [texture.x / atlas.size[0], texture.y / atlas.size[1]],
-				size: [texture.width / atlas.size[0], texture.height / atlas.size[1]]
-			},
+			texture: getAtlasPart(model.layerId, model.texturePath),
 			physics: {
 				collisionGroup: collisionGroups(model.collisionGroupId),
 				isStatic: model.isStatic,
@@ -57,7 +61,10 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 
 	return {
 		inworldUnitPixelSize: project.config.inworldUnitPixelSize,
-		particles: mappedForestToArray(project.particleTree, project.particles).map(def => omit(def, "emissionType")),
+		particles: mappedForestToArray(project.particleTree, project.particles).map(def => ({
+			...omit(def, "emissionType", "layerId"),
+			texture: getAtlasPart(def.layerId, def.texturePath)
+		})),
 		atlasses: [atlas],
 		models,
 		inputBinds,
@@ -69,8 +76,13 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 }
 
 export async function projectToAtlasLayout(project: Project, actions: DevtoolActions): Promise<(SvgTextureFile & XY)[]> {
-	const allModels = getAllProjectModels(project)
-	const allTexturePaths = [...new Set(allModels.map(model => model.texturePath))]
+	let allTexturePaths = [
+		...mappedForestToArray(project.modelTree, project.models)
+			.map(x => x.texturePath),
+		...mappedForestToArray(project.particleTree, project.particles)
+			.map(x => x.texturePath)
+	]
+	allTexturePaths = [...new Set(allTexturePaths)]
 	const allTextures = await readAllTextures(allTexturePaths, project, actions)
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that

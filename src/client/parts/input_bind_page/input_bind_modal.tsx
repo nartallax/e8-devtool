@@ -4,7 +4,7 @@ import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
 import {ArrayView} from "client/components/tree_view/array_view"
 import {chordFromString, chordToString} from "client/parts/chord_input/chord_input"
-import {useInputGroupIdResolver, useInputGroupPath} from "client/parts/data_providers/data_providers"
+import {useInputGroupPath, useInputGroupResolver} from "client/parts/data_providers/data_providers"
 import {InlineTreeChordEditor} from "client/parts/input_bind_page/inline_tree_chord_editor"
 import {InputGroupModal} from "client/parts/input_bind_page/input_group_modal"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
@@ -42,7 +42,7 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						label="Group"
 						forest={project.inputGroupTree}
 						value={groupId}
-						useIdResolver={useInputGroupIdResolver}
+						useResolver={useInputGroupResolver}
 						usePath={useInputGroupPath}
 						onChange={setGroupId}
 						modal={(path, onClose) => <InputGroupModal onClose={onClose} value={path}/>}
