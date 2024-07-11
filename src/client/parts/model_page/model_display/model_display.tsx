@@ -26,7 +26,7 @@ import {TitlePart} from "client/components/title_context/title_context"
 import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
 import {ForestPathSelector} from "client/parts/forest_path_selector/forest_path_selector"
 import {StringForestIdSelector} from "client/parts/string_forest_id_selector/string_forest_id_selector"
-import {useLayerPath, useLayerResolver} from "client/parts/data_providers/data_providers"
+import {layerProvider} from "client/parts/data_providers/data_providers"
 
 type Props = {
 	modelId: UUID
@@ -143,10 +143,8 @@ const ModelSidebar = ({
 				modal={onClose => <CollisionGroupsModal onClose={onClose} value={model.collisionGroupId}/>}
 			/>
 			<StringForestIdSelector
-				usePath={useLayerPath}
-				useResolver={useLayerResolver}
+				provider={layerProvider}
 				label="Layer"
-				forest={project.layerTree}
 				value={model.layerId}
 				onChange={layerId => setModel(model => ({...model, layerId}))}
 				modal={(path, onClose) => <LayersModal onClose={onClose} value={path} layerType='model'/>}

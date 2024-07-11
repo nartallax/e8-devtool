@@ -50,7 +50,7 @@ type EditableForestWithCloseProps<T> = EditableForestProps<T> & {
 	onClose: (newSelectedPath?: string | null) => void
 }
 
-type ForestDataProvider<T> = ForestFetcherHooks<T> & {
+export type ForestDataProvider<T> = ForestFetcherHooks<T> & {
 	useEditableForest: ((props: EditableForestProps<T>) => EditableForest) & ((props: EditableForestWithCloseProps<T>) => EditableForestWithClose)
 	useEditableItem: (id: UUID) => EditableItem<T>
 	useFetchers: () => ForestDataFetchers<T>
@@ -58,7 +58,7 @@ type ForestDataProvider<T> = ForestFetcherHooks<T> & {
 
 type ForestFetcherHooks<T> = {
 	useByPath: ((path: string) => T | null) & ((path: null) => null)
-	usePathById: ((id: UUID) => string | null) & ((id: null) => null)
+	usePathById: ((id: UUID | null) => string | null) & ((id: null) => null)
 	useAsMap: () => Map<string, T>
 }
 
