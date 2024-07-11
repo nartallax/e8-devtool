@@ -73,6 +73,7 @@ export interface ProjectParticleDefinition {
 	angle: number
 }
 
+// TODO: why there's "definition" in this name but not in most others?
 export interface ProjectLayerDefinition {
 	id: UUID
 	type: LayerType

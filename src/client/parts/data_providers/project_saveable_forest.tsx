@@ -14,7 +14,6 @@ type ProjectSaveableForestProps = {
 
 type ProjectSaveableForestAddedProps = {
 	forest: Tree<string, string>[]
-	setForest: SetState<Tree<string, string>[]>
 	onNodeCreated: (node: Tree<string, string>, path: TreePath) => Promise<void>
 	onNodeMoved: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
 	onNodeRenamed: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
@@ -115,7 +114,6 @@ export function makeProjectSaveableForestWrapper<T>({
 					<Component
 						{...props}
 						forest={forest}
-						setForest={setForest}
 						onNodeCreated={onNodeCreated}
 						onNodeDeleted={onNodeDeleted}
 						onNodeMoved={onNodeMoved}

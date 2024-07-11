@@ -1,7 +1,7 @@
 import {useProject} from "client/parts/project_context"
 import {Tree} from "common/tree"
 import {UUID} from "common/uuid"
-import {Project, ProjectInputBind, ProjectModel, ProjectParticleDefinition} from "data/project"
+import {Project, ProjectCollisionGroup, ProjectInputBind, ProjectInputGroup, ProjectLayerDefinition, ProjectModel, ProjectParticleDefinition} from "data/project"
 import {mappedForestToArrayWithPath, mergePath} from "data/project_utils"
 import {useCallback, useMemo} from "react"
 
@@ -26,14 +26,17 @@ export const makeProjectMapPathResolver = (propName: keyof Project) => {
 	return usePathById
 }
 
-type ProjectObjectReferrerType = "model" | "particle" | "input bind"
+export type ProjectObjectType = "model" | "particle" | "input bind" | "input bind group" | "collision group" | "layer"
 type ProjectObjectReferrerMap = {
 	model: ProjectModel
 	particle: ProjectParticleDefinition
 	["input bind"]: ProjectInputBind
+	["input bind group"]: ProjectInputGroup
+	["collision group"]: ProjectCollisionGroup
+	layer: ProjectLayerDefinition
 }
-export type ProjectObjectReferrer = {path: string, type: ProjectObjectReferrerType}
-export const makeProjectObjectReferrersResolver = <T extends ProjectObjectReferrerType>(
+export type ProjectObjectReferrer = {path: string, type: ProjectObjectType}
+export const makeProjectObjectReferrersResolver = <T extends ProjectObjectType>(
 	type: T, referrerPropName: keyof ProjectObjectReferrerMap[T], useIdResolver: () => (path: string) => Promise<{id: UUID}>
 ): (path: string | null) => Promise<ProjectObjectReferrer[]> => {
 
@@ -57,7 +60,7 @@ export const makeProjectObjectReferrersResolver = <T extends ProjectObjectReferr
 	return useReferrers
 }
 
-const getProjectReferrers = <T extends ProjectObjectReferrerType>(type: T, project: Project): [Tree<string, string>[], Record<string, ProjectObjectReferrerMap[T]>] => {
+const getProjectReferrers = <T extends ProjectObjectType>(type: T, project: Project): [Tree<string, string>[], Record<string, ProjectObjectReferrerMap[T]>] => {
 	switch(type){
 		case "input bind": return [project.inputBindTree, project.inputBinds] as any
 		case "model": return [project.modelTree, project.models] as any
