@@ -1,7 +1,6 @@
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {useProject} from "client/parts/project_context"
-import {SetState} from "client/ui_utils/react_types"
 import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, isTreeBranch, isTreeLeaf, moveTreeByPath, updateTreeByPath} from "common/tree"
 import {Project} from "data/project"
 import {treePathToString} from "data/project_utils"
@@ -14,10 +13,10 @@ type ProjectSaveableForestProps = {
 
 type ProjectSaveableForestAddedProps = {
 	forest: Tree<string, string>[]
-	onNodeCreated: (node: Tree<string, string>, path: TreePath) => Promise<void>
-	onNodeMoved: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
-	onNodeRenamed: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
-	onNodeDeleted: (node: Tree<string, string>, path: TreePath) => Promise<void>
+	createNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
+	moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
+	renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
+	deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
 }
 
 type NestedProps<T, P> = {
@@ -114,10 +113,10 @@ export function makeProjectSaveableForestWrapper<T>({
 					<Component
 						{...props}
 						forest={forest}
-						onNodeCreated={onNodeCreated}
-						onNodeDeleted={onNodeDeleted}
-						onNodeMoved={onNodeMoved}
-						onNodeRenamed={onNodeRenamed}
+						createNode={onNodeCreated}
+						deleteNode={onNodeDeleted}
+						moveNode={onNodeMoved}
+						renameNode={onNodeRenamed}
 					/>
 				</UnsavedChanges>
 			)

@@ -270,7 +270,7 @@ export const TreeBranchChildren = <T, B>({
 					return (
 						<TreeBranch
 							branch={tree}
-							key={getBranchKey(tree.value, path, tree)}
+							key={getBranchKey(tree.value, newPath, tree)}
 							squares={squares}
 							path={newPath}
 							{...props}
@@ -280,7 +280,7 @@ export const TreeBranchChildren = <T, B>({
 					return (
 						<TreeRow
 							row={tree}
-							key={getLeafKey(tree.value, path, tree)}
+							key={getLeafKey(tree.value, newPath, tree)}
 							squares={squares}
 							path={newPath}
 							{...props}

@@ -81,6 +81,8 @@ export interface ProjectLayerDefinition {
 
 export interface ProjectInputBind {
 	id: UUID
+	// TODO: I think this should be `groupId`
+	// alternatively everything else should not have `id` suffix, but that's not as good I think
 	group: UUID | null
 	isHold: boolean
 	defaultChords: ProjectChord[]

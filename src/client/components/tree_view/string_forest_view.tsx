@@ -18,13 +18,13 @@ type MutableProps = ReadonlyProps & {
 	itemName: string
 	// those handlers are a bit too verbose, but that's fine, because they are supposed to come from data provider
 	// actual end-user of this component shouldn't ever need to define those handlers
-	onNodeCreated: (node: Tree<string, string>, path: TreePath) => void
-	onNodeMoved: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => void
-	onNodeRenamed: (node: Tree<string, string>, path: TreePath, newName: string) => void
-	onNodeDeleted: (node: Tree<string, string>, path: TreePath) => void
+	createNode: (node: Tree<string, string>, path: TreePath) => void
+	moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => void
+	renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => void
+	deleteNode: (node: Tree<string, string>, path: TreePath) => void
 }
 
-const arePropsMutable = (x: unknown): x is MutableProps => !!x && typeof(x) === "object" && !!(x as MutableProps).onNodeMoved
+const arePropsMutable = (x: unknown): x is MutableProps => !!x && typeof(x) === "object" && !!(x as MutableProps).moveNode
 
 export const StringForestView = ({
 	forest, makePath, selectedPath, onItemClick, onItemDoubleclick, isBranchClickable, ...props
@@ -50,16 +50,16 @@ export const StringForestView = ({
 
 	if(arePropsMutable(props)){
 		const {
-			itemName, onNodeCreated, onNodeDeleted, onNodeMoved, onNodeRenamed
+			itemName, createNode, deleteNode, moveNode, renameNode
 		} = props
 		innerProps = {
 			...innerProps,
 			itemName,
-			onLeafCreated: (name, path) => onNodeCreated({value: name}, path),
-			onBranchCreated: (name, path) => onNodeCreated({value: name, children: []}, path),
-			onDelete: (path, node) => onNodeDeleted(node, path),
-			onDrag: (from, to) => onNodeMoved(getTreeByPath(forest, from), from, to),
-			onRename: (path, name, node) => onNodeRenamed(node, path, name)
+			onLeafCreated: (name, path) => createNode({value: name}, path),
+			onBranchCreated: (name, path) => createNode({value: name, children: []}, path),
+			onDelete: (path, node) => deleteNode(node, path),
+			onDrag: (from, to) => moveNode(getTreeByPath(forest, from), from, to),
+			onRename: (path, name, node) => renameNode(node, path, name)
 		}
 	}
 

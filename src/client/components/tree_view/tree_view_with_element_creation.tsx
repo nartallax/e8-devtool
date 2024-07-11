@@ -73,6 +73,22 @@ export const TreeViewWithElementCreation = <L, B>({
 		addRenameNode(false)
 	}
 
+	function getKey<V extends L | B, T extends Tree<L, B>>(innerGetKey?: (tree: V, path: TreePath, node: T) => string) {
+		return (tree: V, path: TreePath, node: T) => {
+			if(createdNode){
+				if(node === createdNode.node){
+					return createdNodeId
+				}
+				if(createdNode.path[createdNode.path.length - 1]! < path[path.length - 1]!){
+					path = [...path]
+					path[path.length - 1]--
+				}
+			}
+
+			return !innerGetKey ? "<no key function provided>" : innerGetKey(tree, path, node)
+		}
+	}
+
 	return (
 		<>
 			{(!!buttons || !!addRenameBranch || !!addRenameLeaf) && <Row justify="start" gap>
@@ -88,8 +104,8 @@ export const TreeViewWithElementCreation = <L, B>({
 				getBranchLabel={!getBranchLabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchLabel(branch, path, node)}
 				getLeafSublabel={!getLeafSublabel ? undefined : (leaf, path, node) => node === createdNode?.node ? "" : getLeafSublabel(leaf, path, node)}
 				getBranchSublabel={!getBranchSublabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchSublabel(branch, path, node)}
-				getLeafKey={(leaf, path, node) => node === createdNode?.node ? createdNodeId : getLeafKey(leaf, path, node)}
-				getBranchKey={!getBranchKey ? undefined : (branch, path, node) => node === createdNode?.node ? createdNodeId : getBranchKey(branch, path, node)}
+				getLeafKey={getKey(getLeafKey)}
+				getBranchKey={getKey(getBranchKey)}
 				onAddChild={onAddChild}
 				tree={tree}
 				onLabelEdit={onEdit}

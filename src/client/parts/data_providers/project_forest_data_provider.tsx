@@ -1,13 +1,15 @@
+import {useAlert} from "client/components/modal/alert_modal"
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {ProjectObjectReferrer} from "client/parts/data_providers/data_resolvers"
 import {useProject} from "client/parts/project_context"
+import {AbortError} from "client/ui_utils/abort_error"
 import {SetState} from "client/ui_utils/react_types"
 import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, isTreeBranch, isTreeLeaf, moveTreeByPath, updateTreeByPath} from "common/tree"
 import {UUID} from "crypto"
 import {Project} from "data/project"
 import {treePathToString} from "data/project_utils"
-import {useCallback, useEffect, useMemo, useState} from "react"
+import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 
 type ChangesProps = Pick<React.ComponentProps<typeof UnsavedChanges>, "saveOnUnmount" | "save" | "isUnsaved">
 
@@ -20,6 +22,10 @@ type EditableForest = {
 		deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
 	}
 	changesProps: ChangesProps
+}
+
+type EditableForestWithClose = EditableForest & {
+	onClose: (newSelectedPath?: string | null) => Promise<void>
 }
 
 type EditableItem<T> = {
@@ -35,8 +41,17 @@ type ForestDataFetchers<T> = {
 	getReferrers: (fieldName: keyof T, value: unknown) => Promise<ProjectObjectReferrer[]>
 }
 
+type EditableForestProps<T> = {
+	createItem: () => T
+	getReferrers?: (value: T) => Promise<ProjectObjectReferrer[]>[]
+}
+
+type EditableForestWithCloseProps<T> = EditableForestProps<T> & {
+	onClose: (newSelectedPath?: string | null) => void
+}
+
 type ForestDataProvider<T> = ForestFetcherHooks<T> & {
-	useEditableForest: (createItem: () => T) => EditableForest
+	useEditableForest: ((props: EditableForestProps<T>) => EditableForest) & ((props: EditableForestWithCloseProps<T>) => EditableForestWithClose)
 	useEditableItem: (id: UUID) => EditableItem<T>
 	useFetchers: () => ForestDataFetchers<T>
 }
@@ -130,20 +145,25 @@ function makeForestFetcherHooks<T>(mapPropName: keyof Project, itemType: Project
 	return {useAsMap, usePathById, useByPath}
 }
 
+const isPropsWithClose = (props: unknown): props is EditableForestWithCloseProps<unknown> =>
+	!!props && typeof(props) === "object" && !!(props as EditableForestWithCloseProps<unknown>).onClose
+
 function makeUseEditableForest<T>({
-	forestName: forestPropName, mapName: mapPropName
+	forestName, mapName, itemType
 }: ForestMapProps) {
-	return function useEditableForest(createItem: () => T): EditableForest {
+	function useEditableForest(props: EditableForestProps<T>): EditableForest
+	function useEditableForest(props: EditableForestWithCloseProps<T>): EditableForestWithClose
+	function useEditableForest({createItem, getReferrers, ...props}: EditableForestProps<T> | EditableForestWithCloseProps<T>): EditableForest | EditableForestWithClose {
 		const [project, setProject] = useProject()
 		const {
 			isUnsaved, setState: setMapForest, save, state: {map, forest}
 		} = useSaveableState({
-			map: project[mapPropName] as Record<string, T>,
-			forest: project[forestPropName] as Tree<string, string>[]
+			map: project[mapName] as Record<string, T>,
+			forest: project[forestName] as Tree<string, string>[]
 		}, ({map, forest}) => setProject(project => ({
 			...project,
-			[mapPropName]: map,
-			[forestPropName]: forest
+			[mapName]: map,
+			[forestName]: forest
 		})))
 
 		const setMap = useCallback((valueOrCallback: Record<string, T> | ((oldValue: Record<string, T>) => Record<string, T>)) => {
@@ -172,6 +192,26 @@ function makeUseEditableForest<T>({
 			setMap(newMap)
 		}
 
+		const {showAlert} = useAlert()
+
+		const showRefErrors = async(refs: ProjectObjectReferrer[]) => {
+			if(refs.length === 0){
+				return
+			}
+
+
+			const firstRefs = refs.slice(0, 10)
+			let message = `This ${itemType} is being referred to from other objects: `
+			message += "\n\t" + firstRefs.map(({type, path}) => `${type}: ${path}`).join("\n\t")
+			if(firstRefs.length < refs.length){
+				message += `\n...and ${refs.length - firstRefs.length} more.`
+			}
+			message += `\nYou should remove those references first, and then delete this ${itemType}.`
+
+			await showAlert({header: `This ${itemType} is in use`, body: message})
+			throw new AbortError(`Deletion prevented, ${itemType} is used from ${refs.length} objects.`)
+		}
+
 		const createNode = async(node: Tree<string, string>, path: TreePath) => {
 			if(isTreeLeaf(node)){
 				const pathStr = treePathToString(forest, path.slice(0, -1), node.value)
@@ -198,6 +238,16 @@ function makeUseEditableForest<T>({
 		const deleteNode = async(node: Tree<string, string>, path: TreePath) => {
 			if(isTreeLeaf(node)){
 				const pathStr = treePathToString(forest, path)
+				const item = map[pathStr]
+				if(!item){
+					throw new Error("Cannot delete item by path" + path + ": no item.")
+				}
+
+				if(getReferrers){
+					const refs = (await Promise.all(getReferrers(item))).flat()
+					await showRefErrors(refs)
+				}
+
 				setMap(map => {
 					const newMap = {...map}
 					delete newMap[pathStr]
@@ -207,13 +257,27 @@ function makeUseEditableForest<T>({
 			setForest(forest => deleteFromTreeByPath(forest, path))
 		}
 
+		const onCloseValue = !isPropsWithClose(props) ? undefined : props.onClose
+		const haveOnClose = !!onCloseValue
+		const onCloseRef = useRef(onCloseValue)
+		onCloseRef.current = onCloseValue
+		const onClose = useMemo(() => !haveOnClose ? undefined : async(newSelectedPath?: string | null) => {
+			// always saving on close is a bit controversial, considering user may have selected "cancel" button
+			// logic here is that changes to tree data are always saved; changes to selected value may not be
+			await save()
+			onCloseRef.current?.(newSelectedPath)
+		}, [haveOnClose, save])
+
 		return {
 			forestProps: {
 				createNode, moveNode, renameNode, deleteNode, forest
 			},
-			changesProps: {isUnsaved, save, saveOnUnmount: true}
+			changesProps: {isUnsaved, save, saveOnUnmount: true},
+			onClose
 		}
 	}
+
+	return useEditableForest
 }
 
 function makeUseEditableItem<T extends {id: UUID}>(mapPropName: keyof Project) {

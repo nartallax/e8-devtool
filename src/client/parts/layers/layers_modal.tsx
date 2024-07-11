@@ -20,7 +20,7 @@ type Props = {
 export const LayersModal = withLayersForest<Props>(
 	{createItem: ({layerType}) => ({id: getRandomUUID(), type: layerType})},
 	({
-		value: initialValue, onClose, layerType, onNodeDeleted, ...forestProps
+		value: initialValue, onClose, layerType, deleteNode: onNodeDeleted, ...forestProps
 	}) => {
 		const [path, setPath] = useState(initialValue)
 
@@ -55,7 +55,7 @@ export const LayersModal = withLayersForest<Props>(
 							{...forestProps}
 							makePath={mergePath}
 							itemName="layer"
-							onNodeDeleted={onDelete}
+							deleteNode={onDelete}
 							selectedPath={path}
 							onItemClick={path => ifTypeIsRight(path, () => setPath(path))}
 							onItemDoubleclick={path => ifTypeIsRight(path, () => onClose(path))}

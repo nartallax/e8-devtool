@@ -2,36 +2,30 @@ import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
-import {useInputBindsWithGroupByPath, withInputGroupForest} from "client/parts/data_providers/data_providers"
+import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {inputBindProvider, inputGroupProvider} from "client/parts/data_providers/data_providers"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
-import {useReferrersError} from "client/parts/use_referrers_error"
-import {Tree, TreePath} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {mergePath} from "data/project_utils"
 import {useState} from "react"
 
 type Props = {
-	value: string | null
-	onClose: (newValue?: string | null) => void
+	path: string | null
+	onClose: (newPath?: string | null) => void
 }
 
-export const InputGroupModal = withInputGroupForest<Props>(
-	{createItem: () => ({id: getRandomUUID()})},
-	({
-		value, onClose, onNodeDeleted, ...forestProps
-	}) => {
-		const [path, setPath] = useState(value)
+export const InputGroupModal = ({path: value, onClose: closeModal}: Props) => {
+	const [path, setPath] = useState(value)
 
-		const tryShowRefsError = useReferrersError("input group", [
-			useInputBindsWithGroupByPath(path)
-		])
+	const {getReferrers: getInputBindReferrers} = inputBindProvider.useFetchers()
+	const {forestProps, changesProps, onClose} = inputGroupProvider.useEditableForest({
+		createItem: () => ({id: getRandomUUID()}),
+		getReferrers: inputGroup => [getInputBindReferrers("group", inputGroup.id)],
+		onClose: closeModal
+	})
 
-		const onDelete = async(node: Tree<string, string>, path: TreePath) => {
-			await tryShowRefsError()
-			await onNodeDeleted(node, path)
-		}
-
-		return (
+	return (
+		<UnsavedChanges {...changesProps}>
 			<Modal
 				header="Input groups"
 				onClose={onClose}
@@ -45,13 +39,12 @@ export const InputGroupModal = withInputGroupForest<Props>(
 							selectedPath={path}
 							onItemClick={path => setPath(path)}
 							onItemDoubleclick={path => onClose(path)}
-							onNodeDeleted={onDelete}
 							{...forestProps}
 						/>
 						<ModalSubmitCancelButtons onCancel={onClose}/>
 					</Col>
 				</Form>
 			</Modal>
-		)
-	}
-)
+		</UnsavedChanges>
+	)
+}

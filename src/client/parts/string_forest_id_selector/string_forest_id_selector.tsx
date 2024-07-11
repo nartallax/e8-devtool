@@ -27,20 +27,20 @@ type PropsFor<T, P> = FormInputProps<T> & {
 }
 
 export const StringForestIdSelector = ({
-	useResolver: useIdResolver, usePath, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
+	useResolver, usePath, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
 }: Props) => {
-	const getIdByPath = useIdResolver()
+	const getItemByPath = useResolver()
 
 	const [isOpen, setOpen] = useState(false)
 	const onClose = useCallback(async(newPath?: string | null) => {
 		setOpen(false)
 		if(newPath !== undefined){
 			if(isNullable || newPath !== null){
-				const id = newPath === null ? null : (await getIdByPath(newPath)).id
+				const id = newPath === null ? null : (await getItemByPath(newPath)).id
 				onChange(id!)
 			}
 		}
-	}, [onChange, getIdByPath, isNullable])
+	}, [onChange, getItemByPath, isNullable])
 
 	const path = usePath(value)
 	const name = value === null ? absentValueLabel : !path ? loadingValueLabel : getLastPathPart(path)

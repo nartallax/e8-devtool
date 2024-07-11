@@ -45,7 +45,7 @@ export const InputBindModal = ({bind, path, onClose}: Props) => {
 						useResolver={useInputGroupResolver}
 						usePath={useInputGroupPath}
 						onChange={setGroupId}
-						modal={(path, onClose) => <InputGroupModal onClose={onClose} value={path}/>}
+						modal={(path, onClose) => <InputGroupModal onClose={onClose} path={path}/>}
 					/>
 					<ArrayView
 						itemName="default chord"
