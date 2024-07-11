@@ -3,10 +3,9 @@ import {Form} from "client/components/form/form"
 import {Modal} from "client/components/modal/modal"
 import {Col} from "client/components/row_col/row_col"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
-import {useLayerResolver, useModelsWithLayerByPath, useParticlesWithLayerByPath, withLayersForest} from "client/parts/data_providers/data_providers"
+import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {layerProvider, modelProvider, particleProvider} from "client/parts/data_providers/data_providers"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
-import {useReferrersError} from "client/parts/use_referrers_error"
-import {Tree, TreePath} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {mergePath} from "data/project_utils"
 import {useState} from "react"
@@ -17,33 +16,38 @@ type Props = {
 	layerType: LayerType
 }
 
-export const LayersModal = withLayersForest<Props>(
-	{createItem: ({layerType}) => ({id: getRandomUUID(), type: layerType})},
-	({
-		value: initialValue, onClose, layerType, deleteNode: onNodeDeleted, ...forestProps
-	}) => {
-		const [path, setPath] = useState(initialValue)
+export const LayersModal = ({
+	value: initialValue, onClose: rawOnClose, layerType
+}: Props) => {
+	const [path, setPath] = useState(initialValue)
 
-		const tryShowRefsError = useReferrersError("layer", [
-			useModelsWithLayerByPath(path),
-			useParticlesWithLayerByPath(path)
-		])
+	const {getReferrers: getModelReferrers} = modelProvider.useFetchers()
+	const {getReferrers: getParticleReferrers} = particleProvider.useFetchers()
 
-		const onDelete = async(node: Tree<string, string>, path: TreePath) => {
-			await tryShowRefsError()
-			await onNodeDeleted(node, path)
+	const {forestProps, changesProps, onClose} = layerProvider.useEditableForest({
+		createItem: () => ({id: getRandomUUID(), type: layerType}),
+		getReferrers: layer => [
+			getModelReferrers("layerId", layer.id),
+			getParticleReferrers("layerId", layer.id)
+		],
+		onClose: rawOnClose
+	})
+
+	const {getByPath: getLayerByPath} = layerProvider.useFetchers()
+
+	const ifTypeIsRight = async(path: string, callback: () => void) => {
+		await changesProps.save()
+		// TODO: right now this bugs out, because getLayerByPath uses old version of project
+		// but after we are converted to API, this should stop happening naturally
+		// but I'll need to check if that works this way
+		const layer = await getLayerByPath(path)
+		if(layer.type === layerType){
+			callback()
 		}
+	}
 
-		const getLayer = useLayerResolver()
-
-		const ifTypeIsRight = async(path: string, callback: () => void) => {
-			const layer = await getLayer(path)
-			if(layer.type === layerType){
-				callback()
-			}
-		}
-
-		return (
+	return (
+		<UnsavedChanges {...changesProps}>
 			<Modal
 				header="Layers"
 				contentWidth={["300px", "50vw", "600px"]}
@@ -55,7 +59,6 @@ export const LayersModal = withLayersForest<Props>(
 							{...forestProps}
 							makePath={mergePath}
 							itemName="layer"
-							deleteNode={onDelete}
 							selectedPath={path}
 							onItemClick={path => ifTypeIsRight(path, () => setPath(path))}
 							onItemDoubleclick={path => ifTypeIsRight(path, () => onClose(path))}
@@ -66,5 +69,6 @@ export const LayersModal = withLayersForest<Props>(
 					</Col>
 				</Form>
 			</Modal>
-		)
-	})
+		</UnsavedChanges>
+	)
+}

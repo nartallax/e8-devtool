@@ -1,7 +1,7 @@
 import {useAlert} from "client/components/modal/alert_modal"
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
-import {ProjectObjectReferrer} from "client/parts/data_providers/data_resolvers"
+import {ProjectObjectReferrer} from "client/parts/data_providers/project_referrers"
 import {useProject} from "client/parts/project_context"
 import {AbortError} from "client/ui_utils/abort_error"
 import {SetState} from "client/ui_utils/react_types"
@@ -24,8 +24,8 @@ type EditableForest = {
 	changesProps: ChangesProps
 }
 
-type EditableForestWithClose = EditableForest & {
-	onClose: (newSelectedPath?: string | null) => Promise<void>
+type EditableForestWithClose<A extends unknown[]> = EditableForest & {
+	onClose: (...args: A) => Promise<void>
 }
 
 type EditableItem<T> = {
@@ -46,12 +46,12 @@ type EditableForestProps<T> = {
 	getReferrers?: (value: T) => Promise<ProjectObjectReferrer[]>[]
 }
 
-type EditableForestWithCloseProps<T> = EditableForestProps<T> & {
-	onClose: (newSelectedPath?: string | null) => void
+type EditableForestWithCloseProps<T, A extends unknown[]> = EditableForestProps<T> & {
+	onClose: (...args: A) => void
 }
 
 export type ForestDataProvider<T> = ForestFetcherHooks<T> & {
-	useEditableForest: ((props: EditableForestProps<T>) => EditableForest) & ((props: EditableForestWithCloseProps<T>) => EditableForestWithClose)
+	useEditableForest: ((props: EditableForestProps<T>) => EditableForest) & (<A extends unknown[]>(props: EditableForestWithCloseProps<T, A>) => EditableForestWithClose<A>)
 	useEditableItem: (id: UUID) => EditableItem<T>
 	useFetchers: () => ForestDataFetchers<T>
 }
@@ -145,15 +145,15 @@ function makeForestFetcherHooks<T>(mapPropName: keyof Project, itemType: Project
 	return {useAsMap, usePathById, useByPath}
 }
 
-const isPropsWithClose = (props: unknown): props is EditableForestWithCloseProps<unknown> =>
-	!!props && typeof(props) === "object" && !!(props as EditableForestWithCloseProps<unknown>).onClose
+const isPropsWithClose = (props: unknown): props is EditableForestWithCloseProps<unknown, unknown[]> =>
+	!!props && typeof(props) === "object" && !!(props as EditableForestWithCloseProps<unknown, unknown[]>).onClose
 
 function makeUseEditableForest<T>({
 	forestName, mapName, itemType
 }: ForestMapProps) {
 	function useEditableForest(props: EditableForestProps<T>): EditableForest
-	function useEditableForest(props: EditableForestWithCloseProps<T>): EditableForestWithClose
-	function useEditableForest({createItem, getReferrers, ...props}: EditableForestProps<T> | EditableForestWithCloseProps<T>): EditableForest | EditableForestWithClose {
+	function useEditableForest<A extends unknown[]>(props: EditableForestWithCloseProps<T, A>): EditableForestWithClose<A>
+	function useEditableForest<A extends unknown[]>({createItem, getReferrers, ...props}: EditableForestProps<T> | EditableForestWithCloseProps<T, A>): EditableForest | EditableForestWithClose<A> {
 		const [project, setProject] = useProject()
 		const {
 			isUnsaved, setState: setMapForest, save, state: {map, forest}
@@ -261,11 +261,11 @@ function makeUseEditableForest<T>({
 		const haveOnClose = !!onCloseValue
 		const onCloseRef = useRef(onCloseValue)
 		onCloseRef.current = onCloseValue
-		const onClose = useMemo(() => !haveOnClose ? undefined : async(newSelectedPath?: string | null) => {
+		const onClose = useMemo(() => !haveOnClose ? undefined : async(...args: A) => {
 			// always saving on close is a bit controversial, considering user may have selected "cancel" button
 			// logic here is that changes to tree data are always saved; changes to selected value may not be
 			await save()
-			onCloseRef.current?.(newSelectedPath)
+			onCloseRef.current?.(...args)
 		}, [haveOnClose, save])
 
 		return {
