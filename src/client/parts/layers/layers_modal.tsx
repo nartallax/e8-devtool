@@ -32,6 +32,8 @@ export const LayersModal = ({
 		onClose: rawOnClose
 	})
 
+	const layerMap = layerProvider.useAsMap()
+
 	const {getByPath: getLayerByPath} = layerProvider.useFetchers()
 
 	const ifTypeIsRight = async(path: string, callback: () => void) => {
@@ -60,8 +62,7 @@ export const LayersModal = ({
 							selectedPath={path}
 							onItemClick={path => ifTypeIsRight(path, () => setPath(path))}
 							onItemDoubleclick={path => ifTypeIsRight(path, () => onClose(path))}
-							// TODO: bring this back
-							// getItemSublabel={layer => `(${layer.type})`}
+							getItemSublabel={path => !layerMap ? "" : `(${layerMap.get(path)?.type ?? "???"})`}
 						/>
 						<ModalSubmitCancelButtons onCancel={onClose}/>
 					</Col>
