@@ -1,14 +1,11 @@
-import {XY} from "@nartallax/e8"
 import {Workbench} from "client/components/workbench/workbench"
 import {useApi} from "client/parts/api_context"
-import {useProject} from "client/parts/project_context"
-import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
+import {getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
 import * as css from "./atlas_page.module.scss"
 import {TitlePart} from "client/components/title_context/title_context"
 
 export const AtlasPage = () => {
-	const [project] = useProject()
-	const [atlasEntries] = useApi<(SvgTextureFile & XY)[]>(api => api.projectToAtlasLayout(project), [project])
+	const [atlasEntries] = useApi(api => api.getAtlasLayout(), [])
 	const sideLength = getAtlasSideLength(atlasEntries ?? [])
 
 	return (

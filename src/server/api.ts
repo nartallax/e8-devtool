@@ -21,6 +21,7 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 			return await actions.getProject()
 		},
 
+
 		async getTextureFiles(): Promise<Tree<string, string>[]> {
 			try {
 				return await actions.getTextureTree()
@@ -32,8 +33,9 @@ export function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => v
 			}
 		},
 
-		async projectToAtlasLayout(project: Project): Promise<(SvgTextureFile & XY)[]> {
+		async getAtlasLayout(): Promise<(SvgTextureFile & XY)[]> {
 			try {
+				const project = await actions.getProject()
 				return await projectToAtlasLayout(project, actions)
 			} catch(e){
 				if(!isEnoent(e)){
