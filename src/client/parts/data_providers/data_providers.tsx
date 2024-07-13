@@ -1,7 +1,7 @@
 import {makeProjectForestDataProvider} from "client/parts/data_providers/project_forest_data_provider"
 import {makeProjectSaveableDataWrapper} from "client/parts/data_providers/project_saveable_data"
 import {UUID} from "common/uuid"
-import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayerDefinition, ProjectModel, ProjectParticleDefinition} from "data/project"
+import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 
 export const inputGroupProvider = makeProjectForestDataProvider<ProjectInputGroup>({
 	mapName: "inputGroups",
@@ -15,7 +15,7 @@ export const collisionGroupProvider = makeProjectForestDataProvider<ProjectColli
 	itemType: "collision group"
 })
 
-export const layerProvider = makeProjectForestDataProvider<ProjectLayerDefinition>({
+export const layerProvider = makeProjectForestDataProvider<ProjectLayer>({
 	forestName: "layerTree",
 	mapName: "layers",
 	itemType: "layer"
@@ -33,7 +33,7 @@ export const modelProvider = makeProjectForestDataProvider<ProjectModel>({
 	itemType: "model"
 })
 
-export const particleProvider = makeProjectForestDataProvider<ProjectParticleDefinition>({
+export const particleProvider = makeProjectForestDataProvider<ProjectParticle>({
 	forestName: "particleTree",
 	mapName: "particles",
 	itemType: "particle"

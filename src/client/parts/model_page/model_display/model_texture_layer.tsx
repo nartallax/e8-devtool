@@ -11,6 +11,10 @@ export const ModelTextureLayer = () => {
 	const widthRatio = (inworldUnitPixelSize / naturalSize.width) * model.size.x
 	const heightRatio = (inworldUnitPixelSize / naturalSize.height) * model.size.y
 
+	if(!model.texturePath){
+		return null
+	}
+
 	return (
 		<img
 			className={css.workbenchLayer}

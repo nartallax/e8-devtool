@@ -10,8 +10,8 @@ import {Icon} from "generated/icons"
 import {useState} from "react"
 
 type Props = {
-	value?: string
-	onClose: (value?: string) => void
+	value?: string | null
+	onClose: (value?: string | null) => void
 	isSelectionModal?: boolean
 	textureForest: Tree<string, string>[]
 }

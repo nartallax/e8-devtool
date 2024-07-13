@@ -91,42 +91,7 @@ export function* modelsWithPaths(project: Project): IterableIterator<[string[], 
 	}
 }
 
-// TODO: most of functions in this project should become outdated fast, this one included
-export function namesOfModelsWhich(project: Project, predicate: (model: ProjectModel) => boolean): string[] {
-	const names: string[] = []
-	for(const [path, model] of modelsWithPaths(project)){
-		if(predicate(model)){
-			names.push(path[path.length - 1]!)
-		}
-	}
-	return names
-}
-
-export const mappedForestToNameMap = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>): Map<UUID, string> => {
-	const result = new Map<UUID, string>()
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
-		const pathStr = mergePath(fullPath)
-		const item = map[pathStr]
-		if(!item){
-			throw new Error("No item for path " + pathStr)
-		}
-		result.set(item.id, leaf)
-	}
-	return result
-}
-
-export const forestToNameMap = (forest: Tree<string, string>[]): Map<string, string> => {
-	const result = new Map<string, string>()
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
-		const pathStr = mergePath(fullPath)
-		result.set(pathStr, leaf)
-	}
-	return result
-}
+// TODO: most of functions in this file should become outdated after converting to API
 
 export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Record<string, T>): T[] => {
 	const result: T[] = []

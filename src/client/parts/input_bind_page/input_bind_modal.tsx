@@ -42,9 +42,9 @@ export const InputBindModal = ({path, onClose}: Props) => {
 						<StringForestIdSelector
 							isNullable
 							label="Group"
-							value={bind.group}
+							value={bind.groupId}
 							provider={inputGroupProvider}
-							onChange={group => setBind(bind => ({...bind, group}))}
+							onChange={groupId => setBind(bind => ({...bind, groupId}))}
 							modal={(path, onClose) => <InputGroupModal onClose={onClose} path={path}/>}
 						/>
 						<ArrayView

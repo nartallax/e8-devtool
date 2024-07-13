@@ -19,7 +19,7 @@ export const InputGroupModal = ({path: value, onClose: closeModal}: Props) => {
 	const {getReferrers: getInputBindReferrers} = inputBindProvider.useFetchers()
 	const {forestProps, changesProps, onClose} = inputGroupProvider.useEditableForest({
 		createItem: () => ({id: getRandomUUID()}),
-		getReferrers: inputGroup => [getInputBindReferrers("group", inputGroup.id)],
+		getReferrers: inputGroup => [getInputBindReferrers("groupId", inputGroup.id)],
 		onClose: closeModal
 	})
 

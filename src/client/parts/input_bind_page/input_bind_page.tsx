@@ -14,7 +14,7 @@ export const InputBindPage = () => {
 
 	const {forestProps, changesProps} = inputBindProvider.useEditableForest({
 		createItem: () => ({
-			id: getRandomUUID(), defaultChords: [], group: null, isHold: false
+			id: getRandomUUID(), defaultChords: [], groupId: null, isHold: false
 		})
 	})
 
@@ -35,7 +35,7 @@ export const InputBindPage = () => {
 								return ""
 							}
 
-							const groupId = inputBindMap.get(path)?.group ?? null
+							const groupId = inputBindMap.get(path)?.groupId ?? null
 							if(!groupId){
 								return ""
 							}

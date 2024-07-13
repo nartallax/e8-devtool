@@ -13,7 +13,7 @@ export interface Project {
 	models: Record<string, ProjectModel>
 	modelTree: Tree<string, string>[]
 
-	particles: Record<string, ProjectParticleDefinition>
+	particles: Record<string, ProjectParticle>
 	particleTree: Tree<string, string>[]
 
 	collisionGroups: Record<string, ProjectCollisionGroup>
@@ -21,7 +21,7 @@ export interface Project {
 	collisionGroupPairs: [UUID, UUID][]
 
 	/** Couples of groups that should be colliding. */
-	layers: Record<string, ProjectLayerDefinition>
+	layers: Record<string, ProjectLayer>
 	layerTree: Tree<string, string>[]
 
 	inputGroups: Record<string, ProjectInputGroup>
@@ -55,7 +55,7 @@ export type ProjectCollisionGroup = {
 	id: UUID
 }
 
-export interface ProjectParticleDefinition {
+export interface ProjectParticle {
 	id: UUID
 	/** This only matters to devtool and calculation of `.amount`
 	 * in runtime emission type is determined by usage */
@@ -73,17 +73,14 @@ export interface ProjectParticleDefinition {
 	angle: number
 }
 
-// TODO: why there's "definition" in this name but not in most others?
-export interface ProjectLayerDefinition {
+export interface ProjectLayer {
 	id: UUID
 	type: LayerType
 }
 
 export interface ProjectInputBind {
 	id: UUID
-	// TODO: I think this should be `groupId`
-	// alternatively everything else should not have `id` suffix, but that's not as good I think
-	group: UUID | null
+	groupId: UUID | null
 	isHold: boolean
 	defaultChords: ProjectChord[]
 }
@@ -95,8 +92,8 @@ export type ProjectChord = {
 
 export function makeBlankProject(): Project {
 	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID()}
-	const modelLayer: ProjectLayerDefinition = {id: getRandomUUID(), type: "model"}
-	const particleLayer: ProjectLayerDefinition = {id: getRandomUUID(), type: "particle"}
+	const modelLayer: ProjectLayer = {id: getRandomUUID(), type: "model"}
+	const particleLayer: ProjectLayer = {id: getRandomUUID(), type: "particle"}
 	return {
 		config: {
 			inworldUnitPixelSize: 100,
@@ -124,7 +121,7 @@ export function makeBlankProject(): Project {
 		inputBinds: {
 			"default bind": {
 				id: getRandomUUID(),
-				group: null,
+				groupId: null,
 				isHold: false,
 				defaultChords: [{
 					id: getRandomUUID(),
@@ -140,15 +137,14 @@ export function makeBlankProject(): Project {
 type BlankModelParams = {
 	collisionGroupId: UUID
 	layerId: UUID
-	texturePath: string
 }
 
-export const makeBlankModel = ({collisionGroupId, layerId, texturePath}: BlankModelParams): ProjectModel => ({
+export const makeBlankModel = ({collisionGroupId, layerId}: BlankModelParams): ProjectModel => ({
 	id: getRandomUUID(),
 	layerId,
 	collisionGroupId,
 	size: {x: 1, y: 1},
-	texturePath,
+	texturePath: null,
 	isStatic: false,
 	shapes: []
 })
@@ -158,9 +154,9 @@ export interface ProjectModel {
 	isStatic: boolean
 	shapes: ProjectShape[]
 	collisionGroupId: UUID
+	// TODO: if texture is nullable, why layerId isn't? they are linked, might as well be the same
 	layerId: UUID
-	// TODO: make nullable
-	texturePath: string
+	texturePath: string | null
 	size: XY
 }
 

@@ -1,7 +1,6 @@
 import {FormInputProps} from "client/components/form/form_context"
 import {ValueSelectorField} from "client/components/value_selector/value_selector"
-import {Tree} from "common/tree"
-import {forestToNameMap} from "data/project_utils"
+import {getLastPathPart} from "data/project_utils"
 import {useCallback, useMemo, useState} from "react"
 
 type Props = NullableProps | NonNullableProps
@@ -19,11 +18,10 @@ type PropsFor<T> = FormInputProps<T> & {
 	onChange: (value: T) => void
 	modal: (onClose: (newValue?: T) => void) => React.ReactNode
 	absentValueLabel?: string
-	forest: Tree<string, string>[]
 }
 
 export const ForestPathSelector = ({
-	isNullable, value, onChange, modal, absentValueLabel = "<none>", forest, ...props
+	isNullable, value, onChange, modal, absentValueLabel = "<none>", ...props
 }: Props) => {
 	const [isOpen, setOpen] = useState(false)
 	const onClose = useCallback((newValue?: string | null) => {
@@ -36,11 +34,8 @@ export const ForestPathSelector = ({
 	}, [onChange, isNullable])
 
 	const resolver = useMemo(() => {
-		// it's possible to split path here instead of creating a map
-		// but I don't want to introduce "split" operation to paths, although it's reasonable thing to do
-		const map = forestToNameMap(forest)
-		return (path: string | null) => path === null ? absentValueLabel : map.get(path) ?? "<unknown path>"
-	}, [forest, absentValueLabel])
+		return (path: string | null) => path === null ? absentValueLabel : getLastPathPart(path)
+	}, [absentValueLabel])
 
 	return (
 		<>

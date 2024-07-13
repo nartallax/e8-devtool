@@ -98,6 +98,9 @@ const ModelSidebar = ({
 	}
 
 	const addAutoShape = async() => {
+		if(!model.texturePath){
+			return
+		}
 		const texUrl = getTextureUrl(model.texturePath)
 		const resolution = inworldUnitPixelSize * 10 // this allows for better quality
 		let points = await buildObjectShapeByImage(texUrl, model.size.x, model.size.y, resolution)
@@ -127,14 +130,11 @@ const ModelSidebar = ({
 		setModel(model => ({...model, size: {x, y}}))
 	}
 
-	const {textureTree} = useTextures()
-
-
 	return (
 		<TitlePart part={" - " + modelName}>
 			<ForestPathSelector
+				isNullable
 				label="Texture"
-				forest={textureTree}
 				value={model.texturePath}
 				onChange={texturePath => setModel(model => ({...model, texturePath}))}
 				modal={onClose => <TexturesModal onClose={onClose} value={model.texturePath}/>}

@@ -11,6 +11,7 @@ import {UUID} from "common/uuid"
 import {omit} from "common/omit"
 import {Tree} from "common/tree"
 import {DevtoolActions} from "server/actions"
+import {nonNull} from "common/non_null"
 
 /** Convert project into ResourcePack structure. */
 export async function projectToResourcePack(project: Project, actions: DevtoolActions): Promise<ResourcePack> {
@@ -40,7 +41,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	const models = allModels.map((model): Model => {
 		return {
 			size: [model.size.x, model.size.y],
-			texture: getAtlasPart(model.layerId, model.texturePath),
+			texture: !model.texturePath ? null : getAtlasPart(model.layerId, model.texturePath),
 			physics: {
 				collisionGroup: collisionGroups(model.collisionGroupId),
 				isStatic: model.isStatic,
@@ -52,7 +53,7 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	const collisionGroupPairs = project.collisionGroupPairs.map(([a, b]) => [collisionGroups(a), collisionGroups(b)] as const)
 
 	const inputBinds: InputBindDefinition[] = getSortedProjectBinds(project).map(([bind]) => ({
-		group: bind.group === null ? null : inputGroups(bind.group),
+		group: bind.groupId === null ? null : inputGroups(bind.groupId),
 		isHold: bind.isHold,
 		defaultChords: bind.defaultChords
 			.map(chord => chord.chord)
@@ -81,7 +82,7 @@ export async function projectToAtlasLayout(project: Project, actions: DevtoolAct
 			.map(x => x.texturePath),
 		...mappedForestToArray(project.particleTree, project.particles)
 			.map(x => x.texturePath)
-	]
+	].filter(nonNull)
 	allTexturePaths = [...new Set(allTexturePaths)]
 	const allTextures = await readAllTextures(allTexturePaths, project, actions)
 	// wonder how slow will be to have cellSize = 1 here

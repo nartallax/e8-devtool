@@ -4,9 +4,8 @@ import {StringForestView} from "client/components/tree_view/string_forest_view"
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {collisionGroupProvider, layerProvider, modelProvider} from "client/parts/data_providers/data_providers"
 import {CentralColumn} from "client/parts/layouts/central_column"
-import {useTextures} from "client/parts/texture_tree_context"
 import {AbortError} from "client/ui_utils/abort_error"
-import {appendUrlPath, pushHistory} from "client/ui_utils/urls"
+import {appendUrlPath} from "client/ui_utils/urls"
 import {withDataLoaded} from "client/ui_utils/with_data_loaded"
 import {filterMap} from "common/filter_object"
 import {UUID} from "common/uuid"
@@ -17,16 +16,13 @@ const findDefaultId = (values: Map<string, {id: UUID}>): UUID | null => {
 	return entries.find(([key]) => key === "default")?.[1].id ?? entries[0]?.[1].id ?? null
 }
 
-const findDefaultTexture = (paths: string[]): string | null => paths[0] ?? null
-
 export const ModelSelector = withDataLoaded(
 	() => ({
 		collisionGroups: collisionGroupProvider.useAsMap(),
 		layers: layerProvider.useAsMap()
 	}),
 	({collisionGroups, layers}) => {
-		const {texturePaths} = useTextures()
-		const {matchedUrl} = useRoutingContext()
+		const {matchedUrl, navigate} = useRoutingContext()
 		const {showAlert} = useAlert()
 
 		const getModelWithDefaults = (): ProjectModel => {
@@ -48,15 +44,7 @@ export const ModelSelector = withDataLoaded(
 				throw new AbortError("There are no layers in the project.")
 			}
 
-			const texturePath = findDefaultTexture(texturePaths)
-			if(!texturePath){
-				void showAlert({
-					body: "Cannot add a model: there are no textures in the project, and model must have a texture. Add a texture first."
-				})
-				throw new AbortError("Insufficient data.")
-			}
-
-			return makeBlankModel({collisionGroupId, layerId, texturePath})
+			return makeBlankModel({collisionGroupId, layerId})
 		}
 
 		const {forestProps, changesProps} = modelProvider.useEditableForest({
@@ -73,7 +61,7 @@ export const ModelSelector = withDataLoaded(
 						onItemDoubleclick={async path => {
 							await changesProps.save()
 							const model = await getByPath(path)
-							pushHistory(appendUrlPath(matchedUrl, `./${model.id}`))
+							navigate(appendUrlPath(matchedUrl, `./${model.id}`))
 						}}
 					/>
 				</CentralColumn>
