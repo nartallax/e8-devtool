@@ -4,33 +4,49 @@ import {useProject} from "client/parts/project_context"
 import {SetState} from "client/ui_utils/react_types"
 import {Project} from "data/project"
 
-type ProjectSaveableDataAddedProps<T> = {
+type UseEditableDataResult<T> = {
 	value: T
 	setValue: SetState<T>
+	save: () => Promise<void>
+	changesProps: React.ComponentProps<typeof UnsavedChanges>
 }
 
-export function makeProjectSaveableDataWrapper<T>(propName: keyof Project) {
-	return function withProjectSaveableData<P extends object>(Component: React.FC<P & ProjectSaveableDataAddedProps<T>>) {
-		return function WrapperComponent(props: P) {
-			const [project, setProject] = useProject()
-			const {
-				isUnsaved, setState, save, state
-			} = useSaveableState(
-				project[propName] as T,
-				value => setProject(project => ({
-					...project,
-					[propName]: value
-				})))
+type ProjectSaveableData<T> = {
+	useEditableData: () => UseEditableDataResult<T> | null
+	useData: () => T | null
+}
 
-			return (
-				<UnsavedChanges isUnsaved={isUnsaved} saveOnUnmount save={save}>
-					<Component
-						{...props}
-						value={state}
-						setValue={setState}
-					/>
-				</UnsavedChanges>
-			)
+export function makeProjectSaveableDataWrapper<T>(propName: keyof Project): ProjectSaveableData<T> {
+	function useEditableData() {
+		const [project, setProject] = useProject()
+		const {
+			isUnsaved, setState, save, state
+		} = useSaveableState(
+			project[propName] as T,
+			value => setProject(project => ({
+				...project,
+				[propName]: value
+			})))
+
+		const result: UseEditableDataResult<T> = {
+			value: state,
+			setValue: setState,
+			save,
+			changesProps: {
+				saveOnUnmount: true,
+				save,
+				isUnsaved: isUnsaved
+			}
 		}
+
+		return result
 	}
+
+	function useData() {
+		const [project] = useProject()
+		return project[propName] as T
+	}
+
+
+	return {useEditableData, useData}
 }

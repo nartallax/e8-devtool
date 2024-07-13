@@ -154,6 +154,13 @@ let result = tseslint.config(
 		"@typescript-eslint/semi": ["warn", "never"],
 		"@typescript-eslint/space-before-function-paren": ["warn", "never"],
 		"@typescript-eslint/space-infix-ops": ["warn"],
+		"@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+				// if arg name consists entirely of `_` - it means "YES I KNOW THAT IT'S UNUSED STOP BOTHERING ME"
+        "argsIgnorePattern": "^_+$",
+      }
+    ],
 
 		"react/boolean-prop-naming": ["warn", {rule: "^(value|(is|has|can|are)[A-Z]([A-Za-z0-9]?)+)"}],
 		"react/button-has-type": ["error"],

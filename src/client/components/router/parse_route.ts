@@ -38,7 +38,9 @@ export const matchRoutes = (
 		const newNonMatchedUrl = stripUsedRouteParts(parsedRoute, nonMatchedUrl)
 		const newMatchedUrl = appendUsedRouteParts(parsedRoute, args, matchedUrl)
 
-		return {matchedUrl: newMatchedUrl, nonMatchedUrl: newNonMatchedUrl, arguments: args, renderer, routePattern}
+		return {
+			matchedUrl: newMatchedUrl, nonMatchedUrl: newNonMatchedUrl, arguments: args, renderer, routePattern
+		}
 	}
 
 	return null

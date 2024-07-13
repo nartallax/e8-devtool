@@ -2,12 +2,10 @@ import {useModelDisplayContext} from "client/parts/model_page/model_display/mode
 import * as css from "./model_display.module.scss"
 import {useState} from "react"
 import {useTextures} from "client/parts/texture_tree_context"
-import {useProject} from "client/parts/project_context"
 
 export const ModelTextureLayer = () => {
-	const {model} = useModelDisplayContext()
+	const {model, inworldUnitPixelSize} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
-	const [{config: {inworldUnitPixelSize}}] = useProject()
 	const [naturalSize, setNaturalSize] = useState({width: 1, height: 1})
 
 	const widthRatio = (inworldUnitPixelSize / naturalSize.width) * model.size.x

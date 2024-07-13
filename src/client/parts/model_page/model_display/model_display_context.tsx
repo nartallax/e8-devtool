@@ -1,16 +1,13 @@
 import {XY} from "@nartallax/e8"
-import {useBeforeNavigation} from "client/components/router/routing_context"
-import {UnsavedChanges, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
-import {useSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
 import {WorkbenchContextValue} from "client/components/workbench/workbench_context"
-import {useProject} from "client/parts/project_context"
+import {modelProvider} from "client/parts/data_providers/data_providers"
 import {defineContext} from "client/ui_utils/define_context"
+import {SetState} from "client/ui_utils/react_types"
 import {StateStack} from "client/ui_utils/state_stack"
 import {AnyPointerEvent} from "client/ui_utils/use_mouse_drag"
-import {getLeafByPath} from "common/tree"
 import {UUID} from "common/uuid"
-import {ProjectShape} from "data/project"
-import {treePathToString, pathById} from "data/project_utils"
+import {ProjectConfig, ProjectModel, ProjectShape} from "data/project"
+import {getLastPathPart} from "data/project_utils"
 import {useCallback, useMemo, useRef, useState} from "react"
 
 type ShapeStateMeta = {
@@ -24,37 +21,25 @@ type SelectedPoint = {
 
 export type ModelDisplayContextValue = ReturnType<typeof useModelDisplayContext>
 
+type Props = {
+	model: ProjectModel
+	setModel: SetState<ProjectModel>
+	projectConfig: ProjectConfig
+}
+
 export const [ModelDisplayContextProvider, useModelDisplayContext] = defineContext({
 	name: "ModelDisplayContext",
-	NestedWrapComponent: ({context: {isUnsaved, saveModelToProject}, children}) => (
-		<UnsavedChanges isUnsaved={isUnsaved} save={saveModelToProject}>
-			{children}
-		</UnsavedChanges>
-	),
-	useValue: ({modelId}: {modelId: UUID}) => {
-		const [project, setProject] = useProject()
-		const inworldUnitPixelSize = project.config.inworldUnitPixelSize
-		const modelPath = pathById(project.modelTree, project.models, modelId)
-		const modelName = getLeafByPath(project.modelTree, modelPath).value
-		const modelPathStr = treePathToString(project.modelTree, modelPath)
-		const _model = project.models[modelPathStr]!
-		if(!_model){
-			throw new Error("No model for ID = " + modelId)
-		}
-		const {
-			state: model, setState: setModel, isUnsaved, save: saveModelToProject
-		} = useSaveableState(_model, model => setProject(project => {
-			const models = {...project.models}
-			models[modelPathStr] = model
-			return {...project, models}
-		}))
+	useValue: ({model, setModel, projectConfig}: Props) => {
+		const inworldUnitPixelSize = projectConfig.inworldUnitPixelSize
+
+		const path = modelProvider.usePathById(model.id)
 
 		const [currentlyDrawnShapeId, setCurrentlyDrawnShapeId] = useState<UUID | null>(null)
 		const [selectedShapeId, setSelectedShapeId] = useState<UUID | null>(null)
 		const selectedPointRef = useRef<SelectedPoint | null>(null)
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		const shapesStateStack = useMemo(() => new StateStack<ProjectShape[], ShapeStateMeta>(100, model.shapes), [modelId])
+		const shapesStateStack = useMemo(() => new StateStack<ProjectShape[], ShapeStateMeta>(100, model.shapes), [model.id])
 
 		const roundToGrain = useCallback((point: XY) => roundPointToGrain(point, inworldUnitPixelSize), [inworldUnitPixelSize])
 
@@ -85,16 +70,12 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			return roundToGrain({x, y})
 		}, [inworldUnitPixelSize, roundToGrain, workbenchRef])
 
-		const {saveOrAbort} = useUnsavedChanges()
-		useBeforeNavigation(() => saveOrAbort({actionDescription: "navigate away"}))
-
 		return {
 			currentlyDrawnShapeId,
 			setCurrentlyDrawnShapeId,
 			selectedShapeId,
 			setSelectedShapeId,
 			model,
-			modelId,
 			setModel,
 			shapesStateStack,
 			roundToGrain,
@@ -104,9 +85,8 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			resetPosition,
 			mouseEventToInworldCoords,
 			selectedPointRef,
-			saveModelToProject,
-			isUnsaved,
-			modelName
+			modelName: !path ? "" : getLastPathPart(path),
+			inworldUnitPixelSize
 		}
 	}
 })

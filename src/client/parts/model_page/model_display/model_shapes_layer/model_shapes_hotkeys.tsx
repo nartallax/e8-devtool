@@ -1,14 +1,17 @@
 import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 import {isArrowKeypress, isRedoKeypress, isUndoKeypress} from "client/components/hotkey_context/hotkey_utils"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
-import {useProject} from "client/parts/project_context"
 import {PropsWithChildren} from "react"
 
 export const ModelShapesHotkeys = ({children}: PropsWithChildren) => {
-	const {getShapes, updateShapes, shapesStateStack, selectedShapeId, setSelectedShapeId, selectedPointRef} = useModelDisplayContext()
-	const [{config: {inworldUnitPixelSize}}] = useProject()
+	const {
+		getShapes, updateShapes, shapesStateStack, selectedShapeId, setSelectedShapeId, selectedPointRef, inworldUnitPixelSize
+	} = useModelDisplayContext()
 
 	const moveSelectedPoint = (e: KeyboardEvent) => {
+		if(!inworldUnitPixelSize){
+			return
+		}
 		const movingPointState = selectedPointRef.current!
 		const step = 1 / inworldUnitPixelSize
 		const shape = getShapes().find(shape => shape.id === movingPointState.shapeId)!

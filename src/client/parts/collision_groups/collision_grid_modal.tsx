@@ -1,14 +1,17 @@
 import {Modal} from "client/components/modal/modal"
 import {UUID} from "common/uuid"
 import * as css from "./collision_grid_modal.module.scss"
-import {useProject} from "client/parts/project_context"
-import {useMemo, useState} from "react"
+import {useMemo} from "react"
 import {ProjectCollisionGroup} from "data/project"
 import {Col} from "client/components/row_col/row_col"
 import {Form} from "client/components/form/form"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Checkbox} from "client/components/checkbox/checkbox"
-import {mappedForestToNameMap, mappedForestToArray} from "data/project_utils"
+import {getLastPathPart} from "data/project_utils"
+import {collisionGroupProvider, collisionPairsProvider} from "client/parts/data_providers/data_providers"
+import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {reverseMap} from "common/reverse_map"
+import {withDataLoaded} from "client/ui_utils/with_data_loaded"
 
 type Props = {
 	onClose: () => void
@@ -27,95 +30,84 @@ const buildPairMap = (groups: ProjectCollisionGroup[], pairs: [UUID, UUID][]) =>
 	return result
 }
 
-const pairMapToArray = (map: PairMap): [UUID, UUID][] => {
-	const result: [UUID, UUID][] = []
-	for(const [a, bs] of map.entries()){
-		for(const b of bs){
-			if(a <= b){
-				result.push([a, b])
-			}
+export const CollisionGridModal = withDataLoaded(
+	(_: Props) => ({
+		collisionGroups: collisionGroupProvider.useAsMap(),
+		collisionPairsData: collisionPairsProvider.useEditableData()
+	}),
+	({
+		onClose, collisionGroups, collisionPairsData: {
+			value: collisionPairs, setValue: setCollisionPairs, save, changesProps
 		}
-	}
-	return result
-}
+	}) => {
+		const groupPathById = reverseMap(collisionGroups, (_, group) => group.id)
+		const allGroups = useMemo(() => [...collisionGroups.values()], [collisionGroups])
+		const pairMap = useMemo(() => buildPairMap(allGroups, collisionPairs), [allGroups, collisionPairs])
 
-export const CollisionGridModal = ({onClose}: Props) => {
-	const [project, setProject] = useProject()
-	const {collisionGroupTree: groupsForest, collisionGroups: groupsMap} = project
-	const [nameMap, allGroups] = useMemo(() => [
-		mappedForestToNameMap(groupsForest, groupsMap),
-		mappedForestToArray(groupsForest, groupsMap)
-	], [groupsForest, groupsMap])
-
-	const [pairMap, setPairMap] = useState(buildPairMap(allGroups, project.collisionGroupPairs))
-
-	const onChange = (pair: [UUID, UUID], isEnabled: boolean) => {
-		const newMap = new Map([...pairMap.entries()])
-		const [a, b] = pair
-		if(isEnabled){
-			newMap.get(a)?.add(b)
-			newMap.get(b)?.add(a)
-		} else {
-			newMap.get(a)?.delete(b)
-			newMap.get(b)?.delete(a)
+		const onChange = (pair: [UUID, UUID], isEnabled: boolean) => {
+			setCollisionPairs(pairs => {
+				if(isEnabled){
+					return [...pairs, pair]
+				} else {
+					const [rmA, rmB] = pair
+					return pairs.filter(([a, b]) => !((a === rmA && b === rmB) || (a === rmB && b === rmA)))
+				}
+			})
 		}
-		setPairMap(newMap)
-	}
 
-	const onSubmit = () => {
-		setProject(project => {
-			const collisionGroupPairs = pairMapToArray(pairMap)
-			return {...project, collisionGroupPairs}
-		})
-		onClose()
-	}
+		const onSubmit = async() => {
+			await save()
+			onClose()
+		}
 
-	return (
-		<Modal
-			contentWidth={[null, "300px", "90vw"]}
-			contentHeight={[null, "300px", "90vh"]}
-			header="Collision grid"
-			onClose={onClose}>
-			<Form onSubmit={onSubmit}>
-				<Col
-					align="center"
-					justify="center"
-					grow={1}
-					alignSelf="stretch">
-					<div className={css.rows}>
-						<div className={css.row} key='labels'>
-							{allGroups.map(group =>
-								(
-									<div className={css.topLabelContainer} key={group.id}>
-										<div className={css.topLabel}>
-											{nameMap.get(group.id)}
+		return (
+			<UnsavedChanges {...changesProps}>
+				<Modal
+					contentWidth={[null, "300px", "90vw"]}
+					contentHeight={[null, "300px", "90vh"]}
+					header="Collision grid"
+					onClose={onClose}>
+					<Form onSubmit={onSubmit}>
+						<Col
+							align="center"
+							justify="center"
+							grow={1}
+							alignSelf="stretch">
+							<div className={css.rows}>
+								<div className={css.row} key='labels'>
+									{allGroups.map(group =>
+										(
+											<div className={css.topLabelContainer} key={group.id}>
+												<div className={css.topLabel}>
+													{getLastPathPart(groupPathById.get(group.id)!)}
+												</div>
+											</div>
+										))}
+								</div>
+								{allGroups.map(groupA => (
+									<div className={css.row} key={groupA.id}>
+										<div key='name'>
+											{getLastPathPart(groupPathById.get(groupA.id)!)}
 										</div>
+										{allGroups.map(groupB =>
+											(
+												<PairCheckbox
+													key={groupB.id}
+													onChange={onChange}
+													map={pairMap}
+													pair={[groupA.id, groupB.id]}
+												/>
+											))}
 									</div>
 								))}
-						</div>
-						{allGroups.map(groupA => (
-							<div className={css.row} key={groupA.id}>
-								<div key='name'>
-									{nameMap.get(groupA.id)}
-								</div>
-								{allGroups.map(groupB =>
-									(
-										<PairCheckbox
-											key={groupB.id}
-											onChange={onChange}
-											map={pairMap}
-											pair={[groupA.id, groupB.id]}
-										/>
-									))}
 							</div>
-						))}
-					</div>
-				</Col>
-				<ModalSubmitCancelButtons onCancel={onClose}/>
-			</Form>
-		</Modal>
-	)
-}
+						</Col>
+						<ModalSubmitCancelButtons onCancel={onClose}/>
+					</Form>
+				</Modal>
+			</UnsavedChanges>
+		)
+	})
 
 type CheckboxProps = {
 	pair: [UUID, UUID]

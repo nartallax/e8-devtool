@@ -7,7 +7,6 @@ import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_
 import {layerProvider, modelProvider, particleProvider} from "client/parts/data_providers/data_providers"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {getRandomUUID} from "common/uuid"
-import {mergePath} from "data/project_utils"
 import {useState} from "react"
 
 type Props = {
@@ -57,7 +56,6 @@ export const LayersModal = ({
 					<Col gap stretch grow>
 						<StringForestView
 							{...forestProps}
-							makePath={mergePath}
 							itemName="layer"
 							selectedPath={path}
 							onItemClick={path => ifTypeIsRight(path, () => setPath(path))}

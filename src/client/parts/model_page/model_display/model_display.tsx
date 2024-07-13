@@ -14,7 +14,6 @@ import {ModelGridLayer} from "client/parts/model_page/model_display/model_grid_l
 import {ModelShapeLayer} from "client/parts/model_page/model_display/model_shapes_layer/model_shapes_layer"
 import {ModelTextureLayer} from "client/parts/model_page/model_display/model_texture_layer"
 import {TexturesModal} from "client/parts/textures/textures_modal"
-import {useProject} from "client/parts/project_context"
 import {useTextures} from "client/parts/texture_tree_context"
 import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectShape} from "data/project"
@@ -23,10 +22,10 @@ import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useLocalStorageState} from "client/ui_utils/use_local_storage_state"
 import {TitlePart} from "client/components/title_context/title_context"
-import {MappedForestIdSelector} from "client/parts/mapped_forest_id_selector/mapped_forest_id_selector"
 import {ForestPathSelector} from "client/parts/forest_path_selector/forest_path_selector"
 import {StringForestIdSelector} from "client/parts/string_forest_id_selector/string_forest_id_selector"
-import {layerProvider} from "client/parts/data_providers/data_providers"
+import {collisionGroupProvider, layerProvider, modelProvider, projectConfigProvider} from "client/parts/data_providers/data_providers"
+import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 
 type Props = {
 	modelId: UUID
@@ -38,29 +37,37 @@ export const ModelDisplay = ({modelId}: Props) => {
 	const [isShowingGrid, setShowGrid] = useLocalStorageState("modelDisplay.isShowingGrid", true)
 	const [isShowingTexture, setShowTexture] = useLocalStorageState("modelDisplay.isShowingTexture", true)
 
+	const editable = modelProvider.useEditableItem(modelId)
+	const config = projectConfigProvider.useData()
+	if(!editable || !config){
+		return null
+	}
+
 	return (
-		<ModelDisplayContextProvider modelId={modelId}>
-			<SidebarLayout>
-				<Sidebar>
-					<ModelSidebar
+		<UnsavedChanges {...editable.changesProps}>
+			<ModelDisplayContextProvider model={editable.value} setModel={editable.setValue} projectConfig={config}>
+				<SidebarLayout>
+					<Sidebar>
+						<ModelSidebar
+							isShowingDecomp={isShowingDecomp}
+							isShowingGrid={isShowingGrid}
+							isShowingShapes={isShowingShapes}
+							isShowingTexture={isShowingTexture}
+							setShowDecomp={setShowDecomp}
+							setShowGrid={setShowGrid}
+							setShowShapes={setShowShapes}
+							setShowTexture={setShowTexture}
+						/>
+					</Sidebar>
+					<ModelWorkbench
 						isShowingDecomp={isShowingDecomp}
 						isShowingGrid={isShowingGrid}
 						isShowingShapes={isShowingShapes}
 						isShowingTexture={isShowingTexture}
-						setShowDecomp={setShowDecomp}
-						setShowGrid={setShowGrid}
-						setShowShapes={setShowShapes}
-						setShowTexture={setShowTexture}
 					/>
-				</Sidebar>
-				<ModelWorkbench
-					isShowingDecomp={isShowingDecomp}
-					isShowingGrid={isShowingGrid}
-					isShowingShapes={isShowingShapes}
-					isShowingTexture={isShowingTexture}
-				/>
-			</SidebarLayout>
-		</ModelDisplayContextProvider>
+				</SidebarLayout>
+			</ModelDisplayContextProvider>
+		</UnsavedChanges>
 	)
 }
 
@@ -78,10 +85,8 @@ type SidebarProps = {
 const ModelSidebar = ({
 	isShowingDecomp, setShowDecomp, isShowingGrid, isShowingShapes, setShowGrid, setShowShapes, isShowingTexture, setShowTexture
 }: SidebarProps) => {
-	const [project] = useProject()
-	const {inworldUnitPixelSize} = project.config
 	const {
-		currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel, modelName
+		currentlyDrawnShapeId, setCurrentlyDrawnShapeId, setSelectedShapeId, updateShapes, model, roundToGrain, shapesStateStack, getShapes, setModel, modelName, inworldUnitPixelSize
 	} = useModelDisplayContext()
 	const {getTextureUrl} = useTextures()
 
@@ -134,13 +139,12 @@ const ModelSidebar = ({
 				onChange={texturePath => setModel(model => ({...model, texturePath}))}
 				modal={onClose => <TexturesModal onClose={onClose} value={model.texturePath}/>}
 			/>
-			<MappedForestIdSelector
-				forest={project.collisionGroupTree}
-				map={project.collisionGroups}
+			<StringForestIdSelector
+				provider={collisionGroupProvider}
 				label="Collision"
 				value={model.collisionGroupId}
 				onChange={collisionGroupId => setModel(model => ({...model, collisionGroupId}))}
-				modal={onClose => <CollisionGroupsModal onClose={onClose} value={model.collisionGroupId}/>}
+				modal={(path, onClose) => <CollisionGroupsModal path={path} onClose={onClose}/>}
 			/>
 			<StringForestIdSelector
 				provider={layerProvider}
@@ -212,8 +216,7 @@ type WorkbenchProps = {
 const ModelWorkbench = ({
 	isShowingDecomp, isShowingGrid, isShowingShapes, isShowingTexture
 }: WorkbenchProps) => {
-	const {model, workbenchRef} = useModelDisplayContext()
-	const [{config: {inworldUnitPixelSize}}] = useProject()
+	const {model, workbenchRef, inworldUnitPixelSize} = useModelDisplayContext()
 
 	return (
 		<Workbench

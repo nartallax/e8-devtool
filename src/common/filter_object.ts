@@ -11,3 +11,13 @@ export function filterObject<K extends string, V>(map: Record<K, V>, predicate: 
 	}
 	return result
 }
+
+export function filterMap<K, V>(map: ReadonlyMap<K, V>, predicate: (k: K, v: V) => boolean): Map<K, V> {
+	const result: [K, V][] = []
+	for(const [k, v] of map.entries()){
+		if(predicate(k, v)){
+			result.push([k, v])
+		}
+	}
+	return new Map(result)
+}

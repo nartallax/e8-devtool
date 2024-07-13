@@ -91,6 +91,7 @@ export function* modelsWithPaths(project: Project): IterableIterator<[string[], 
 	}
 }
 
+// TODO: most of functions in this project should become outdated fast, this one included
 export function namesOfModelsWhich(project: Project, predicate: (model: ProjectModel) => boolean): string[] {
 	const names: string[] = []
 	for(const [path, model] of modelsWithPaths(project)){

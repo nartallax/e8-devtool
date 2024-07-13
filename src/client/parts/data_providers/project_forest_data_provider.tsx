@@ -8,7 +8,7 @@ import {SetState} from "client/ui_utils/react_types"
 import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, isTreeBranch, isTreeLeaf, moveTreeByPath, updateTreeByPath} from "common/tree"
 import {UUID} from "crypto"
 import {Project} from "data/project"
-import {treePathToString} from "data/project_utils"
+import {mergePath, treePathToString} from "data/project_utils"
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 
 type ChangesProps = Pick<React.ComponentProps<typeof UnsavedChanges>, "saveOnUnmount" | "save" | "isUnsaved">
@@ -20,6 +20,7 @@ type EditableForest = {
 		moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
 		renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
 		deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
+		makePath: (parts: string[], isPrefix: boolean) => string
 	}
 	changesProps: ChangesProps
 }
@@ -52,14 +53,15 @@ type EditableForestWithCloseProps<T, A extends unknown[]> = EditableForestProps<
 
 export type ForestDataProvider<T> = ForestFetcherHooks<T> & {
 	useEditableForest: ((props: EditableForestProps<T>) => EditableForest) & (<A extends unknown[]>(props: EditableForestWithCloseProps<T, A>) => EditableForestWithClose<A>)
-	useEditableItem: (id: UUID) => EditableItem<T>
+	useEditableItem: (id: UUID) => EditableItem<T> | null
+	useEditableItemByPath: (path: string) => EditableItem<T> | null
 	useFetchers: () => ForestDataFetchers<T>
 }
 
 type ForestFetcherHooks<T> = {
 	useByPath: ((path: string) => T | null) & ((path: null) => null)
 	usePathById: ((id: UUID | null) => string | null) & ((id: null) => null)
-	useAsMap: () => Map<string, T>
+	useAsMap: () => Map<string, T> | null
 }
 
 type ForestMapProps = {
@@ -68,8 +70,7 @@ type ForestMapProps = {
 	itemType: ProjectObjectReferrer["type"]
 }
 
-function makeFetchers<T extends {id: UUID}>(project: Project, mapPropName: keyof Project, itemType: ProjectObjectReferrer["type"]): ForestDataFetchers<T> {
-	const map = project[mapPropName] as Record<string, T>
+function makeFetchers<T extends {id: UUID}>(getProject: () => Project, mapPropName: keyof Project, itemType: ProjectObjectReferrer["type"]): ForestDataFetchers<T> {
 
 	function getByPath(path: null): Promise<null>
 	function getByPath(path: string): Promise<T>
@@ -77,6 +78,7 @@ function makeFetchers<T extends {id: UUID}>(project: Project, mapPropName: keyof
 		if(path === null){
 			return null
 		}
+		const map = getProject()[mapPropName] as Record<string, T>
 		const item = map[path]
 		if(!item){
 			throw new Error("Unknown item path: " + path)
@@ -90,6 +92,7 @@ function makeFetchers<T extends {id: UUID}>(project: Project, mapPropName: keyof
 		if(id === null){
 			return null
 		}
+		const map = getProject()[mapPropName] as Record<string, T>
 		for(const path in map){
 			const item = map[path]!
 			if(item.id === id){
@@ -99,10 +102,14 @@ function makeFetchers<T extends {id: UUID}>(project: Project, mapPropName: keyof
 		throw new Error("Unknown item id: " + id)
 	}
 
-	const getAsMap = async() => new Map(Object.entries(map))
+	const getAsMap = async() => {
+		const map = getProject()[mapPropName] as Record<string, T>
+		return new Map(Object.entries(map))
+	}
 
 	const getReferrers = async(fieldName: keyof T, value: unknown) => {
 		const result: ProjectObjectReferrer[] = []
+		const map = getProject()[mapPropName] as Record<string, T>
 		for(const path in map){
 			const item = map[path]!
 			if(item[fieldName] === value){
@@ -129,7 +136,7 @@ function makeForestFetcherHooks<T>(mapPropName: keyof Project, itemType: Project
 		// ...which increments a state and causes hooks to refetch
 		const [project] = useProject()
 		const fetcher = useMemo(() =>
-			makeFetchers(project, mapPropName, itemType)[fetcherName] as unknown as (input: I) => Promise<O>
+			makeFetchers(() => project, mapPropName, itemType)[fetcherName] as unknown as (input: I) => Promise<O>
 		, [project, fetcherName]
 		)
 		const [result, setResult] = useState(dflt)
@@ -156,7 +163,7 @@ function makeUseEditableForest<T>({
 	function useEditableForest<A extends unknown[]>({createItem, getReferrers, ...props}: EditableForestProps<T> | EditableForestWithCloseProps<T, A>): EditableForest | EditableForestWithClose<A> {
 		const [project, setProject] = useProject()
 		const {
-			isUnsaved, setState: setMapForest, save, state: {map, forest}
+			isUnsaved, setState: setMapForest, saveIfUnsaved: save, state: {map, forest}
 		} = useSaveableState({
 			map: project[mapName] as Record<string, T>,
 			forest: project[forestName] as Tree<string, string>[]
@@ -270,7 +277,7 @@ function makeUseEditableForest<T>({
 
 		return {
 			forestProps: {
-				createNode, moveNode, renameNode, deleteNode, forest
+				createNode, moveNode, renameNode, deleteNode, forest, makePath: mergePath
 			},
 			changesProps: {isUnsaved, save, saveOnUnmount: true},
 			onClose
@@ -281,7 +288,7 @@ function makeUseEditableForest<T>({
 }
 
 function makeUseEditableItem<T extends {id: UUID}>(mapPropName: keyof Project) {
-	return function useEditableItem(id: UUID): EditableItem<T> {
+	return function useEditableItem(id: UUID): EditableItem<T> | null {
 		const [project, setProject] = useProject()
 
 		const _valuePair = Object.entries(project[mapPropName] as Record<string, T>).find(([, item]) => item.id === id)
@@ -304,10 +311,35 @@ function makeUseEditableItem<T extends {id: UUID}>(mapPropName: keyof Project) {
 	}
 }
 
+function makeUseEditableItemByPath<T>(mapPropName: keyof Project) {
+	return function useEditableItemByPath(path: string): EditableItem<T> | null {
+		const [project, setProject] = useProject()
+		const map = project[mapPropName] as Record<string, T>
+		const _value = map[path]
+		if(!_value){
+			throw new Error("No item found by path = " + path)
+		}
+
+		const {
+			isUnsaved, setState: setValue, save, state: value
+		} = useSaveableState<T>(_value, value => setProject(project => ({
+			...project,
+			[mapPropName]: {...project[mapPropName] as Record<string, T>, [path]: value}
+		})))
+
+		return {
+			value, setValue,
+			changesProps: {save, isUnsaved, saveOnUnmount: true}
+		}
+	}
+}
+
 function makeUseFetchers<T extends {id: UUID}>(mapPropName: keyof Project, itemType: ProjectObjectReferrer["type"]): () => ForestDataFetchers<T> {
 	return function useFetchers() {
 		const [project] = useProject()
-		return useMemo(() => makeFetchers<T>(project, mapPropName, itemType), [project])
+		const projectRef = useRef(project)
+		projectRef.current = project
+		return useMemo(() => makeFetchers<T>(() => projectRef.current, mapPropName, itemType), [])
 	}
 }
 
@@ -316,6 +348,7 @@ export function makeProjectForestDataProvider<T extends {id: UUID}>({mapName: ma
 		...makeForestFetcherHooks(mapPropName, itemType),
 		useFetchers: makeUseFetchers(mapPropName, itemType),
 		useEditableForest: makeUseEditableForest({mapName: mapPropName, forestName: forestPropName, itemType}),
-		useEditableItem: makeUseEditableItem(mapPropName)
+		useEditableItem: makeUseEditableItem(mapPropName),
+		useEditableItemByPath: makeUseEditableItemByPath(mapPropName)
 	}
 }

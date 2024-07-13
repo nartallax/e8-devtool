@@ -39,6 +39,5 @@ export const particleProvider = makeProjectForestDataProvider<ProjectParticleDef
 	itemType: "particle"
 })
 
-
-export const withProjectConfig = makeProjectSaveableDataWrapper<ProjectConfig>("config")
-export const withCollisionGroupPairs = makeProjectSaveableDataWrapper<[UUID, UUID][]>("collisionGroupPairs")
+export const projectConfigProvider = makeProjectSaveableDataWrapper<ProjectConfig>("config")
+export const collisionPairsProvider = makeProjectSaveableDataWrapper<[UUID, UUID][]>("collisionGroupPairs")

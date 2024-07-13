@@ -6,7 +6,6 @@ import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_
 import {inputBindProvider, inputGroupProvider} from "client/parts/data_providers/data_providers"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {getRandomUUID} from "common/uuid"
-import {mergePath} from "data/project_utils"
 import {useState} from "react"
 
 type Props = {
@@ -35,7 +34,6 @@ export const InputGroupModal = ({path: value, onClose: closeModal}: Props) => {
 					<Col gap grow align="stretch">
 						<StringForestView
 							itemName="input group"
-							makePath={mergePath}
 							selectedPath={path}
 							onItemClick={path => setPath(path)}
 							onItemDoubleclick={path => onClose(path)}

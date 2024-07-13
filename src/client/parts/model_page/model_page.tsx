@@ -10,6 +10,8 @@ export const ModelPage = () => {
 		<TitlePart part="Models">
 			<Router
 				routes={[
+					// TODO: maybe we should use path here
+					// if we are passing everything else by path, why models should be different
 					["/:modelId", ({modelId}) => <ModelDisplay modelId={modelId as UUID}/>],
 					["/", () => <ModelSelector/>]
 				]}

@@ -6,6 +6,7 @@ type UseSaveableStateResult<T> = {
 	setState: SetState<T>
 	isUnsaved: boolean
 	save: () => Promise<void>
+	saveIfUnsaved: () => Promise<void>
 	markSaved: () => void
 }
 
@@ -17,6 +18,8 @@ export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | 
 	const currentValueRef = useRef(value)
 	const [currentValue, rawSetState] = useState(value)
 	const [isUnsaved, setUnsaved] = useState(false)
+	const isUnsavedRef = useRef(isUnsaved)
+	isUnsavedRef.current = isUnsaved
 
 	const setState = useCallback((valueOrCallback: T | ((old: T) => T)) => {
 		let newValue: T
@@ -37,9 +40,15 @@ export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | 
 		setUnsaved(false)
 	}, [])
 
+	const saveIfUnsaved = useCallback(async() => {
+		if(isUnsavedRef.current){
+			await doSave()
+		}
+	}, [doSave])
+
 	const markSaved = useCallback(() => setUnsaved(false), [])
 
 	return {
-		state: currentValue, setState, isUnsaved, save: doSave, markSaved
+		state: currentValue, setState, isUnsaved, save: doSave, saveIfUnsaved, markSaved
 	}
 }

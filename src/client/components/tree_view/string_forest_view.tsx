@@ -12,6 +12,7 @@ type ReadonlyProps = {
 	onItemClick?: (path: string, isBranch: boolean) => void
 	onItemDoubleclick?: (path: string, isBranch: boolean) => void
 	isBranchClickable?: boolean
+	buttons?: () => React.ReactNode
 }
 
 type MutableProps = ReadonlyProps & {
@@ -27,7 +28,7 @@ type MutableProps = ReadonlyProps & {
 const arePropsMutable = (x: unknown): x is MutableProps => !!x && typeof(x) === "object" && !!(x as MutableProps).moveNode
 
 export const StringForestView = ({
-	forest, makePath, selectedPath, onItemClick, onItemDoubleclick, isBranchClickable, ...props
+	forest, makePath, selectedPath, onItemClick, onItemDoubleclick, isBranchClickable, buttons, ...props
 }: Props) => {
 
 	const selectedTreePath = useMemo(() =>
@@ -45,7 +46,8 @@ export const StringForestView = ({
 		onLeafDoubleclick: !onItemDoubleclick ? undefined : (_, path) => onItemDoubleclick(makePath(treePathToValues(forest, path), false), false),
 		onBranchClick: !onItemClick || !isBranchClickable ? undefined : (_, path) => onItemClick(makePath(treePathToValues(forest, path), true), true),
 		onBranchDoubleclick: !onItemDoubleclick || !isBranchClickable ? undefined : (_, path) => onItemDoubleclick(makePath(treePathToValues(forest, path), true), true),
-		selectedPath: selectedTreePath
+		selectedPath: selectedTreePath,
+		buttons
 	}
 
 	if(arePropsMutable(props)){
