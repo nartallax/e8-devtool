@@ -6,6 +6,7 @@ import * as open from "open"
 import {CLIArgs, getCliArgs} from "server/cli"
 import {Project} from "data/project"
 import {DevtoolActions, getActions} from "server/actions"
+import {batchJsonApiCalls} from "server/batcher"
 
 async function main(): Promise<void> {
 	log("Starting...")
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,
 		apiRoot: "/api/",
-		apiMethods: getApi(cli, project => updateStaticRoutes(cli, staticRoutes, project, actions))
+		apiMethods: batchJsonApiCalls(getApi(cli, project => updateStaticRoutes(cli, staticRoutes, project, actions)))
 	})
 
 	const addr = await server.start()

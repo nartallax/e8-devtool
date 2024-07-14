@@ -13,7 +13,7 @@ import {useEffect, useMemo, useState} from "react"
 
 class DevtoolApiClient extends ApiClient {
 	constructor(onApiError?: (error: ApiError) => void) {
-		super("/api/", "POST", onApiError)
+		super("/api/batch", "POST", onApiError)
 	}
 
 	getProject = () => this.call<Project>({name: "getProject"})

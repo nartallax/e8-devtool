@@ -6,8 +6,6 @@ import {isPathInsidePath} from "common/is_path_inside_path"
 import {httpGet} from "common/http_request"
 import {isEnoent} from "common/is_enoent"
 import {readStreamToBuffer} from "common/read_stream_to_buffer"
-import {ApiError, ApiResponse, errorToErrorApiResp} from "common/api_response"
-import {log} from "common/log"
 import * as MimeTypes from "mime-types"
 
 export interface HttpStaticRoute {
@@ -33,7 +31,7 @@ interface HttpServerOptions {
 	/** Part of path that precedes all of the API calls */
 	apiRoot: string
 	apiMethods: {
-		[name: string]: (...args: unknown[]) => (unknown | Promise<unknown>)
+		[name: string]: (body: Buffer) => (Buffer | Promise<Buffer>)
 	}
 	inputSizeLimit: number
 	readTimeoutSeconds: number
@@ -193,66 +191,20 @@ export class HttpServer {
 
 	}
 
-	private async getApiBody(req: Http.IncomingMessage, url: URL): Promise<unknown[]> {
-		// this is not very common, and is in fact remnant from one of the previous project
-		// here we assume that only PUT/GET endpoints will ever need query params, which is wrong
-		// but whatever
-		if(req.method === "GET" || req.method === "PUT"){
-			const argsObj: Record<string, unknown> = {}
-			for(const [k, v] of url.searchParams.entries()){
-				argsObj[k] = v
-			}
-			if(req.method === "PUT"){
-				argsObj["data"] = await readStreamToBuffer(req, this.opts.inputSizeLimit, this.opts.readTimeoutSeconds * 1000)
-			}
-			return [argsObj]
-		}
-
-		const body = await readStreamToBuffer(req, this.opts.inputSizeLimit, this.opts.readTimeoutSeconds * 1000)
-		const args = JSON.parse(body.toString("utf-8")) ?? []
-		if(!Array.isArray(args)){
-			throw new Error("POST body args, if present, must be contained in array")
-		}
-		return args
-	}
-
 	private async processApiRequest(url: URL, req: Http.IncomingMessage, res: Http.ServerResponse): Promise<void> {
 		const methodName = url.pathname.substring(this.opts.apiRoot.length)
 		const apiMethod = Object.hasOwn(this.opts.apiMethods, methodName) ? this.opts.apiMethods[methodName] : null
 		if(!apiMethod){
-			return await endRequest(res, 404, "Your Api Call Sucks")
+			return await endRequest(res, 404, "Unknown API method")
 		}
 
-		const methodArgs = await this.getApiBody(req, url)
+		const body = await readStreamToBuffer(req, this.opts.inputSizeLimit, this.opts.readTimeoutSeconds * 1000)
 
-		let callResult: unknown = null
-		let error: Error | null = null
-		log(`API call: ${methodName}`)
 		try {
-			callResult = await Promise.resolve(apiMethod(...methodArgs))
+			const callResult = await Promise.resolve(apiMethod(body))
+			await endRequest(res, 200, "OK", callResult)
 		} catch(e){
-			if(e instanceof Error){
-				const err: Error = e
-				const errStr = ApiError.isApiError(err) ? err.message : err.stack || err.message
-				log(`Error calling ${methodName}(${apiMethodArgsToString(methodArgs ?? [])}): ${errStr}`)
-				error = err
-			} else {
-				throw e
-			}
-		}
-
-		let resp: string | Buffer
-		if(error){
-			resp = JSON.stringify(errorToErrorApiResp(error))
-			await endRequest(res, 500, "Server Error", resp)
-		} else {
-			if(callResult instanceof Buffer){
-				resp = callResult
-			} else {
-				const apiResp: ApiResponse<unknown> = {result: callResult ?? null}
-				resp = JSON.stringify(apiResp)
-			}
-			await endRequest(res, 200, "OK", resp)
+			await endRequest(res, 500, "Server Error")
 		}
 	}
 
@@ -282,14 +234,4 @@ function waitReadStreamToEnd(stream: Fs.ReadStream): Promise<void> {
 		stream.on("error", e => bad(e))
 		stream.on("end", () => ok())
 	})
-}
-
-export function apiMethodArgsToString(methodArgs: unknown[]): string {
-	return methodArgs.map(value => {
-		let str = value instanceof Uint8Array ? "<binary>" : JSON.stringify(value)
-		if(str.length > 50){
-			str = str.substring(0, 50) + "<cut>"
-		}
-		return str
-	}).join(", ")
 }
