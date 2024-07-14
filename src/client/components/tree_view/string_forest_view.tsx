@@ -14,6 +14,7 @@ type ReadonlyProps = {
 	getItemSublabel?: (path: string) => string
 	isBranchClickable?: boolean
 	buttons?: () => React.ReactNode
+	// TODO: validators, to avoid having bad path symbols
 }
 
 type MutableProps = ReadonlyProps & {

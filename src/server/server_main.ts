@@ -8,6 +8,10 @@ import {Project} from "data/project"
 import {DevtoolActions, getActions} from "server/actions"
 import {batchJsonApiCalls} from "server/batcher"
 
+// TODO: forbid parcel to auto-install browser implementations for node APIs and modules
+// (I sometimes import them on accident, then remove them, but the installed module stays there, which sucks)
+// after that - clean up autoinstalled modules
+
 async function main(): Promise<void> {
 	log("Starting...")
 	const cli = getCliArgs()
@@ -32,7 +36,7 @@ async function main(): Promise<void> {
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,
 		apiRoot: "/api/",
-		apiMethods: batchJsonApiCalls(getApi(cli, project => updateStaticRoutes(cli, staticRoutes, project, actions)))
+		apiMethods: batchJsonApiCalls(await getApi(cli, project => updateStaticRoutes(cli, staticRoutes, project, actions)))
 	})
 
 	const addr = await server.start()
