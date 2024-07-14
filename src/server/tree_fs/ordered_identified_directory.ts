@@ -12,9 +12,7 @@ type Props<T> = {
 
 /** OrderedDirectory that has some logic about manipulating data stored in its leaves  */
 export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
-	constructor(private dir: OrderedDirectory, private idPathMap: DualMap<UUID, string>, private partitioner: ObjectPartitioner<T>) {
-
-	}
+	constructor(private dir: OrderedDirectory, private idPathMap: DualMap<UUID, string>, private partitioner: ObjectPartitioner<T>) {}
 
 	static async createAt<T extends {id: UUID}>(path: string, props: Props<T>): Promise<OrderedIdentifiedDirectory<T>> {
 		let partitioner = new ObjectPartitioner<T>()
@@ -102,6 +100,10 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 			const fieldValue = await this.partitioner.readField(fullPath, field)
 			return fieldValue === value ? relPath : null
 		}))).filter(nonNull)
+	}
+
+	getForest(): Tree<string, string>[] {
+		return this.dir.forest
 	}
 
 }

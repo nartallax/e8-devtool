@@ -7,42 +7,84 @@ interface ApiCallOptions {
 	body?: unknown[]
 }
 
+type BatchableCall<T> = {
+	data: [name: string, args?: unknown[]]
+	ok: (result: T) => void
+	bad: (err: unknown) => void
+}
+
+type Batch = BatchableCall<any>[]
+
 export class ApiClient {
 
-	// TODO: call queue, to avoid weird concurrency bugs
+	private nextBatch: Batch = []
+	private runningBatch: Batch | null = null
+	private batchTimer: ReturnType<typeof setTimeout> | ReturnType<typeof requestAnimationFrame> | null = null
 
-	constructor(private urlBase: string, private method: ApiHttpMethod, private onApiError?: (err: ApiError) => void) {}
+	constructor(private urlBase: string, private method: ApiHttpMethod, private batchGatheringTime: number | "raf", private onApiError?: (err: ApiError) => void) {}
 
-	private async parseResp<T>(resp: Response): Promise<T> {
-		const respData: ApiResponse<unknown>[] = await resp.json()
-		for(const resp of respData){
-			if(isSuccessApiResponse(resp)){
-				return resp.result as T
+	private tryStartBatchTimer() {
+		if(this.batchTimer === null){
+			if(this.batchGatheringTime === "raf"){
+				this.batchTimer = requestAnimationFrame(() => this.sendBatch())
 			} else {
-				const err = new ApiError(resp.error.message)
+				this.batchTimer = setTimeout(() => this.sendBatch(), this.batchGatheringTime)
+			}
+		}
+	}
+
+	private async sendBatch() {
+		if(this.runningBatch !== null || this.nextBatch.length < 1){
+			return
+		}
+
+		this.batchTimer = null
+		const calls = this.runningBatch = this.nextBatch
+		this.nextBatch = []
+
+		try {
+			const resp = await fetch(this.urlBase, {
+				method: this.method,
+				body: JSON.stringify(calls.map(call => call.data))
+			})
+
+			await this.parseResp(resp, calls)
+		} finally {
+			this.runningBatch = null
+			void this.sendBatch()
+		}
+
+	}
+
+	private async parseResp(resp: Response, calls: BatchableCall<any>[]) {
+		const respData: ApiResponse<unknown>[] = await resp.json()
+		for(let i = 0; i < calls.length; i++){
+			const call = calls[i]!
+			const respItem = respData[i]
+			if(respItem && isSuccessApiResponse(respItem)){
+				call.ok(respItem.result)
+			} else {
+				const err = !respItem
+					? new ApiError("Batched calls count differs from response items count.")
+					: new ApiError(respItem.error.message)
 				if(this.onApiError){
 					this.onApiError(err)
 				}
-				throw err
+				call.bad(err)
 			}
 		}
-		throw new Error("No response?")
 	}
 
-	async call(opts: ApiCallOptions & {resultType: "binary"}): Promise<ArrayBuffer>
-	async call<T>(opts: ApiCallOptions): Promise<T>
-	async call<T>(opts: ApiCallOptions): Promise<T | ArrayBuffer> {
-		// TODO: batching should work somehow better
-		// this is just for now
-		const body: unknown[] = [opts.name]
-		if(opts.body){
-			body.push(opts.body)
-		}
-		const resp = await fetch(this.urlBase, {
-			method: this.method,
-			body: JSON.stringify([body])
+	call<T>(opts: ApiCallOptions): Promise<T> {
+		return new Promise((ok, bad) => {
+			const data: BatchableCall<T>["data"] = [opts.name]
+			if(opts.body){
+				data.push(opts.body)
+			}
+			const call: BatchableCall<T> = {ok, bad, data}
+			this.nextBatch.push(call)
+			this.tryStartBatchTimer()
 		})
-		return (await this.parseResp(resp))
 	}
 
 }

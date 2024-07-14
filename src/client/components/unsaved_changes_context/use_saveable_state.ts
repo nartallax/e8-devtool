@@ -15,8 +15,12 @@ type UseSaveableStateResult<T> = {
 /** setState that tracks if it was saved
 "saved" here means "uploaded to some storage or parent state" */
 export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | Promise<void>): UseSaveableStateResult<T> => {
-	const currentValueRef = useRef(value)
 	const [currentValue, rawSetState] = useState(value)
+	return useWrapSaveableState(currentValue, rawSetState, save)
+}
+
+export const useWrapSaveableState = <T>(currentValue: T, rawSetState: (newValue: T) => void, save: (currentValue: T) => void | Promise<void>): UseSaveableStateResult<T> => {
+	const currentValueRef = useRef(currentValue)
 	const [isUnsaved, setUnsaved] = useState(false)
 	const isUnsavedRef = useRef(isUnsaved)
 	isUnsavedRef.current = isUnsaved
@@ -31,7 +35,7 @@ export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | 
 		currentValueRef.current = newValue
 		rawSetState(newValue)
 		setUnsaved(true)
-	}, [])
+	}, [rawSetState])
 
 	const saveRef = useRef(save)
 	saveRef.current = save

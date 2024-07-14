@@ -76,6 +76,7 @@ export async function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project
 		api[`${prefix}/getPathById`] = dir.getPath.bind(dir)
 		api[`${prefix}/get`] = dir.getItemById.bind(dir)
 		api[`${prefix}/getByPath`] = dir.getItemByPath.bind(dir)
+		api[`${prefix}/getForest`] = dir.getForest.bind(dir)
 	}
 
 	// TODO: rethink input paths
