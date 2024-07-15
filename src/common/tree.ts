@@ -345,13 +345,20 @@ export const getTreeSiblings = <T, B>(trees: Tree<T, B>[], path: TreePath): Tree
 }
 
 export const treeValuesToTreePath = <T, B>(forest: Tree<T, B>[], values: (T | B)[]): TreePath | null => {
-	const parentForest = forest
+	let parentForest = forest
 	const result: TreePath = []
-	outer: for(const arrayValue of values){
+	outer: for(let arrayIndex = 0; arrayIndex < values.length; arrayIndex++){
+		const arrayValue = values[arrayIndex]
 		let i = 0
 		for(const tree of parentForest){
 			if(tree.value === arrayValue){
 				result.push(i)
+
+				if(isTreeBranch(tree)){
+					parentForest = tree.children
+				} else if(arrayIndex === values.length - 1){
+					return result
+				}
 				continue outer
 			}
 			i++

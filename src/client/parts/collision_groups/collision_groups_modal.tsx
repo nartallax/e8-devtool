@@ -7,51 +7,49 @@ import {getRandomUUID} from "common/uuid"
 import {useState} from "react"
 import {Button} from "client/components/button/button"
 import {Icon} from "generated/icons"
-import {collisionGroupProvider, modelProvider} from "client/parts/data_providers/data_providers"
-import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {collisionGroupProvider} from "client/parts/data_providers/data_providers"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
 
 type Props = {
-	path: string
-	onClose: (path?: string) => void
+	path: string | null
+	onClose: (path?: string | null) => void
 }
 
-export const CollisionGroupsModal = ({path: initialPath, onClose: rawOnClose}: Props) => {
+export const CollisionGroupsModal = ({path: initialPath, onClose}: Props) => {
 	const [isCollisonGridOpen, setCollisionGridOpen] = useState(false)
-	const [path, setPath] = useState(initialPath)
+	const [path, setPath] = useState<string | null>(initialPath)
 
-	const {getReferrers: getModelReferrers} = modelProvider.useFetchers()
-
-	const {onClose, changesProps, forestProps} = collisionGroupProvider.useEditableForest({
-		createItem: () => ({id: getRandomUUID()}),
-		getReferrers: group => [getModelReferrers("collisionGroupId", group.id)],
-		onClose: rawOnClose
+	const forestProps = collisionGroupProvider.useEditableForest({
+		createItem: () => ({id: getRandomUUID()})
 	})
 
+	if(!forestProps){
+		return null
+	}
+
 	return (
-		<UnsavedChanges {...changesProps}>
-			<Modal
-				header="Collision groups"
-				contentWidth={["300px", "50vw", "600px"]}
-				contentHeight={["300px", "50vh", "800px"]}
-				onClose={onClose}>
-				<Form onSubmit={() => onClose(path)}>
-					<Col gap stretch grow>
-						{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
-						<StringForestView
-							{...forestProps}
-							itemName="collision group"
-							selectedPath={path}
-							onItemClick={path => setPath(path)}
-							onItemDoubleclick={path => onClose(path)}
-							buttons={() => (
-								<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
-							)}
-						/>
-						<ModalSubmitCancelButtons onCancel={onClose}/>
-					</Col>
-				</Form>
-			</Modal>
-		</UnsavedChanges>
+		<Modal
+			header="Collision groups"
+			contentWidth={["300px", "50vw", "600px"]}
+			contentHeight={["300px", "50vh", "800px"]}
+			onClose={onClose}>
+			<Form onSubmit={() => onClose(path)}>
+				<Col gap stretch grow>
+					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
+					<StringForestView
+						{...forestProps}
+						itemName="collision group"
+						selectedPath={path}
+						setSelectedPath={setPath}
+						onItemClick={path => setPath(path)}
+						onItemDoubleclick={path => onClose(path)}
+						buttons={() => (
+							<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
+						)}
+					/>
+					<ModalSubmitCancelButtons onCancel={onClose}/>
+				</Col>
+			</Form>
+		</Modal>
 	)
 }

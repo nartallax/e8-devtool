@@ -43,6 +43,17 @@ export function getLastPathPart(path: string): string {
 	return parts[parts.length - 1]!
 }
 
+export function dropLastPathPart(path: string): string {
+	const parts = splitPath(path)
+	return parts.slice(0, -1).join("/")
+}
+
+export function replaceLastPathPart(path: string, name: string): string {
+	const parts = splitPath(path).slice(0, -1)
+	parts.push(name)
+	return parts.join("/")
+}
+
 export function treePathToString(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
 	const parts = treePathToValues(forest, path)
 	if(addedPart){

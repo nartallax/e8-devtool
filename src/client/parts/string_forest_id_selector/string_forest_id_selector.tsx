@@ -1,6 +1,7 @@
 import {FormInputProps} from "client/components/form/form_context"
 import {ValueSelectorField} from "client/components/value_selector/value_selector"
-import {ForestDataProvider} from "client/parts/data_providers/project_forest_data_provider"
+import {ForestDataProvider} from "client/parts/data_providers/api_forest_data_provider"
+import {throwPlaceholder} from "client/ui_utils/noop"
 import {UUID} from "common/uuid"
 import {getLastPathPart} from "data/project_utils"
 import {useCallback, useState} from "react"
@@ -9,6 +10,7 @@ type Props<V extends {id: UUID}> = NullableProps<V> | NonNullableProps<V>
 
 type NonNullableProps<V extends {id: UUID}> = PropsFor<V, UUID, string> & {
 	isNullable?: false
+	createEmpty: () => V | Promise<V>
 }
 
 type NullableProps<V extends {id: UUID}> = PropsFor<V, UUID | null, string | null> & {
@@ -19,7 +21,9 @@ type PropsFor<V extends {id: UUID}, T, P> = FormInputProps<T> & {
 	provider: ForestDataProvider<V>
 	value: T
 	onChange: (value: T) => void
-	modal: (path: P, onClose: (newPath?: P) => void) => React.ReactNode
+	// yes, onClose here should be always nullable
+	// for cases like "last item in the collection was deleted" - modal should return null
+	modal: (path: P, onClose: (newPath?: string | null) => void) => React.ReactNode
 	absentValueLabel?: string
 	loadingValueLabel?: string
 }
@@ -28,17 +32,31 @@ export function StringForestIdSelector<V extends {id: UUID}>({
 	provider, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
 }: Props<V>) {
 	const {getByPath} = provider.useFetchers()
+	const createEmpty = !isNullable ? (props as NonNullableProps<V>).createEmpty : throwPlaceholder
 
 	const [isOpen, setOpen] = useState(false)
 	const onClose = useCallback(async(newPath?: string | null) => {
 		setOpen(false)
-		if(newPath !== undefined){
-			if(isNullable || newPath !== null){
-				const id = newPath === null ? null : (await getByPath(newPath)).id
-				onChange(id!)
-			}
+		if(newPath === undefined){
+			return
 		}
-	}, [onChange, getByPath, isNullable])
+
+		if(newPath !== null){
+			const id = (await getByPath(newPath)).id
+			onChange(id)
+			return
+		}
+
+		if(isNullable){
+			onChange(null)
+			return
+		}
+
+		// TODO: try to pick any value here, don't immediately create new one
+
+		const emptyItem = await Promise.resolve(createEmpty())
+		onChange(emptyItem.id)
+	}, [onChange, getByPath, isNullable, createEmpty])
 
 	const path = provider.usePathById(value)
 	const name = value === null ? absentValueLabel : !path ? loadingValueLabel : getLastPathPart(path)

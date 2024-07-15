@@ -15,14 +15,14 @@ type Serializer<T, K extends keyof T> = {
 /** Object that stores logic about splitting an object into several parts, and serializing/deserializing those parts */
 export class ObjectPartitioner<T> {
 
-	jsonSerializer: Serializer<T, any> = {
+	jsonSerializer: Serializer<any, any> = {
 		serialize: x => Buffer.from(JSON.stringify(x, null, "\t"), "utf-8"),
 		deserialize: x => JSON.parse(x.toString("utf-8"))
 	}
 
 	private restFile: [string, Serializer<T, any>] | null = null
 	private knownFields: Map<keyof T, string> = new Map()
-	private knownFiles: Map<string, Partition<T, keyof T>> = new Map()
+	private knownFiles: Map<string, Partition<T, any>> = new Map()
 
 	getFilenameWithField(field: keyof T): string {
 		const filename = this.knownFields.get(field)
@@ -101,7 +101,11 @@ export class ObjectPartitioner<T> {
 	}
 
 	async readAndAssemble(directoryPath: string): Promise<T> {
-		const parts = await Promise.all([...this.knownFiles.entries()].map(async([filename, serializer]) => {
+		const files: [string, Serializer<T, any>][] = [...this.knownFiles.entries()]
+		if(this.restFile){
+			files.push(this.restFile)
+		}
+		const parts = await Promise.all(files.map(async([filename, serializer]) => {
 			const data = await Fs.readFile(Path.resolve(directoryPath, filename))
 			return serializer.deserialize(data)
 		}))

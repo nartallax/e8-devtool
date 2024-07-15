@@ -23,7 +23,7 @@ export const batchJsonApiCalls = (api: Record<string, (...args: unknown[]) => un
 			try {
 				log(`API call: ${fnName}`)
 				const callRes = await Promise.resolve(fn(...fnArgs))
-				result.push({result: callRes})
+				result.push({result: callRes === undefined ? null : callRes})
 			} catch(e){
 				log(`Error calling ${fnName}(${apiMethodArgsToString(fnArgs)}): ${errToString(e)}`)
 				result.push(errorToErrorApiResp(e))
@@ -40,8 +40,8 @@ export const batchJsonApiCalls = (api: Record<string, (...args: unknown[]) => un
 function apiMethodArgsToString(methodArgs: unknown[]): string {
 	return methodArgs.map(value => {
 		let str = value instanceof Uint8Array ? "<binary>" : JSON.stringify(value)
-		if(str.length > 50){
-			str = str.substring(0, 50) + "<cut>"
+		if(str.length > 500){
+			str = str.substring(0, 500) + "<cut>"
 		}
 		return str
 	}).join(", ")

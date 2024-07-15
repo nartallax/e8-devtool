@@ -1,20 +1,23 @@
 import {TreeViewWithCreationProps, TreeViewWithElementCreation} from "client/components/tree_view/tree_view_with_element_creation"
-import {Tree, TreePath, getTreeByPath, treePathToValues, treeValuesToTreePath} from "common/tree"
-import {splitPath} from "data/project_utils"
+import {Tree, TreePath, areTreePathsEqual, getTreeByPath, moveTreeByPath, treePathToValues, treeValuesToTreePath} from "common/tree"
+import {replaceLastPathPart, splitPath} from "data/project_utils"
 import {useMemo} from "react"
 
-type Props = ReadonlyProps | MutableProps
+type Props = ReadonlyProps | SelectableProps | MutableProps | MutableSelectableProps
 
 type ReadonlyProps = {
 	forest: Tree<string, string>[]
 	makePath: (parts: string[], isPrefix: boolean) => string
-	selectedPath?: string | null
 	onItemClick?: (path: string, isBranch: boolean) => void
 	onItemDoubleclick?: (path: string, isBranch: boolean) => void
 	getItemSublabel?: (path: string) => string
 	isBranchClickable?: boolean
 	buttons?: () => React.ReactNode
 	// TODO: validators, to avoid having bad path symbols
+}
+
+type SelectableProps = ReadonlyProps & {
+	selectedPath: string | null
 }
 
 type MutableProps = ReadonlyProps & {
@@ -27,15 +30,27 @@ type MutableProps = ReadonlyProps & {
 	deleteNode: (node: Tree<string, string>, path: TreePath) => void
 }
 
+type MutableSelectableProps = SelectableProps & MutableProps & {
+	/** You should supply this function if your tree is mutable and selectable.
+	It will be called in case when a node is moved/renamed */
+	setSelectedPath: (path: string | null) => void
+}
+
 const arePropsMutable = (x: unknown): x is MutableProps => !!x && typeof(x) === "object" && !!(x as MutableProps).moveNode
+const arePropsSelectable = (x: unknown): x is SelectableProps => !!x && typeof(x) === "object" && (x as SelectableProps).selectedPath !== undefined
+const arePropsMutableSelectable = (x: unknown): x is MutableSelectableProps => !!x && typeof(x) === "object" && (x as SelectableProps).selectedPath !== undefined
 
 export const StringForestView = ({
-	forest, makePath, selectedPath, onItemClick, onItemDoubleclick, isBranchClickable, buttons, getItemSublabel, ...props
+	forest, makePath, onItemClick, onItemDoubleclick, isBranchClickable, buttons, getItemSublabel, ...props
 }: Props) => {
+	const selectedPath: string | null = arePropsSelectable(props) ? props.selectedPath : null
+	const selectedTreePath = useMemo(() => {
+		if(!selectedPath){
+			return undefined
+		}
 
-	const selectedTreePath = useMemo(() =>
-		!selectedPath ? undefined : treeValuesToTreePath(forest, splitPath(selectedPath)) ?? undefined
-	, [forest, selectedPath])
+		return treeValuesToTreePath(forest, splitPath(selectedPath)) ?? undefined
+	}, [forest, selectedPath])
 
 	let innerProps: TreeViewWithCreationProps<string, string> = {
 		tree: forest,
@@ -66,6 +81,38 @@ export const StringForestView = ({
 			onDelete: (path, node) => deleteNode(node, path),
 			onDrag: (from, to) => moveNode(getTreeByPath(forest, from), from, to),
 			onRename: (path, name, node) => renameNode(node, path, name)
+		}
+
+		if(arePropsMutableSelectable(props)){
+			const setSelectedPath = props.setSelectedPath
+			const {onDelete, onDrag, onRename} = innerProps
+			innerProps = {
+				...innerProps,
+				onDelete: async(path, node) => {
+					await Promise.resolve(onDelete!(path, node))
+					if(selectedTreePath && areTreePathsEqual(selectedTreePath, path)){
+						setSelectedPath(null)
+					}
+				},
+				onRename: async(path, name, node) => {
+					await Promise.resolve(onRename!(path, name, node))
+					if(selectedPath && selectedTreePath && areTreePathsEqual(selectedTreePath, path)){
+						setSelectedPath(replaceLastPathPart(selectedPath, name))
+					}
+				},
+				onDrag: async(from, to) => {
+					await Promise.resolve(onDrag!(from, to))
+					if(selectedTreePath && areTreePathsEqual(selectedTreePath, from)){
+						// this is not very efficient, but we don't really have another choice
+						// we don't have any guarantees that forest will be updated after onDrag handler is resolved
+						// (it should, but React is asyncronous and sometimes doesn't re-render everything in time)
+						// that's why we can't just put forest in a ref and use this ref
+						// and that's why we are moving nodes manually, despite onDrag probably doing the same
+						const newForest = moveTreeByPath(forest, from, to)
+						setSelectedPath(makePath(treePathToValues(newForest, to), false))
+					}
+				}
+			}
 		}
 	}
 

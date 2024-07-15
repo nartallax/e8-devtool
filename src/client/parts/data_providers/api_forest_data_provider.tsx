@@ -14,20 +14,18 @@ import {useCallback} from "react"
 type ChangesProps = Pick<React.ComponentProps<typeof UnsavedChanges>, "saveOnUnmount" | "save" | "isUnsaved">
 
 type EditableForest = {
-	forestProps: {
-		forest: Tree<string, string>[]
-		createNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
-		moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
-		renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
-		deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
-		makePath: (parts: string[], isPrefix: boolean) => string
-	}
+	forest: Tree<string, string>[]
+	createNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
+	moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
+	renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
+	deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
+	makePath: (parts: string[], isPrefix: boolean) => string
 }
 
 type EditableItem<T> = {
 	value: T
 	setValue: SetState<T>
-	save: () => Promise<void>
+	saveUnsaved: () => Promise<void>
 	changesProps: ChangesProps
 }
 
@@ -36,6 +34,7 @@ type ForestDataFetchers<T> = {
 	getPathById: ((id: UUID) => Promise<string>) & ((id: null) => Promise<null>)
 	getAsMap: () => Promise<Map<string, T>>
 	getReferrers: <K extends keyof T>(fieldName: K, value: T[K]) => Promise<ProjectObjectReferrer[]>
+	create: (path: string, index: number, item: T) => Promise<void>
 }
 
 type EditableForestProps<T> = {
@@ -43,7 +42,7 @@ type EditableForestProps<T> = {
 }
 
 export type ForestDataProvider<T> = ForestFetcherHooks<T> & {
-	useEditableForest: (props: EditableForestProps<T>) => EditableForest
+	useEditableForest: (props: EditableForestProps<T>) => EditableForest | null
 	useEditableItem: (id: UUID) => EditableItem<T> | null
 	useEditableItemByPath: (path: string) => EditableItem<T> | null
 	useFetchers: () => ForestDataFetchers<T>
@@ -55,7 +54,9 @@ type ForestFetcherHooks<T> = {
 	useAsMap: () => Map<string, T> | null
 }
 
-export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindingsName: keyof DevtoolApiClient["forestBindings"], getReferrers?: (item: T) => Promise<ProjectObjectReferrer[]>[]): ForestDataProvider<T> {
+const noopReferers = () => []
+
+export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindingsName: keyof DevtoolApiClient["forestBindings"], useReferrerFetcher: () => (item: T) => Promise<ProjectObjectReferrer[]>[] = () => noopReferers): ForestDataProvider<T> {
 	const useQueries = () => {
 		const apiClient = useApiClient()
 		const bindings = apiClient.forestBindings[bindingsName] as unknown as ForestApiBindings<T>
@@ -96,11 +97,16 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 
 	type Queries = ReturnType<typeof useQueries>
 
-	function useEditableForest({createItem}: EditableForestProps<T>): EditableForest {
+	function useEditableForest({createItem}: EditableForestProps<T>): EditableForest | null {
 		const queries = useQueries()
-		const [forest, setForest] = useAsyncCall<Tree<string, string>[]>([], () => queries.getForest.getValue(), [])
+		const [forest, setForest, {isLoaded}] = useAsyncCall([], () => queries.getForest.getValue(), [])
+		const getReferrers = useReferrerFetcher()
 
 		const {showAlert} = useAlert()
+
+		if(!isLoaded){
+			return null
+		}
 
 		const showRefErrors = async(refs: ProjectObjectReferrer[]) => {
 			if(refs.length === 0){
@@ -148,7 +154,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		const deleteNode = async(node: Tree<string, string>, path: TreePath) => {
 			const pathStr = treePathToString(forest, path)
 			if(isTreeLeaf(node)){
-				if(getReferrers){
+				if(getReferrers !== noopReferers){
 					const item = await queries.getByPath.getValue(pathStr)
 					const refs = (await Promise.all(getReferrers(item!))).flat()
 					await showRefErrors(refs)
@@ -159,10 +165,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		}
 
 		return {
-			// TODO: do we even need to wrap this in an object
-			forestProps: {
-				createNode, moveNode, renameNode, deleteNode, forest, makePath: mergePath
-			}
+			createNode, moveNode, renameNode, deleteNode, forest, makePath: mergePath
 		}
 	}
 
@@ -170,7 +173,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		const queries = useQueries()
 		const [rawValue, rawSetValue] = useAsyncCall(() => fetcher(queries), [fetcher])
 		const {
-			state, setState, save, saveIfUnsaved, isUnsaved
+			state, setState, saveIfUnsaved, isUnsaved
 		} = useWrapSaveableState(rawValue, rawSetValue, async value => {
 			await queries.update(value!)
 		})
@@ -182,9 +185,9 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		return {
 			value: state!,
 			setValue: setState as SetState<T>,
-			save: saveIfUnsaved,
+			saveUnsaved: saveIfUnsaved,
 			changesProps: {
-				isUnsaved, save, saveOnUnmount: true
+				isUnsaved, save: saveIfUnsaved
 			}
 		}
 	}
@@ -200,7 +203,8 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 				getAsMap: queries.getAsMap.getValue,
 				getByPath: queries.getByPath.getValue as ForestDataFetchers<T>["getByPath"],
 				getPathById: queries.getPathById.getValue as ForestDataFetchers<T>["getPathById"],
-				getReferrers: queries.getReferrers.getValue
+				getReferrers: queries.getReferrers.getValue,
+				create: queries.create
 			}
 		},
 

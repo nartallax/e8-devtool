@@ -1,43 +1,54 @@
-import {makeProjectForestDataProvider} from "client/parts/data_providers/project_forest_data_provider"
+import {makeApiForestDataProvider} from "client/parts/data_providers/api_forest_data_provider"
 import {makeProjectSaveableDataWrapper} from "client/parts/data_providers/project_saveable_data"
 import {UUID} from "common/uuid"
 import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 
-export const inputGroupProvider = makeProjectForestDataProvider<ProjectInputGroup>({
-	mapName: "inputGroups",
-	forestName: "inputGroupTree",
-	itemType: "input bind group"
-})
+export const inputGroupProvider = makeApiForestDataProvider<ProjectInputGroup>(
+	"input bind group",
+	"inputGroup",
+	() => {
+		const {getReferrers: getBindReferrers} = inputBindProvider.useFetchers()
+		return group => [getBindReferrers("groupId", group.id)]
+	}
+)
 
-export const collisionGroupProvider = makeProjectForestDataProvider<ProjectCollisionGroup>({
-	forestName: "collisionGroupTree",
-	mapName: "collisionGroups",
-	itemType: "collision group"
-})
+export const collisionGroupProvider = makeApiForestDataProvider<ProjectCollisionGroup>(
+	"collision group",
+	"collisionGroup",
+	() => {
+		const {getReferrers: getModelReferrers} = modelProvider.useFetchers()
+		return group => [getModelReferrers("collisionGroupId", group.id)]
+	}
+)
 
-export const layerProvider = makeProjectForestDataProvider<ProjectLayer>({
-	forestName: "layerTree",
-	mapName: "layers",
-	itemType: "layer"
-})
+export const layerProvider = makeApiForestDataProvider<ProjectLayer>(
+	"layer",
+	"layer",
+	() => {
+		const {getReferrers: getModelReferrers} = modelProvider.useFetchers()
+		const {getReferrers: getParticleReferrers} = particleProvider.useFetchers()
+		return layer => [
+			getModelReferrers("layerId", layer.id),
+			getParticleReferrers("layerId", layer.id)
+		]
+	}
+)
 
-export const inputBindProvider = makeProjectForestDataProvider<ProjectInputBind>({
-	forestName: "inputBindTree",
-	mapName: "inputBinds",
-	itemType: "input bind"
-})
+export const inputBindProvider = makeApiForestDataProvider<ProjectInputBind>(
+	"input bind",
+	"inputBind"
+)
 
-export const modelProvider = makeProjectForestDataProvider<ProjectModel>({
-	forestName: "modelTree",
-	mapName: "models",
-	itemType: "model"
-})
+export const modelProvider = makeApiForestDataProvider<ProjectModel>(
+	"model",
+	"model"
+)
 
-export const particleProvider = makeProjectForestDataProvider<ProjectParticle>({
-	forestName: "particleTree",
-	mapName: "particles",
-	itemType: "particle"
-})
+export const particleProvider = makeApiForestDataProvider<ProjectParticle>(
+	"particle",
+	"particle"
+)
 
+// TODO: uh.
 export const projectConfigProvider = makeProjectSaveableDataWrapper<ProjectConfig>("config")
 export const collisionPairsProvider = makeProjectSaveableDataWrapper<[UUID, UUID][]>("collisionGroupPairs")

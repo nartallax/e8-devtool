@@ -1,5 +1,6 @@
 import {directoryExists} from "common/file_exists"
 import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, getForestLeaves, getTreeByPath, isTreeBranch, moveTreeByPath, treePathToValues, treeValuesToTreePath, updateTreeByPath} from "common/tree"
+import {dropLastPathPart} from "data/project_utils"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 
@@ -39,7 +40,7 @@ export class OrderedDirectory {
 	}
 
 	private newRelPathToTreePath(relPath: string, index: number): TreePath {
-		return [...this.relPathToTreePath(Path.dirname(relPath)), index]
+		return [...this.relPathToTreePath(dropLastPathPart(relPath)), index]
 	}
 
 	async createNode(relPath: string, index: number, isBranch: boolean): Promise<string> {

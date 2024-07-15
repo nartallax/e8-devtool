@@ -34,7 +34,7 @@ export const InputBindModal = ({path, onClose}: Props) => {
 				contentWidth={["300px", "50vw", "600px"]}
 				contentHeight={["300px", "50vh", "800px"]}>
 				<Form onSubmit={async() => {
-					await editable.changesProps.save()
+					await editable.saveUnsaved()
 					onClose()
 				}}>
 					<Col gap grow stretch>

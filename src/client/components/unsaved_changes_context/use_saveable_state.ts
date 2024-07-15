@@ -21,6 +21,7 @@ export const useSaveableState = <T>(value: T, save: (currentValue: T) => void | 
 
 export const useWrapSaveableState = <T>(currentValue: T, rawSetState: (newValue: T) => void, save: (currentValue: T) => void | Promise<void>): UseSaveableStateResult<T> => {
 	const currentValueRef = useRef(currentValue)
+	currentValueRef.current = currentValue
 	const [isUnsaved, setUnsaved] = useState(false)
 	const isUnsavedRef = useRef(isUnsaved)
 	isUnsavedRef.current = isUnsaved
@@ -41,6 +42,7 @@ export const useWrapSaveableState = <T>(currentValue: T, rawSetState: (newValue:
 	saveRef.current = save
 	const doSave = useCallback(async() => {
 		await Promise.resolve(saveRef.current(currentValueRef.current))
+		isUnsavedRef.current = false
 		setUnsaved(false)
 	}, [])
 

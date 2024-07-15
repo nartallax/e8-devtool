@@ -63,7 +63,7 @@ export const TreeViewWithElementCreation = <L, B>({
 	}, [])
 
 	const onAddChild = !onLeafCreated ? undefined : (path: TreePath) => {
-		setCreatedNode({node: {value: ""}, path})
+		addRenameNode(false, [...path, 0])
 	}
 
 	const addRenameBranch = !onBranchCreated ? undefined : () => {
@@ -73,16 +73,28 @@ export const TreeViewWithElementCreation = <L, B>({
 		addRenameNode(false)
 	}
 
+	function shiftPathByCreatedNode(path: TreePath): TreePath {
+		if(!createdNode){
+			return path
+		}
+		const createdPath = createdNode.path
+		if(createdPath.length > path.length){
+			return path
+		}
+		if(createdPath[path.length - 1]! < path[path.length - 1]!){
+			path = [...path]
+			path[path.length - 1]--
+		}
+		return path
+	}
+
 	function getKey<V extends L | B, T extends Tree<L, B>>(innerGetKey?: (tree: V, path: TreePath, node: T) => string) {
 		return (tree: V, path: TreePath, node: T) => {
 			if(createdNode){
 				if(node === createdNode.node){
 					return createdNodeId
 				}
-				if(createdNode.path[createdNode.path.length - 1]! < path[path.length - 1]!){
-					path = [...path]
-					path[path.length - 1]--
-				}
+				path = shiftPathByCreatedNode(path)
 			}
 
 			return !innerGetKey ? "<no key function provided>" : innerGetKey(tree, path, node)
@@ -100,10 +112,10 @@ export const TreeViewWithElementCreation = <L, B>({
 			</Row>}
 			<SearchableTreeView
 				{...props}
-				getLeafLabel={(leaf, path, node) => node === createdNode?.node ? "" : getLeafLabel(leaf, path, node)}
-				getBranchLabel={!getBranchLabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchLabel(branch, path, node)}
-				getLeafSublabel={!getLeafSublabel ? undefined : (leaf, path, node) => node === createdNode?.node ? "" : getLeafSublabel(leaf, path, node)}
-				getBranchSublabel={!getBranchSublabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchSublabel(branch, path, node)}
+				getLeafLabel={(leaf, path, node) => node === createdNode?.node ? "" : getLeafLabel(leaf, shiftPathByCreatedNode(path), node)}
+				getBranchLabel={!getBranchLabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchLabel(branch, shiftPathByCreatedNode(path), node)}
+				getLeafSublabel={!getLeafSublabel ? undefined : (leaf, path, node) => node === createdNode?.node ? "" : getLeafSublabel(leaf, shiftPathByCreatedNode(path), node)}
+				getBranchSublabel={!getBranchSublabel ? undefined : (branch, path, node) => node === createdNode?.node ? "" : getBranchSublabel(branch, shiftPathByCreatedNode(path), node)}
 				getLeafKey={getKey(getLeafKey)}
 				getBranchKey={getKey(getBranchKey)}
 				onAddChild={onAddChild}

@@ -16,7 +16,7 @@ import {ModelTextureLayer} from "client/parts/model_page/model_display/model_tex
 import {TexturesModal} from "client/parts/textures/textures_modal"
 import {useTextures} from "client/parts/texture_tree_context"
 import {UUID, getRandomUUID} from "common/uuid"
-import {ProjectShape} from "data/project"
+import {ProjectCollisionGroup, ProjectLayer, ProjectShape} from "data/project"
 import {Icon} from "generated/icons"
 import {useRef} from "react"
 import {SetState} from "client/ui_utils/react_types"
@@ -130,6 +130,26 @@ const ModelSidebar = ({
 		setModel(model => ({...model, size: {x, y}}))
 	}
 
+	const saveLayer = layerProvider.useFetchers().create
+	const createDefaultLayer = async() => {
+		const layer: ProjectLayer = {
+			id: getRandomUUID(),
+			type: "model"
+		}
+		await saveLayer("default", 0, layer)
+		return layer
+	}
+
+	const saveCollisionGroup = collisionGroupProvider.useFetchers().create
+	const createDefaultCollisionGroup = async() => {
+		const collisionGroup: ProjectCollisionGroup = {
+			id: getRandomUUID()
+		}
+		await saveCollisionGroup("default", 0, collisionGroup)
+		return collisionGroup
+	}
+
+
 	return (
 		<TitlePart part={" - " + modelName}>
 			<ForestPathSelector
@@ -140,6 +160,7 @@ const ModelSidebar = ({
 				modal={onClose => <TexturesModal onClose={onClose} value={model.texturePath}/>}
 			/>
 			<StringForestIdSelector
+				createEmpty={createDefaultCollisionGroup}
 				provider={collisionGroupProvider}
 				label="Collision"
 				value={model.collisionGroupId}
@@ -147,6 +168,7 @@ const ModelSidebar = ({
 				modal={(path, onClose) => <CollisionGroupsModal path={path} onClose={onClose}/>}
 			/>
 			<StringForestIdSelector
+				createEmpty={createDefaultLayer}
 				provider={layerProvider}
 				label="Layer"
 				value={model.layerId}

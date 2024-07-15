@@ -39,13 +39,13 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	}
 
 	async createDirectory(relPath: string, index: number): Promise<void> {
-		await this.dir.createNode(relPath, index, false)
+		await this.dir.createNode(relPath, index, true)
 	}
 
 	async createItem(relPath: string, index: number, value: T): Promise<void> {
-		const itemDirPath = await this.dir.createNode(relPath, index, true)
+		const itemDirPath = await this.dir.createNode(relPath, index, false)
 		await this.partitioner.partitionAndWrite(itemDirPath, value)
-		this.idPathMap.set(value.id, itemDirPath)
+		this.idPathMap.set(value.id, relPath)
 	}
 
 	async deleteNode(relPath: string): Promise<void> {
@@ -90,7 +90,7 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	}
 
 	async updateItem(item: T): Promise<void> {
-		const relPath = this.idPathMap.getA(item.id)
+		const relPath = this.idPathMap.getB(item.id)
 		await this.partitioner.partitionAndWrite(Path.resolve(this.dir.path, relPath), item)
 	}
 

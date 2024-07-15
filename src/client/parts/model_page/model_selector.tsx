@@ -1,7 +1,6 @@
 import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
-import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {collisionGroupProvider, layerProvider, modelProvider} from "client/parts/data_providers/data_providers"
 import {CentralColumn} from "client/parts/layouts/central_column"
 import {AbortError} from "client/ui_utils/abort_error"
@@ -47,24 +46,25 @@ export const ModelSelector = withDataLoaded(
 			return makeBlankModel({collisionGroupId, layerId})
 		}
 
-		const {forestProps, changesProps} = modelProvider.useEditableForest({
+		const forestProps = modelProvider.useEditableForest({
 			createItem: () => getModelWithDefaults()
 		})
 		const {getByPath} = modelProvider.useFetchers()
 
+		if(!forestProps){
+			return null
+		}
+
 		return (
-			<UnsavedChanges {...changesProps}>
-				<CentralColumn>
-					<StringForestView
-						{...forestProps}
-						itemName="model"
-						onItemDoubleclick={async path => {
-							await changesProps.save()
-							const model = await getByPath(path)
-							navigate(appendUrlPath(matchedUrl, `./${model.id}`))
-						}}
-					/>
-				</CentralColumn>
-			</UnsavedChanges>
+			<CentralColumn>
+				<StringForestView
+					{...forestProps}
+					itemName="model"
+					onItemDoubleclick={async path => {
+						const model = await getByPath(path)
+						navigate(appendUrlPath(matchedUrl, `./${model.id}`))
+					}}
+				/>
+			</CentralColumn>
 		)
 	})
