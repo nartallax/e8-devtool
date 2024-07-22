@@ -1,3 +1,4 @@
+import {ValidatorSets} from "client/components/form/validators"
 import {TreeViewWithCreationProps, TreeViewWithElementCreation} from "client/components/tree_view/tree_view_with_element_creation"
 import {Tree, TreePath, areTreePathsEqual, getTreeByPath, moveTreeByPath, treePathToValues, treeValuesToTreePath} from "common/tree"
 import {replaceLastPathPart, splitPath} from "data/project_utils"
@@ -13,7 +14,6 @@ type ReadonlyProps = {
 	getItemSublabel?: (path: string) => string
 	isBranchClickable?: boolean
 	buttons?: () => React.ReactNode
-	// TODO: validators, to avoid having bad path symbols
 }
 
 type SelectableProps = ReadonlyProps & {
@@ -53,7 +53,7 @@ export const StringForestView = ({
 	}, [forest, selectedPath])
 
 	let innerProps: TreeViewWithCreationProps<string, string> = {
-		tree: forest,
+		forest,
 		getSearchText: leaf => leaf,
 		getLeafKey: (_, path) => makePath(treePathToValues(forest, path), false),
 		getBranchKey: (_, path) => makePath(treePathToValues(forest, path), true),
@@ -66,7 +66,11 @@ export const StringForestView = ({
 		onBranchDoubleclick: !onItemDoubleclick || !isBranchClickable ? undefined : (_, path) => onItemDoubleclick(makePath(treePathToValues(forest, path), true), true),
 		selectedPath: selectedTreePath,
 		buttons,
-		getLeafSublabel: !getItemSublabel ? undefined : (_, path) => getItemSublabel(makePath(treePathToValues(forest, path), false))
+		getLeafSublabel: !getItemSublabel ? undefined : (_, path) => getItemSublabel(makePath(treePathToValues(forest, path), false)),
+		// wonder if this should be a prop, or perahaps separate control
+		// we only ever use this control for FS trees, so it makes sense to do this
+		leafLabelValidators: ValidatorSets.path,
+		branchLabelValidators: ValidatorSets.path
 	}
 
 	if(arePropsMutable(props)){

@@ -1,4 +1,4 @@
-import {Tree, TreeBranch, TreePath, areTreePathsEqual, isTreeBranch} from "common/tree"
+import {Tree, TreeBranch, TreePath, areTreePathsEqual, getTreeSiblings, isTreeBranch} from "common/tree"
 
 import * as css from "./tree_view.module.scss"
 import {useState} from "react"
@@ -12,6 +12,7 @@ import {isInButton} from "client/ui_utils/dom_queries"
 import {ValidatorsMaybeFactory} from "client/components/form/validators"
 
 type BaseProps<L, B> = {
+	forest: Tree<L, B>[]
 	// eslint-disable-next-line react/no-unused-prop-types
 	getBranchKey?: (branch: B, path: TreePath, node: Tree<L, B>) => string
 	// eslint-disable-next-line react/no-unused-prop-types
@@ -41,7 +42,7 @@ type BaseProps<L, B> = {
 	selectedPath?: TreePath
 	// eslint-disable-next-line react/no-unused-prop-types
 	isEverythingExpanded?: boolean
-	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>}) => React.ReactNode
+	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>, siblingNames: string[]}) => React.ReactNode
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
@@ -83,28 +84,46 @@ const TreeBranch = <T, B>({branch, isEverythingExpanded, ...props}: BranchProps<
 	)
 }
 
+const getLabel = <T, B>(row: Tree<T, B>, path: TreePath, getBranchLabel: RowProps<T, B>["getBranchLabel"], getLeafLabel: RowProps<T, B>["getLeafLabel"], siblingIndex?: number) => {
+
+	if(siblingIndex !== undefined && path.length > 0){
+		const lastPathPart = path[path.length - 1]!
+		if(siblingIndex >= lastPathPart){
+			siblingIndex++
+		}
+		path = [...path.slice(0, -1), siblingIndex]
+	}
+
+	if(isTreeBranch(row)){
+		if(!getBranchLabel){
+			throw new Error("Cannot get branch label: no function provided.")
+		}
+		return getBranchLabel(row.value, path, row)
+	} else {
+		return getLeafLabel(row.value, path, row)
+	}
+}
+
 const TreeRow = <T, B>({
 	row, squares, isExpanded, getBranchLabel, getLeafLabel, getLeafSublabel, getBranchSublabel,
 	onExpandChange, onLeafDoubleclick, onLeafClick, path, inlineEditPath, onLabelEditComplete,
 	canEditBranchLabel, canEditLeafLabel, setInlineEditPath, onNodeDelete, onAddChild, canDeleteBranch,
 	canDeleteLeaf, leafLabelValidators, branchLabelValidators, selectedPath, InlineEditor = InlineTreeElementEditor,
-	onBranchClick, onBranchDoubleclick
+	onBranchClick, onBranchDoubleclick,
+	forest
 }: RowProps<T, B>) => {
 	const isSelected = !!selectedPath && areTreePathsEqual(selectedPath, path)
 	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
-	let label: string
-	if(isTreeBranch(row)){
-		if(!getBranchLabel){
-			throw new Error("Cannot get branch label: no function provided.")
-		}
-		label = getBranchLabel(row.value, path, row)
-	} else {
-		label = getLeafLabel(row.value, path, row)
-	}
+
+	const label = getLabel(row, path, getBranchLabel, getLeafLabel)
+
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
+		const siblingNames = getTreeSiblings(forest, path)
+			.map((tree, siblingIndex) => getLabel(tree, path, getBranchLabel, getLeafLabel, siblingIndex))
 		labelOrEditor = (
 			<InlineEditor
+				siblingNames={siblingNames}
 				initialValue={label}
 				onComplete={label => onLabelEditComplete(path, row, label)}
 				treePath={path}

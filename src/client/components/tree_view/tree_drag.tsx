@@ -23,12 +23,12 @@ type RowElPath = {
 type TreeDragParams<T, B> = {
 	onDrag?: (from: TreePath, to: TreePath) => void
 	rootRef: RefObject<HTMLElement | null>
-	tree: Tree<T, B>[]
+	forest: Tree<T, B>[]
 	canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
 }
 
 export const useTreeViewDragProps = <T, B>({
-	onDrag: _onDrag, rootRef, canBeChildOf, tree
+	onDrag: _onDrag, rootRef, canBeChildOf, forest
 }: TreeDragParams<T, B>) => {
 	const offset = useRef({x: 0, y: 0})
 	const destination = useRef<DragDestination<T, B> | null>(null)
@@ -38,7 +38,7 @@ export const useTreeViewDragProps = <T, B>({
 	onDragRef.current = _onDrag
 
 	const updateDest = (e: AnyPointerEvent) => {
-		const newDest = getDragDestination(tree, e)
+		const newDest = getDragDestination(forest, e)
 		const root = rootRef.current
 		if(!newDest || !draggedRow.current || !root){
 			return
@@ -55,11 +55,11 @@ export const useTreeViewDragProps = <T, B>({
 			} else {
 				const parentPath = newDest.path.slice(0, newDest.path.length - 1)
 				if(parentPath.length > 0){
-					parent = getBranchByPath(tree, parentPath)
+					parent = getBranchByPath(forest, parentPath)
 				}
 			}
 
-			if(!canBeChildOf(getTreeByPath(tree, draggedRow.current.path), parent)){
+			if(!canBeChildOf(getTreeByPath(forest, draggedRow.current.path), parent)){
 				return
 			}
 		}

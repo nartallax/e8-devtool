@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import * as css from "./tree_view.module.scss"
 import {cn} from "client/ui_utils/classname"
-import {ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/components/form/validators"
+import {Validators, ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/components/form/validators"
 import {TreePath} from "common/tree"
 
 type Props = {
@@ -9,10 +9,11 @@ type Props = {
 	onComplete: (newValue: string | null) => void
 	treePath: TreePath
 	validators?: ValidatorsMaybeFactory<string, TreePath>
+	siblingNames: string[]
 }
 
 export const InlineTreeElementEditor = ({
-	initialValue, onComplete, validators, treePath
+	initialValue, onComplete, validators, treePath, siblingNames
 }: Props) => {
 	// this state is just to make it rerender-resistant
 	const [value, setValue] = useState(initialValue)
@@ -32,7 +33,9 @@ export const InlineTreeElementEditor = ({
 		if(!ref.current){
 			return
 		}
-		const resolvedValidators = resolveValidatorsMaybeFactory(validators, treePath)
+		let resolvedValidators = resolveValidatorsMaybeFactory(validators, treePath)
+		resolvedValidators ??= []
+		resolvedValidators.push(Validators.isUnique({values: siblingNames}))
 		const value = ref.current.value
 		const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
 		if(hasError){
@@ -41,7 +44,7 @@ export const InlineTreeElementEditor = ({
 		} else {
 			onComplete(value)
 		}
-	}, [onComplete, treePath, validators])
+	}, [onComplete, treePath, validators, siblingNames])
 
 	const onKeyDown = useCallback((e: React.KeyboardEvent) => {
 		if(e.key === "Enter"){

@@ -1,6 +1,8 @@
+import {ApiError} from "common/api_response"
 import {directoryExists} from "common/file_exists"
+import {pathPartRegexp} from "common/regexps"
 import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, getForestLeaves, getTreeByPath, isTreeBranch, moveTreeByPath, treePathToValues, treeValuesToTreePath, updateTreeByPath} from "common/tree"
-import {dropLastPathPart} from "data/project_utils"
+import {dropLastPathPart, splitPath} from "data/project_utils"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 
@@ -43,7 +45,16 @@ export class OrderedDirectory {
 		return [...this.relPathToTreePath(dropLastPathPart(relPath)), index]
 	}
 
+	private validatePath(relPathOrPart: string): void {
+		for(const pathPart of splitPath(relPathOrPart)){
+			if(!pathPartRegexp.test(pathPart)){
+				throw new ApiError(`Name "${pathPart}" is not a valid path part.`)
+			}
+		}
+	}
+
 	async createNode(relPath: string, index: number, isBranch: boolean): Promise<string> {
+		this.validatePath(relPath)
 		const fullPath = Path.resolve(this.path, relPath)
 		// all those FS operation could use some rollback strategy, in case one of them goes wrong and the rest don't
 		const [, [entryName]] = await Promise.all([
@@ -60,6 +71,7 @@ export class OrderedDirectory {
 	}
 
 	async deleteNode(relPath: string, onLeafDeleted?: (relPath: string) => void): Promise<void> {
+		this.validatePath(relPath)
 		const fullPath = Path.resolve(this.path, relPath)
 		await Promise.all([
 			Fs.rm(fullPath, {recursive: true}),
@@ -84,6 +96,8 @@ export class OrderedDirectory {
 	}
 
 	async moveNode(fromRelPath: string, toRelPath: string, index: number, onLeafMoved?: (oldRelPath: string, newRelPath: string) => void): Promise<string> {
+		this.validatePath(fromRelPath)
+		this.validatePath(toRelPath)
 		const fromFullPath = Path.resolve(this.path, fromRelPath)
 		const toFullPath = Path.resolve(this.path, toRelPath)
 		const [, [, flags]] = await Promise.all([
@@ -114,6 +128,8 @@ export class OrderedDirectory {
 	}
 
 	async renameNode(oldRelPath: string, newName: string, onLeafMoved?: (oldRelPath: string, newRelPath: string) => void): Promise<void> {
+		this.validatePath(oldRelPath)
+		this.validatePath(newName)
 		const fromFullPath = Path.resolve(this.path, oldRelPath)
 		const toFullPath = Path.resolve(Path.dirname(fromFullPath), newName)
 		await Promise.all([

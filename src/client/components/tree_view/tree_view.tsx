@@ -5,7 +5,7 @@ import {MutableRefObject, useCallback, useMemo, useRef, useState} from "react"
 import {SetState} from "client/ui_utils/react_types"
 import {useTreeViewDragProps} from "client/components/tree_view/tree_drag"
 
-export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf"> & {
+export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" | "path" | "inlineEditPath" | "onLabelEditComplete" | "canEditBranchLabel" | "canEditLeafLabel" | "setInlineEditPath" | "onNodeDelete" | "canDeleteBranch" | "canDeleteLeaf" | "tree"> & {
 	controlRef?: MutableRefObject<TreeControls | null>
 	onLabelEdit?: (path: TreePath, newLabel: string, node: Tree<L, B>) => void
 	onLabelEditCancel?: (path: TreePath, node: Tree<L, B>) => void
@@ -25,7 +25,7 @@ export type TreeControls = {
 
 export const TreeView = <L, B>({
 	onLabelEdit, onDelete, onDrag, canBeChildOf, onLabelEditCancel,
-	controlRef, tree, ...props
+	controlRef, forest, ...props
 }: TreeViewProps<L, B>) => {
 	const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -53,7 +53,7 @@ export const TreeView = <L, B>({
 	}
 
 	const dragProps = useTreeViewDragProps({
-		canBeChildOf, tree, onDrag, rootRef
+		canBeChildOf, forest, onDrag, rootRef
 	})
 
 
@@ -70,7 +70,8 @@ export const TreeView = <L, B>({
 				onNodeDelete={onNodeDelete}
 				canDeleteBranch={!!onDelete}
 				canDeleteLeaf={!!onDelete}
-				tree={tree}
+				tree={forest}
+				forest={forest}
 			/>
 		</div>
 	)

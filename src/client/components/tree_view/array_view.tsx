@@ -19,12 +19,12 @@ type Props<T> = Pick<ParentProps<T>, "InlineEditor"> & {
 export function ArrayView<T>({
 	itemName, createItem, renameItem, values, setValues, getLabel, getKey, nameValidators, onItemClick, onItemDoubleclick, ...props
 }: Props<T>) {
-	const tree = useMemo(() => values.map(value => ({value})), [values])
+	const forest = useMemo(() => values.map(value => ({value})), [values])
 
 	return (
 		<TreeViewWithElementCreation
 			{...props}
-			tree={tree}
+			forest={forest}
 			itemName={itemName}
 			onRename={(path, name) => {
 				const index = path[0]!

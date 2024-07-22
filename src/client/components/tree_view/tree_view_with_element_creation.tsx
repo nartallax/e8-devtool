@@ -18,7 +18,7 @@ export type TreeViewWithCreationProps<L, B> = Omit<SearchableTreeViewProps<L, B>
 const createdNodeId = "new_node_" + getRandomUUID()
 
 export const TreeViewWithElementCreation = <L, B>({
-	onRename, onLeafCreated, onBranchCreated, buttons, tree: srcTree, itemName,
+	onRename, onLeafCreated, onBranchCreated, buttons, forest: srcForest, itemName,
 	getLeafLabel, getBranchLabel, getLeafSublabel, getBranchSublabel, getLeafKey, getBranchKey, ...props
 }: TreeViewWithCreationProps<L, B>) => {
 	const [createdNode, setCreatedNode] = useState<{
@@ -28,14 +28,14 @@ export const TreeViewWithElementCreation = <L, B>({
 
 	const treeControls = useRef<TreeControls | null>(null)
 
-	const tree = useMemo(() => {
-		let tree = srcTree
+	const forest = useMemo(() => {
+		let tree = srcForest
 		if(createdNode){
 			// yeah, that's weird. but treeview won't mind.
 			tree = addTreeByPath(tree, createdNode.node as any, createdNode.path)
 		}
 		return tree
-	}, [srcTree, createdNode])
+	}, [srcForest, createdNode])
 
 	const onEdit = !onRename ? undefined : (path: TreePath, newLabel: string, node: Tree<L, B>) => {
 		if(node !== createdNode?.node){
@@ -119,7 +119,7 @@ export const TreeViewWithElementCreation = <L, B>({
 				getLeafKey={getKey(getLeafKey)}
 				getBranchKey={getKey(getBranchKey)}
 				onAddChild={onAddChild}
-				tree={tree}
+				forest={forest}
 				onLabelEdit={onEdit}
 				onLabelEditCancel={onEditCancel}
 				controlRef={treeControls}

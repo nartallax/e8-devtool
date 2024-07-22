@@ -1,4 +1,5 @@
 import {Validator} from "client/components/form/form_context"
+import {pathPartRegexp} from "common/regexps"
 
 export type ValidatorsMaybeFactory<T, V> = Validator<T>[] | ((value: V) => (Validator<T>[] | undefined))
 
@@ -30,8 +31,17 @@ export namespace Validators {
 			return null
 		}
 	}
+
+	export const isPathPart = (): Validator<string> => value => {
+		if(typeof(value) !== "string" || !pathPartRegexp.test(value)){
+			return "This value is not a path part."
+		}
+
+		return null
+	}
 }
 
 export namespace ValidatorSets {
 	export const nonEmpty = [Validators.nonEmpty()]
+	export const path = [Validators.isPathPart()]
 }

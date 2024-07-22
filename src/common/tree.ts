@@ -329,19 +329,29 @@ export const moveTreeByPath = <T, B>(trees: Tree<T, B>[], from: TreePath, to: Tr
 	return addTreeByPath(trees, tree, to)
 }
 
+/** Get siblings of the tree node, excluding that node itself */
 export const getTreeSiblings = <T, B>(trees: Tree<T, B>[], path: TreePath): Tree<T, B>[] => {
 	if(path.length === 0){
 		throw new Error("Wrong path")
 	}
+
 	const parentPath = path.slice(0, path.length - 1)
+	let parentChildren: Tree<T, B>[]
 	if(parentPath.length === 0){
-		return trees
+		parentChildren = trees
+	} else {
+		const parent = getTreeByPath(trees, parentPath)
+		if(!isTreeBranch(parent)){
+			throw new Error("Path is all wrong")
+		}
+		parentChildren = parent.children
 	}
-	const parent = getTreeByPath(trees, parentPath)
-	if(!isTreeBranch(parent)){
-		throw new Error("Path is all wrong")
-	}
-	return parent.children
+
+	const childIndex = path[path.length - 1]!
+	return [
+		...parentChildren.slice(0, childIndex),
+		...parentChildren.slice(childIndex + 1)
+	]
 }
 
 export const treeValuesToTreePath = <T, B>(forest: Tree<T, B>[], values: (T | B)[]): TreePath | null => {
