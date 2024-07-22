@@ -35,8 +35,11 @@ export type ProjectConfig = {
 	Used to determine how to render vector textures, if there are any, and some other values related to resolution. */
 	inworldUnitPixelSize: number
 	resourcePackPath: string
+	// TODO: remove this, refer to textures by ID
 	textureDirectoryPath: string
 	/** Path that contains classes related to entities */
+	// TODO: remove this. we should have tree of ts files related to objects, automatically linked
+	// this way, we won't have as much magic as "just name a file with special ending"
 	entityClassesDirectoryPath: string
 	ts: {
 		entityEnumName: string
@@ -156,6 +159,8 @@ export interface ProjectModel {
 	collisionGroupId: UUID
 	// TODO: if texture is nullable, why layerId isn't? they are linked, might as well be the same
 	layerId: UUID
+	// TODO: I don't like texture being a path. we should have separate internal directory for textures
+	// referring to textures by path introduces exact same problems as referring to everything else by path
 	texturePath: string | null
 	size: XY
 }

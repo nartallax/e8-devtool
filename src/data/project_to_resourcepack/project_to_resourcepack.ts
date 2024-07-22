@@ -66,6 +66,8 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 			...omit(def, "emissionType", "layerId"),
 			texture: getAtlasPart(def.layerId, def.texturePath)
 		})),
+		// TODO: build atlasses in runtime, for modability sake
+		// also this will allow us to use runtime constraints at machine we're building atlasses for
 		atlasses: [atlas],
 		models,
 		inputBinds,
