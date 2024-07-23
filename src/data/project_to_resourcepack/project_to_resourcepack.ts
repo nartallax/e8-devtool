@@ -1,5 +1,4 @@
-import {Project} from "data/project"
-import {getAllProjectModels, getSortedProjectBinds, mappedForestToArray} from "data/project_utils"
+import {getSortedProjectBinds, mappedForestToArray} from "data/project_utils"
 import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
@@ -14,9 +13,9 @@ import {DevtoolActions} from "server/actions"
 import {nonNull} from "common/non_null"
 
 /** Convert project into ResourcePack structure. */
-export async function projectToResourcePack(project: Project, actions: DevtoolActions): Promise<ResourcePack> {
-	const allModels = getAllProjectModels(project)
-	const texturesWithPositions = await projectToAtlasLayout(project, actions)
+export async function projectToResourcePack(actions: DevtoolActions): Promise<ResourcePack> {
+	const allModels = (await actions.dirs.models.getAllItemsAsArray()).sort((a, b) => a.id > b.id ? 1 : -1)
+	const texturesWithPositions = await projectToAtlasLayout(actions)
 	const atlasSideLength = getAtlasSideLength(texturesWithPositions)
 	const atlasSvg = glueSvgsIntoAtlas(texturesWithPositions, atlasSideLength)
 	const atlas: Atlas = {
@@ -35,9 +34,25 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		}
 	}
 
-	const layers = mappedForestToIndexMap("layer", project.layerTree, project.layers)
-	const collisionGroups = mappedForestToIndexMap("collision group", project.collisionGroupTree, project.collisionGroups)
-	const inputGroups = mappedForestToIndexMap("input group", project.inputGroupTree, project.inputGroups)
+	const [collisionGroupPairIds, inputBindForest, inputBindMap, config, layersForest, layersMap, collisionGroupsForest, collisionGroupsMap, inputGroupsForest, inputGroupsMap, particlesForest, particlesMap] = await Promise.all([
+		actions.getCollisionPairs(),
+		actions.dirs.inputBinds.getForest(),
+		actions.dirs.inputBinds.getAllItemsAsMap(),
+		actions.getProjectConfig(),
+		actions.dirs.layers.getForest(),
+		actions.dirs.layers.getAllItemsAsMap(),
+		actions.dirs.collsionGroups.getForest(),
+		actions.dirs.collsionGroups.getAllItemsAsMap(),
+		actions.dirs.inputGroups.getForest(),
+		actions.dirs.inputGroups.getAllItemsAsMap(),
+		actions.dirs.particles.getForest(),
+		actions.dirs.particles.getAllItemsAsMap()
+	])
+
+	const layers = mappedForestToIndexMap("layer", layersForest, layersMap)
+	const collisionGroups = mappedForestToIndexMap("collision group", collisionGroupsForest, collisionGroupsMap)
+	const inputGroups = mappedForestToIndexMap("input group", inputGroupsForest, inputGroupsMap)
+
 	const models = allModels.map((model): Model => {
 		return {
 			size: [model.size.x, model.size.y],
@@ -50,9 +65,9 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		}
 	})
 
-	const collisionGroupPairs = project.collisionGroupPairs.map(([a, b]) => [collisionGroups(a), collisionGroups(b)] as const)
+	const collisionGroupPairs = collisionGroupPairIds.map(([a, b]) => [collisionGroups(a), collisionGroups(b)] as const)
 
-	const inputBinds: InputBindDefinition[] = getSortedProjectBinds(project).map(([bind]) => ({
+	const inputBinds: InputBindDefinition[] = getSortedProjectBinds(inputBindForest, inputBindMap).map(([bind]) => ({
 		group: bind.groupId === null ? null : inputGroups(bind.groupId),
 		isHold: bind.isHold,
 		defaultChords: bind.defaultChords
@@ -61,8 +76,8 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 	}))
 
 	return {
-		inworldUnitPixelSize: project.config.inworldUnitPixelSize,
-		particles: mappedForestToArray(project.particleTree, project.particles).map(def => ({
+		inworldUnitPixelSize: config.inworldUnitPixelSize,
+		particles: mappedForestToArray(particlesForest, particlesMap).map(def => ({
 			...omit(def, "emissionType", "layerId"),
 			texture: getAtlasPart(def.layerId, def.texturePath)
 		})),
@@ -71,22 +86,21 @@ export async function projectToResourcePack(project: Project, actions: DevtoolAc
 		atlasses: [atlas],
 		models,
 		inputBinds,
-		layers: mappedForestToArray(project.layerTree, project.layers).map(layer => ({type: layer.type})),
+		layers: mappedForestToArray(layersForest, layersMap).map(layer => ({type: layer.type})),
 		// TODO: this is bad for modability
-		collisionGroupCount: Object.values(project.collisionGroups).length,
+		collisionGroupCount: Object.values(collisionGroupsMap).length,
 		collisionGroupPairs: collisionGroupPairs
 	}
 }
 
-export async function projectToAtlasLayout(project: Project, actions: DevtoolActions): Promise<(SvgTextureFile & XY)[]> {
-	let allTexturePaths = [
-		...mappedForestToArray(project.modelTree, project.models)
-			.map(x => x.texturePath),
-		...mappedForestToArray(project.particleTree, project.particles)
-			.map(x => x.texturePath)
-	].filter(nonNull)
+export async function projectToAtlasLayout(actions: DevtoolActions): Promise<(SvgTextureFile & XY)[]> {
+	const [modelTexturePaths, particleTexturePath] = await Promise.all([
+		actions.dirs.models.getFieldOfAllItemsAsArray("texturePath"),
+		actions.dirs.particles.getFieldOfAllItemsAsArray("texturePath")
+	])
+	let allTexturePaths = [...modelTexturePaths, ...particleTexturePath].filter(nonNull)
 	allTexturePaths = [...new Set(allTexturePaths)]
-	const allTextures = await readAllTextures(allTexturePaths, project, actions)
+	const allTextures = await readAllTextures(allTexturePaths, actions)
 	// wonder how slow will be to have cellSize = 1 here
 	// maybe I'll need to optimize that
 	return buildAtlasLayout(allTextures, 1)
@@ -116,13 +130,15 @@ function glueSvgsIntoAtlas(textures: (SvgTextureFile & XY)[], sideLength: number
 	return compoundSvg
 }
 
-async function readAllTextures(paths: string[], project: Project, actions: DevtoolActions): Promise<SvgTextureFile[]> {
+async function readAllTextures(paths: string[], actions: DevtoolActions): Promise<SvgTextureFile[]> {
 	const result = new Array<SvgTextureFile>(paths.length)
 	await Promise.all(paths.map(async(path, index) => {
 		if(!path.toLowerCase().endsWith(".svg")){
 			throw new Error("Only svgs are supported; got " + path)
 		}
-		const texturesRoot = actions.resolveProjectPath(project.config.textureDirectoryPath)
+		// TODO: cache config in DevtoolActions
+		const config = await actions.getProjectConfig()
+		const texturesRoot = actions.resolveProjectPath(config.textureDirectoryPath)
 		const fileContent = await Fs.readFile(Path.resolve(texturesRoot, path), "utf-8")
 		result[index] = {...optimizeSvg(fileContent, path), path}
 	}))

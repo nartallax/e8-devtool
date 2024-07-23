@@ -6,7 +6,7 @@ import {dropLastPathPart, splitPath} from "data/project_utils"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 
-const orderingFileName = ".ordering.json"
+const orderingFileName = "tree.e8.json"
 enum OrderingFlags {
 	isBranch = 1 << 0
 }

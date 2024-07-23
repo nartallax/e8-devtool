@@ -4,7 +4,7 @@ import {log} from "common/log"
 import * as Process from "process"
 import * as open from "open"
 import {CLIArgs, getCliArgs} from "server/cli"
-import {Project} from "data/project"
+import {ProjectConfig} from "data/project"
 import {DevtoolActions, getActions} from "server/actions"
 import {batchJsonApiCalls} from "server/batcher"
 
@@ -15,7 +15,10 @@ import {batchJsonApiCalls} from "server/batcher"
 async function main(): Promise<void> {
 	log("Starting...")
 	const cli = getCliArgs()
-	const actions = getActions(cli)
+	const actions = await getActions(
+		cli,
+		config => updateStaticRoutes(cli, staticRoutes, config, actions)
+	)
 
 	if(cli.generate){
 		await actions.produceEverything()
@@ -23,9 +26,9 @@ async function main(): Promise<void> {
 	}
 
 	const staticRoutes: Record<string, HttpStaticRoute> = await(async() => {
-		const project = await actions.getProject()
+		const config = await actions.getProjectConfig()
 		const result: Record<string, HttpStaticRoute> = {}
-		updateStaticRoutes(cli, result, project, actions)
+		updateStaticRoutes(cli, result, config, actions)
 		return result
 	})()
 
@@ -36,7 +39,7 @@ async function main(): Promise<void> {
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,
 		apiRoot: "/api/",
-		apiMethods: batchJsonApiCalls(await getApi(cli, project => updateStaticRoutes(cli, staticRoutes, project, actions)))
+		apiMethods: batchJsonApiCalls(await getApi(actions))
 	})
 
 	const addr = await server.start()
@@ -47,9 +50,9 @@ async function main(): Promise<void> {
 	}
 }
 
-const updateStaticRoutes = (cli: CLIArgs, routes: Record<string, HttpStaticRoute>, project: Project, actions: DevtoolActions) => {
+const updateStaticRoutes = (cli: CLIArgs, routes: Record<string, HttpStaticRoute>, config: ProjectConfig, actions: DevtoolActions) => {
 	routes["/"] = {url: cli.html, defaultMimeType: "text/html"}
-	routes["/textures/"] = {url: actions.resolveProjectPath(project.config.textureDirectoryPath)}
+	routes["/textures/"] = {url: actions.resolveProjectPath(config.textureDirectoryPath)}
 }
 
 async function mainWrapped(): Promise<void> {

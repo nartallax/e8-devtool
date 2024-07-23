@@ -1,4 +1,4 @@
-import {Project, ProjectInputBind, ProjectModel} from "data/project"
+import {ProjectInputBind, ProjectModel} from "data/project"
 import {sortBy} from "common/sort_by"
 import {Tree, TreePath, allTreeNodes, getForestLeaves, isTreeBranch, treePathToValues} from "common/tree"
 import {UUID} from "common/uuid"
@@ -7,18 +7,18 @@ import {UUID} from "common/uuid"
 // because it will guarantee that the order is the same each time
 // and order is important, because index of the model is its id
 /** @returns [all folder labels, in descendance order; model] */
-export function getAllProjectModelsWithFolders(project: Project): [string[], ProjectModel][] {
-	const allModels: [string[], ProjectModel][] = [...modelsWithPaths(project)]
+export function getAllProjectModelsWithFolders(forest: Tree<string, string>[], map: Record<string, ProjectModel>): [string[], ProjectModel][] {
+	const allModels: [string[], ProjectModel][] = [...modelsWithPaths(forest, map)]
 	sortBy(allModels, x => x[1].id)
 	return allModels
 }
 
-export function getAllProjectModels(project: Project): ProjectModel[] {
-	return getAllProjectModelsWithFolders(project).map(x => x[1])
+export function getAllProjectModels(forest: Tree<string, string>[], map: Record<string, ProjectModel>): ProjectModel[] {
+	return getAllProjectModelsWithFolders(forest, map).map(x => x[1])
 }
 
-export function getSortedProjectBinds(project: Project): [ProjectInputBind, string[]][] {
-	const arr = mappedForestToArrayWithPath(project.inputBindTree, project.inputBinds)
+export function getSortedProjectBinds(forest: Tree<string, string>[], map: Record<string, ProjectInputBind>): [ProjectInputBind, string[]][] {
+	const arr = mappedForestToArrayWithPath(forest, map)
 	sortBy(arr, ([bind]) => bind.id)
 	return arr
 }
@@ -89,12 +89,12 @@ export const pathStrById = (forest: Tree<string, string>[], map: Record<string, 
 	throw new Error(`Object with id = ${id} not found`)
 }
 
-export function* modelsWithPaths(project: Project): IterableIterator<[string[], ProjectModel]> {
-	for(const [branches, leaf] of getForestLeaves(project.modelTree)){
+export function* modelsWithPaths(forest: Tree<string, string>[], map: Record<string, ProjectModel>): IterableIterator<[string[], ProjectModel]> {
+	for(const [branches, leaf] of getForestLeaves(forest)){
 		const fullPath = branches.map(x => x.value)
 		fullPath.push(leaf)
 		const pathStr = mergePath(fullPath)
-		const model = project.models[pathStr]
+		const model = map[pathStr]
 		if(!model){
 			throw new Error("No model for path " + pathStr)
 		}

@@ -1,34 +1,6 @@
-import {Tree} from "common/tree"
 import {UUID} from "common/uuid"
 import {XY, Chord, LayerType, StartEnd, DeviatingValueRange} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
-
-/** Project is source data for resource pack
- *
- * this data structure only relevant to project manager,
- * and is not used anywhere in the actual engine runtime  */
-export interface Project {
-	config: ProjectConfig
-
-	models: Record<string, ProjectModel>
-	modelTree: Tree<string, string>[]
-
-	particles: Record<string, ProjectParticle>
-	particleTree: Tree<string, string>[]
-
-	collisionGroups: Record<string, ProjectCollisionGroup>
-	collisionGroupTree: Tree<string, string>[]
-	collisionGroupPairs: [UUID, UUID][]
-
-	/** Couples of groups that should be colliding. */
-	layers: Record<string, ProjectLayer>
-	layerTree: Tree<string, string>[]
-
-	inputGroups: Record<string, ProjectInputGroup>
-	inputGroupTree: Tree<string, string>[]
-	inputBinds: Record<string, ProjectInputBind>
-	inputBindTree: Tree<string, string>[]
-}
 
 export type ProjectConfig = {
 	/** Resolution of one inworld unit (on x1 zoom)
@@ -106,38 +78,6 @@ export const makeBlankProjectConfig = (): ProjectConfig => ({
 		particleEnumName: "Particles"
 	}
 })
-
-export function makeBlankProject(): Project {
-	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID()}
-	const modelLayer: ProjectLayer = {id: getRandomUUID(), type: "model"}
-	const particleLayer: ProjectLayer = {id: getRandomUUID(), type: "particle"}
-	return {
-		config: makeBlankProjectConfig(),
-		collisionGroups: {default: collisionGroup},
-		collisionGroupTree: [{value: "default"}],
-		collisionGroupPairs: [[collisionGroup.id, collisionGroup.id]],
-		layers: {model: modelLayer, particle: particleLayer},
-		layerTree: [{value: "model"}, {value: "particle"}],
-		models: {},
-		particles: {},
-		particleTree: [],
-		modelTree: [],
-		inputBindTree: [{value: "default bind"}],
-		inputBinds: {
-			"default bind": {
-				id: getRandomUUID(),
-				groupId: null,
-				isHold: false,
-				defaultChords: [{
-					id: getRandomUUID(),
-					chord: ["Ctrl", "W"]
-				}]
-			}
-		},
-		inputGroups: {"default input group": {id: getRandomUUID()}},
-		inputGroupTree: [{value: "default input group"}]
-	}
-}
 
 type BlankModelParams = {
 	collisionGroupId: UUID

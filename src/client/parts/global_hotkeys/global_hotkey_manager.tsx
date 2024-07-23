@@ -1,8 +1,13 @@
 import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 import {preventUndoRedoGlobally} from "client/components/hotkey_context/hotkey_utils"
-import {UnsavedChanges, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
-import {useProjectContext} from "client/parts/project_context"
+import {useToastContext} from "client/components/toast/toast_context"
+import {useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
+import {useApiClient} from "client/parts/api_context"
+import {getRandomUUID} from "common/uuid"
+import {Icon} from "generated/icons"
 import {PropsWithChildren, useEffect} from "react"
+
+const savingToastId = getRandomUUID()
 
 // a component that manages hotkeys that fire globally on page
 export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
@@ -14,19 +19,41 @@ export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
 		preventUndoRedoGlobally()
 	}, [])
 
-	const {isUnsaved, save: uploadProject} = useProjectContext()
 	const {save} = useUnsavedChanges()
+	const api = useApiClient()
+	const {addToast, updateToast, removeToast} = useToastContext()
 
 	return (
-		<UnsavedChanges isUnsaved={isUnsaved} save={uploadProject} alwaysRun>
-			<Hotkey
-				shouldPick={e => e.code === "KeyS" && e.ctrlKey}
-				onPress={e => {
-					e.preventDefault()
-					void save()
-				}}>
-				{children}
-			</Hotkey>
-		</UnsavedChanges>
+		<Hotkey
+			shouldPick={e => e.code === "KeyS" && e.ctrlKey}
+			onPress={async e => {
+				e.preventDefault()
+
+				addToast({
+					icon: Icon.spinner,
+					text: "Saving...",
+					id: savingToastId,
+					isStepRotating: true
+				})
+
+				try {
+					await Promise.all([save(), api.generateResourcePack()])
+				} catch(e){
+					// if there was an error - it was api error and there's a toast already
+					// so all that's left is to remove ours
+					removeToast(savingToastId)
+				}
+
+				updateToast({
+					id: savingToastId,
+					text: "Saved!",
+					icon: Icon.check,
+					ttl: 1000,
+					isStepRotating: false
+				})
+
+			}}>
+			{children}
+		</Hotkey>
 	)
 }

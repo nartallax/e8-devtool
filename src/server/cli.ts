@@ -28,9 +28,9 @@ const cli = CLI.define({
 			description: "Host name on which UI will be available. Defaults to localhost.",
 			default: "localhost"
 		}),
-		projectPath: CLI.path({
-			keys: ["--project"],
-			description: "Path to a file that will hold definition of the project, and also serve as point where relative paths are calculated from. Choose location of this file wisely, as in this project you won't be able to reference files outside directory that project definition file is in. If file does not exist - empty one will be generated."
+		projectRoot: CLI.path({
+			keys: ["--project-root"],
+			description: "Path to a directory that contains all files related to the project. It also serves as point where relative paths are calculated from."
 		})
 	}
 })

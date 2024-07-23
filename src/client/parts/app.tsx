@@ -10,7 +10,6 @@ import {AtlasPage} from "client/parts/atlas_page/atlas_page"
 import {GlobalHotkeyManager} from "client/parts/global_hotkeys/global_hotkey_manager"
 import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
 import {ModelPage} from "client/parts/model_page/model_page"
-import {ProjectProvider, useProjectContext} from "client/parts/project_context"
 import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
 import {PropsWithChildren} from "react"
 import faviconDefault from "../favicon.svg"
@@ -45,9 +44,7 @@ const CommonProviders = ({children}: PropsWithChildren) => (
 const DataProviders = ({children}: PropsWithChildren) => (
 	<ApiProvider>
 		<TextureTreeProvider>
-			<ProjectProvider>
-				{children}
-			</ProjectProvider>
+			{children}
 		</TextureTreeProvider>
 	</ApiProvider>
 )
@@ -75,8 +72,7 @@ const Providers = ({children}: PropsWithChildren) => (
 
 const Content = () => {
 	const {isLoaded: isTexturesLoaded} = useTextures()
-	const {isLoaded: isProjectLoaded} = useProjectContext()
-	const isEverythingLoaded = isTexturesLoaded && isProjectLoaded
+	const isEverythingLoaded = isTexturesLoaded
 	const {hasChanges} = useUnsavedChanges()
 
 	if(!isEverythingLoaded){

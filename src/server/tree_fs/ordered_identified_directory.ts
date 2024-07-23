@@ -89,6 +89,20 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 		return result
 	}
 
+	async getAllItemsAsArray(): Promise<T[]> {
+		return await Promise.all([...this.dir.relPathsOfLeaves()].map(async relPath => {
+			const fullPath = Path.resolve(this.dir.path, relPath)
+			return await this.partitioner.readAndAssemble(fullPath)
+		}))
+	}
+
+	async getFieldOfAllItemsAsArray<K extends keyof T>(fieldName: K): Promise<T[K][]> {
+		return await Promise.all([...this.dir.relPathsOfLeaves()].map(async relPath => {
+			const fullPath = Path.resolve(this.dir.path, relPath)
+			return await this.partitioner.readField(fullPath, fieldName)
+		}))
+	}
+
 	async updateItem(item: T): Promise<void> {
 		const relPath = this.idPathMap.getB(item.id)
 		await this.partitioner.partitionAndWrite(Path.resolve(this.dir.path, relPath), item)

@@ -6,7 +6,7 @@ import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
 import {Tree} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
-import {Project, ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
+import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
@@ -48,12 +48,10 @@ export class DevtoolApiClient extends ApiClient {
 		}
 	}
 
-	getProject = () => this.call<Project>({name: "getProject"})
-	saveAndProduce = (project: Project) => this.call({name: "saveAndProduce", body: [project]})
+	generateResourcePack = () => this.call({name: "generateResourcePack"})
 	getTextureFiles = () => this.call<Tree<string, string>[]>({name: "getTextureFiles"})
 	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
 	getAtlasLayout = () => this.call<(SvgTextureFile & XY)[]>({name: "getAtlasLayout"})
-	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
 	getProjectRootForest = () => this.call<Tree<string, string>[]>({name: "getProjectRootForest"})
 
 	getProjectConfig = () => this.call<ProjectConfig>({name: "getProjectConfig"})
