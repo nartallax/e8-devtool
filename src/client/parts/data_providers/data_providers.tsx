@@ -1,7 +1,6 @@
 import {makeApiForestDataProvider} from "client/parts/data_providers/api_forest_data_provider"
-import {makeProjectSaveableDataWrapper} from "client/parts/data_providers/project_saveable_data"
-import {UUID} from "common/uuid"
-import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
+import {makeApiSimpleDataProvider} from "client/parts/data_providers/api_simple_data_provider"
+import {ProjectCollisionGroup, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 
 export const inputGroupProvider = makeApiForestDataProvider<ProjectInputGroup>(
 	"input bind group",
@@ -49,6 +48,12 @@ export const particleProvider = makeApiForestDataProvider<ProjectParticle>(
 	"particle"
 )
 
-// TODO: uh.
-export const projectConfigProvider = makeProjectSaveableDataWrapper<ProjectConfig>("config")
-export const collisionPairsProvider = makeProjectSaveableDataWrapper<[UUID, UUID][]>("collisionGroupPairs")
+export const projectConfigProvider = makeApiSimpleDataProvider("projectConfig",
+	api => api.getProjectConfig(),
+	(api, config) => api.updateProjectConfig(config)
+)
+
+export const collisionPairsProvider = makeApiSimpleDataProvider("collisionPairs",
+	api => api.getCollisionPairs(),
+	(api, pairs) => api.updateCollisionPairs(pairs)
+)

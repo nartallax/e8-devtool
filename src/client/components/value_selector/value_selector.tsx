@@ -27,7 +27,7 @@ export function ValueSelectorField<T>({
 	return (
 		<FormField id={id} onLabelClick={requestChangeIfNotDisabled}>
 			<div className={css.valueSelector} onClick={requestChangeIfNotDisabled}>
-				{displayValue}
+				<div className={css.valueSelectorText}>{displayValue}</div>
 				<Button icon={Icon.pencil} onClick={onRequestValueChange} isDisabled={isDisabled}/>
 				{onClear && <Button icon={Icon.close} onClick={onClear} isDisabled={isDisabled}/>}
 			</div>

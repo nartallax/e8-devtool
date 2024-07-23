@@ -146,7 +146,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		}
 
 		const renameNode = async(node: Tree<string, string>, path: TreePath, newName: string) => {
-			void node // TODO: don't need it anymore
+			void node // we don't actually need node here, it's here for sake of regularity of handler arguments
 			await queries.rename(treePathToString(forest, path), newName)
 			setForest(forest => updateTreeByPath(forest, path, tree => ({...tree, value: newName})))
 		}

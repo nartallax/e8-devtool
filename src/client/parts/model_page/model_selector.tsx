@@ -1,13 +1,11 @@
-import {useAlert} from "client/components/modal/alert_modal"
 import {useRoutingContext} from "client/components/router/routing_context"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
 import {collisionGroupProvider, layerProvider, modelProvider} from "client/parts/data_providers/data_providers"
 import {CentralColumn} from "client/parts/layouts/central_column"
-import {AbortError} from "client/ui_utils/abort_error"
 import {appendUrlPath} from "client/ui_utils/urls"
 import {withDataLoaded} from "client/ui_utils/with_data_loaded"
 import {filterMap} from "common/filter_object"
-import {UUID} from "common/uuid"
+import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectModel, makeBlankModel} from "data/project"
 
 const findDefaultId = (values: Map<string, {id: UUID}>): UUID | null => {
@@ -22,25 +20,26 @@ export const ModelSelector = withDataLoaded(
 	}),
 	({collisionGroups, layers}) => {
 		const {matchedUrl, navigate} = useRoutingContext()
-		const {showAlert} = useAlert()
+
+		const {create: createCollisionGroup} = collisionGroupProvider.useFetchers()
+		const {create: createLayer} = layerProvider.useFetchers()
 
 		const getModelWithDefaults = (): ProjectModel => {
-			const collisionGroupId = findDefaultId(collisionGroups)
+			let collisionGroupId = findDefaultId(collisionGroups)
 			if(!collisionGroupId){
-				// TODO: create new collision group in this case
-				void showAlert({
-					body: "Cannot add a model: there are no collision groups in the project."
+				collisionGroupId = getRandomUUID()
+				void createCollisionGroup("default", 0, {
+					id: collisionGroupId
 				})
-				throw new AbortError("There are no collision groups in the project.")
 			}
 
-			const layerId = findDefaultId(filterMap(layers, (_, layer) => layer.type === "model"))
+			let layerId = findDefaultId(filterMap(layers, (_, layer) => layer.type === "model"))
 			if(!layerId){
-				// TODO: create new layer group in this case
-				void showAlert({
-					body: "Cannot add a model: there are no layers in the project."
+				layerId = getRandomUUID()
+				void createLayer("default_layer", 0, {
+					id: layerId,
+					type: "model"
 				})
-				throw new AbortError("There are no layers in the project.")
 			}
 
 			return makeBlankModel({collisionGroupId, layerId})

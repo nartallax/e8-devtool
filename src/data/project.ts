@@ -93,24 +93,26 @@ export type ProjectChord = {
 	chord: Chord
 }
 
+export const makeBlankProjectConfig = (): ProjectConfig => ({
+	inworldUnitPixelSize: 100,
+	resourcePackPath: "./generated/resource_pack.e8.bin",
+	textureDirectoryPath: "./textures",
+	entityClassesDirectoryPath: "./entities",
+	ts: {
+		path: "./generated/resource_pack_content.e8.ts",
+		inputBindsEnumName: "Bind",
+		loaderVariableName: "loader",
+		entityEnumName: "Entities",
+		particleEnumName: "Particles"
+	}
+})
+
 export function makeBlankProject(): Project {
 	const collisionGroup: ProjectCollisionGroup = {id: getRandomUUID()}
 	const modelLayer: ProjectLayer = {id: getRandomUUID(), type: "model"}
 	const particleLayer: ProjectLayer = {id: getRandomUUID(), type: "particle"}
 	return {
-		config: {
-			inworldUnitPixelSize: 100,
-			resourcePackPath: "./generated/resource_pack.e8.bin",
-			textureDirectoryPath: "./textures",
-			entityClassesDirectoryPath: "./entities",
-			ts: {
-				path: "./generated/resource_pack_content.e8.ts",
-				inputBindsEnumName: "Bind",
-				loaderVariableName: "loader",
-				entityEnumName: "Entities",
-				particleEnumName: "Particles"
-			}
-		},
+		config: makeBlankProjectConfig(),
 		collisionGroups: {default: collisionGroup},
 		collisionGroupTree: [{value: "default"}],
 		collisionGroupPairs: [[collisionGroup.id, collisionGroup.id]],

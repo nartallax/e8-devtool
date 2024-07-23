@@ -66,7 +66,7 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	}
 
 	async getItemById(id: UUID): Promise<T> {
-		return await this.getItemByPath(this.idPathMap.getA(id))
+		return await this.getItemByPath(this.idPathMap.getB(id))
 	}
 
 	async getItemByPath(relPath: string): Promise<T> {

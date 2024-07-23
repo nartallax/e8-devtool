@@ -1,4 +1,4 @@
-import {Project} from "data/project"
+import {Project, ProjectConfig, makeBlankProjectConfig} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Lock} from "common/lock"
 import {Tree} from "common/tree"
@@ -12,8 +12,14 @@ import {ApiError} from "common/api_response"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
 import * as Path from "path"
+import {promises as Fs} from "fs"
+import {UUID} from "common/uuid"
 
 export async function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project) => void): Promise<Record<string, (...args: any[]) => unknown>> {
+
+	// TODO: rethink input paths
+	// TODO: omit "e8_project" from directory tree when "all files in project directory" are fetched
+	const projectDataRoot = Path.resolve(Path.dirname(cli.projectPath), "e8_project")
 
 	// TODO: cleanup outdated API stuff
 	const projectManipulationLock = new Lock()
@@ -60,7 +66,44 @@ export async function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project
 		return await readdirAsTree(actions.resolveProjectPath("."))
 	}
 
+	const projectConfigPath = Path.resolve(projectDataRoot, "config.e8.json")
+	const getProjectConfig = async(): Promise<ProjectConfig> => {
+		try {
+			return JSON.parse(await Fs.readFile(projectConfigPath, "utf-8"))
+		} catch(e){
+			if(!isEnoent(e)){
+				throw e
+			}
+			return makeBlankProjectConfig()
+		}
+	}
+
+	const updateProjectConfig = async(config: ProjectConfig) => {
+		await Fs.writeFile(projectConfigPath, JSON.stringify(config, null, "\t"), "utf-8")
+	}
+
+	const collisionPairsPath = Path.resolve(projectDataRoot, "collision_pairs.e8.json")
+	const getCollisionPairs = async(): Promise<[UUID, UUID][]> => {
+		try {
+			return JSON.parse(await Fs.readFile(collisionPairsPath, "utf-8"))
+		} catch(e){
+			if(!isEnoent(e)){
+				throw e
+			}
+			return []
+		}
+	}
+
+	const updateCollisionPairs = async(pairs: [UUID, UUID][]) => {
+		pairs = pairs.sort(([aa, ab], [ba, bb]) =>
+			aa > ba ? 1 : aa < ba ? -1 : ab > bb ? 1 : ab < bb ? -1 : 0
+		)
+		await Fs.writeFile(collisionPairsPath, JSON.stringify(pairs, null, "\t"), "utf-8")
+	}
+
 	const api: Record<string, (...args: any[]) => unknown> = {
+		getProjectConfig, updateProjectConfig,
+		getCollisionPairs, updateCollisionPairs,
 		getProject, getTextureFiles, getAtlasLayout, saveAndProduce, getProjectRootForest
 	}
 
@@ -79,9 +122,6 @@ export async function getApi(cli: CLIArgs, afterProjectUpdate: (project: Project
 		api[`${prefix}/getForest`] = dir.getForest.bind(dir)
 	}
 
-	// TODO: rethink input paths
-	// TODO: omit "e8_project" from directory tree when "all files in project directory" are fetched
-	const projectDataRoot = Path.resolve(Path.dirname(cli.projectPath), "e8_project")
 	log("Loading project...")
 
 	const modelDir = await OrderedIdentifiedDirectory.createAt(Path.resolve(projectDataRoot, "models"), {

@@ -6,7 +6,7 @@ import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
 import {Tree} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
-import {Project, ProjectCollisionGroup, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
+import {Project, ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
@@ -55,6 +55,12 @@ export class DevtoolApiClient extends ApiClient {
 	getAtlasLayout = () => this.call<(SvgTextureFile & XY)[]>({name: "getAtlasLayout"})
 	getEntityTree = () => this.call<Tree<string, string>[]>({name: "getEntityTree"})
 	getProjectRootForest = () => this.call<Tree<string, string>[]>({name: "getProjectRootForest"})
+
+	getProjectConfig = () => this.call<ProjectConfig>({name: "getProjectConfig"})
+	updateProjectConfig = (config: ProjectConfig) => this.call<void>({name: "updateProjectConfig", body: [config]})
+
+	getCollisionPairs = () => this.call<[UUID, UUID][]>({name: "getCollisionPairs"})
+	updateCollisionPairs = (pairs: [UUID, UUID][]) => this.call<void>({name: "updateCollisionPairs", body: [pairs]})
 
 	forestBindings = {
 		model: this.makeForestBindings<ProjectModel>("model"),
@@ -107,8 +113,8 @@ export const useApiClient = (): DevtoolApiClient => {
 	return useApiContext().client
 }
 
-export function useAsyncCall<T, D = T>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>, MiscAsyncResult]
-export function useAsyncCall<T>(caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>, MiscAsyncResult]
+export function useAsyncCall<T, D = T>(defaultValue: D, caller: () => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>, MiscAsyncResult]
+export function useAsyncCall<T>(caller: () => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>, MiscAsyncResult]
 export function useAsyncCall(...args: unknown[]): [unknown, SetState<unknown>, MiscAsyncResult] {
 	const defaultValue = args.length === 2 ? null : args[0]
 	const caller = (args.length === 2 ? args[0] : args[1]) as () => Promise<unknown>
