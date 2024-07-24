@@ -5,21 +5,30 @@ import {OrderedDirectory} from "server/tree_fs/ordered_directory"
 import * as Path from "path"
 import {DualMap} from "common/dual_map"
 import {nonNull} from "common/non_null"
+import {replaceLastPathPart} from "data/project_utils"
+
+export type AfterOrderedDirectoryModifyEvent = {
+	// valueType === "item" guarantees that tree wasn't changed
+	// valueType === "tree" guarantees that item value wasn't changed
+	valueType: "tree" | "treeOrItem" | "item"
+	path: string
+}
 
 type Props<T> = {
 	getPartitions: (partitioner: ObjectPartitioner<T>) => ObjectPartitioner<T>
+	afterModified?: (evt: AfterOrderedDirectoryModifyEvent) => void | Promise<void>
 }
 
 /** OrderedDirectory that has some logic about manipulating data stored in its leaves  */
 export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
-	constructor(private dir: OrderedDirectory, private idPathMap: DualMap<UUID, string>, private partitioner: ObjectPartitioner<T>) {}
+	constructor(private dir: OrderedDirectory, private idPathMap: DualMap<UUID, string>, private partitioner: ObjectPartitioner<T>, private props: Props<T>) {}
 
 	static async createAt<T extends {id: UUID}>(path: string, props: Props<T>): Promise<OrderedIdentifiedDirectory<T>> {
 		let partitioner = new ObjectPartitioner<T>()
 		partitioner = props.getPartitions(partitioner)
 		const forest = await OrderedDirectory.getInitialForest(path)
 		const map = await this.getIdPathMapping(path, forest, partitioner)
-		return new OrderedIdentifiedDirectory<T>(new OrderedDirectory(path, forest), map, partitioner)
+		return new OrderedIdentifiedDirectory<T>(new OrderedDirectory(path, forest), map, partitioner, props)
 	}
 
 	protected static async getIdPathMapping<T extends {id: UUID}>(path: string, forest: Tree<string, string>[], partitioner: ObjectPartitioner<T>): Promise<DualMap<UUID, string>> {
@@ -38,18 +47,27 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 		return result
 	}
 
+	private async callAfterModify(event: AfterOrderedDirectoryModifyEvent) {
+		if(this.props.afterModified){
+			await Promise.resolve(this.props.afterModified(event))
+		}
+	}
+
 	async createDirectory(relPath: string, index: number): Promise<void> {
 		await this.dir.createNode(relPath, index, true)
+		await this.callAfterModify({valueType: "tree", path: relPath})
 	}
 
 	async createItem(relPath: string, index: number, value: T): Promise<void> {
 		const itemDirPath = await this.dir.createNode(relPath, index, false)
 		await this.partitioner.partitionAndWrite(itemDirPath, value)
 		this.idPathMap.set(value.id, relPath)
+		await this.callAfterModify({valueType: "treeOrItem", path: relPath})
 	}
 
 	async deleteNode(relPath: string): Promise<void> {
 		await this.dir.deleteNode(relPath, relPath => this.idPathMap.deleteB(relPath))
+		await this.callAfterModify({valueType: "treeOrItem", path: relPath})
 	}
 
 	private onItemPathUpdated = (oldRelPath: string, newRelPath: string) => {
@@ -59,10 +77,12 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 
 	async moveNode(fromRelPath: string, toRelPath: string, index: number): Promise<void> {
 		await this.dir.moveNode(fromRelPath, toRelPath, index, this.onItemPathUpdated)
+		await this.callAfterModify({valueType: "treeOrItem", path: toRelPath})
 	}
 
 	async renameNode(oldRelPath: string, newName: string): Promise<void> {
 		await this.dir.renameNode(oldRelPath, newName, this.onItemPathUpdated)
+		await this.callAfterModify({valueType: "treeOrItem", path: replaceLastPathPart(oldRelPath, newName)})
 	}
 
 	async getItemById(id: UUID): Promise<T> {
@@ -106,6 +126,7 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	async updateItem(item: T): Promise<void> {
 		const relPath = this.idPathMap.getB(item.id)
 		await this.partitioner.partitionAndWrite(Path.resolve(this.dir.path, relPath), item)
+		await this.callAfterModify({valueType: "item", path: relPath})
 	}
 
 	async findPathsOfItemsWithFieldValue<K extends keyof T>(field: K, value: T[K]): Promise<string[]> {

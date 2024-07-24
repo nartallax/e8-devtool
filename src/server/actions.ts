@@ -12,7 +12,7 @@ import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
 import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
 import {UUID} from "common/uuid"
-import {OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
+import {AfterOrderedDirectoryModifyEvent, OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 	const tmpFile = await Tempy.temporaryWrite(value)
@@ -22,25 +22,28 @@ const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 
 export type DevtoolActions = Awaited<ReturnType<typeof getActions>>
 
-// TODO: rename? "actions" is really undescriptive
 export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: ProjectConfig) => void) => {
-	// TODO: rethink input paths
-	// TODO: omit "e8_project" from directory tree when "all files in project directory" are fetched
 	const projectDataRoot = Path.resolve(cli.projectRoot, "e8_project")
 
 	const projectConfigPath = Path.resolve(projectDataRoot, "config.e8.json")
+	let configCache: ProjectConfig | null = null
 	const getProjectConfig = async(): Promise<ProjectConfig> => {
-		try {
-			return JSON.parse(await Fs.readFile(projectConfigPath, "utf-8"))
-		} catch(e){
-			if(!isEnoent(e)){
-				throw e
+		if(!configCache){
+			try {
+				configCache = JSON.parse(await Fs.readFile(projectConfigPath, "utf-8"))
+			} catch(e){
+				if(!isEnoent(e)){
+					throw e
+				}
+				configCache = makeBlankProjectConfig()
 			}
-			return makeBlankProjectConfig()
 		}
+
+		return JSON.parse(JSON.stringify(configCache))
 	}
 
 	const updateProjectConfig = async(config: ProjectConfig) => {
+		configCache = JSON.parse(JSON.stringify(config))
 		await Fs.writeFile(projectConfigPath, JSON.stringify(config, null, "\t"), "utf-8")
 		afterConfigUpdate(config)
 	}
@@ -100,25 +103,37 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 		return result
 	}
 
+	const afterModified = async(evt: AfterOrderedDirectoryModifyEvent) => {
+		if(evt.valueType === "tree" || evt.valueType === "treeOrItem"){
+			await actions.produceTypescript()
+		}
+	}
+
 	log("Loading project...")
 	const models = await OrderedIdentifiedDirectory.createAt<ProjectModel>(Path.resolve(projectDataRoot, "models"), {
 		// TODO: proper partitioning here
-		getPartitions: part => part.addRestFile("model_def.e8.json")
+		getPartitions: part => part.addRestFile("model_def.e8.json"),
+		afterModified
 	})
 	const particles = await OrderedIdentifiedDirectory.createAt<ProjectParticle>(Path.resolve(projectDataRoot, "particles"), {
-		getPartitions: part => part.addRestFile("particle.e8.json")
+		getPartitions: part => part.addRestFile("particle.e8.json"),
+		afterModified
 	})
 	const collsionGroups = await OrderedIdentifiedDirectory.createAt<ProjectCollisionGroup>(Path.resolve(projectDataRoot, "collision_groups"), {
-		getPartitions: part => part.addRestFile("collision_group.e8.json")
+		getPartitions: part => part.addRestFile("collision_group.e8.json"),
+		afterModified
 	})
 	const layers = await OrderedIdentifiedDirectory.createAt<ProjectLayer>(Path.resolve(projectDataRoot, "layers"), {
-		getPartitions: part => part.addRestFile("layer.e8.json")
+		getPartitions: part => part.addRestFile("layer.e8.json"),
+		afterModified
 	})
 	const inputGroups = await OrderedIdentifiedDirectory.createAt<ProjectInputGroup>(Path.resolve(projectDataRoot, "input_groups"), {
-		getPartitions: part => part.addRestFile("input_group.e8.json")
+		getPartitions: part => part.addRestFile("input_group.e8.json"),
+		afterModified
 	})
 	const inputBinds = await OrderedIdentifiedDirectory.createAt<ProjectInputBind>(Path.resolve(projectDataRoot, "input_binds"), {
-		getPartitions: part => part.addRestFile("input_bind.e8.json")
+		getPartitions: part => part.addRestFile("input_bind.e8.json"),
+		afterModified
 	})
 	log("Project is loaded.")
 
@@ -133,12 +148,12 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 			models, particles, collsionGroups, layers, inputGroups, inputBinds
 		},
 
-		projectDataRoot,
-
 		getProjectConfig,
 		updateProjectConfig,
 		getCollisionPairs,
-		updateCollisionPairs
+		updateCollisionPairs,
+
+		projectDataRoot
 	}
 
 	return actions

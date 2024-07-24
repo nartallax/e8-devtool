@@ -136,7 +136,6 @@ async function readAllTextures(paths: string[], actions: DevtoolActions): Promis
 		if(!path.toLowerCase().endsWith(".svg")){
 			throw new Error("Only svgs are supported; got " + path)
 		}
-		// TODO: cache config in DevtoolActions
 		const config = await actions.getProjectConfig()
 		const texturesRoot = actions.resolveProjectPath(config.textureDirectoryPath)
 		const fileContent = await Fs.readFile(Path.resolve(texturesRoot, path), "utf-8")

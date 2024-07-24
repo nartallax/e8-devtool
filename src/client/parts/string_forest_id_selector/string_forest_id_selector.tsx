@@ -2,8 +2,9 @@ import {FormInputProps} from "client/components/form/form_context"
 import {ValueSelectorField} from "client/components/value_selector/value_selector"
 import {ForestDataProvider} from "client/parts/data_providers/api_forest_data_provider"
 import {throwPlaceholder} from "client/ui_utils/noop"
+import {getFirstTreeLeafPath} from "common/tree"
 import {UUID} from "common/uuid"
-import {getLastPathPart} from "data/project_utils"
+import {getLastPathPart, treePathToString} from "data/project_utils"
 import {useCallback, useState} from "react"
 
 type Props<V extends {id: UUID}> = NullableProps<V> | NonNullableProps<V>
@@ -31,7 +32,7 @@ type PropsFor<V extends {id: UUID}, T, P> = FormInputProps<T> & {
 export function StringForestIdSelector<V extends {id: UUID}>({
 	provider, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
 }: Props<V>) {
-	const {getByPath} = provider.useFetchers()
+	const {getByPath, getForest} = provider.useFetchers()
 	const createEmpty = !isNullable ? (props as NonNullableProps<V>).createEmpty : throwPlaceholder
 
 	const [isOpen, setOpen] = useState(false)
@@ -52,11 +53,18 @@ export function StringForestIdSelector<V extends {id: UUID}>({
 			return
 		}
 
-		// TODO: try to pick any value here, don't immediately create new one
+		const forest = await getForest()
+		const leafPath = getFirstTreeLeafPath(forest)
+		if(leafPath){
+			newPath = treePathToString(forest, leafPath)
+			const id = (await getByPath(newPath)).id
+			onChange(id)
+			return
+		}
 
 		const emptyItem = await Promise.resolve(createEmpty())
 		onChange(emptyItem.id)
-	}, [onChange, getByPath, isNullable, createEmpty])
+	}, [onChange, getByPath, isNullable, createEmpty, getForest])
 
 	const path = provider.usePathById(value)
 	const name = value === null ? absentValueLabel : !path ? loadingValueLabel : getLastPathPart(path)

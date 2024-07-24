@@ -8,6 +8,7 @@ import {ApiError} from "common/api_response"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
 import {UUID} from "common/uuid"
+import * as Path from "path"
 
 export async function getApi(actions: DevtoolActions): Promise<Record<string, (...args: any[]) => unknown>> {
 
@@ -40,7 +41,9 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 	}
 
 	const getProjectRootForest = async(): Promise<Tree<string, string>[]> => {
-		return await readdirAsTree(actions.resolveProjectPath("."))
+		return await readdirAsTree(actions.resolveProjectPath("."), path => {
+			return path === actions.projectDataRoot || Path.basename(path).startsWith(".")
+		})
 	}
 
 	const api: Record<string, (...args: any[]) => unknown> = {

@@ -34,6 +34,7 @@ type ForestDataFetchers<T> = {
 	getPathById: ((id: UUID) => Promise<string>) & ((id: null) => Promise<null>)
 	getAsMap: () => Promise<Map<string, T>>
 	getReferrers: <K extends keyof T>(fieldName: K, value: T[K]) => Promise<ProjectObjectReferrer[]>
+	getForest: () => Promise<Tree<string, string>[]>
 	create: (path: string, index: number, item: T) => Promise<void>
 }
 
@@ -84,8 +85,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 					return await bindings.getPathById(id)
 				}),
 				get: query(bindings.get),
-				// TODO: do we really need null here?
-				getByPath: query(async(path: string | null) => {
+				getByPath: query(async(path: string) => {
 					if(path === null){
 						return null
 					}
@@ -195,7 +195,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 	return {
 		useAsMap: () => useQueries().getAsMap.useValue(),
 		usePathById: ((id: UUID | null) => useQueries().getPathById.useValue(id)) as ForestDataProvider<T>["usePathById"],
-		useByPath: ((path: string | null) => useQueries().getByPath.useValue(path)) as ForestDataProvider<T>["useByPath"],
+		useByPath: ((path: string) => useQueries().getByPath.useValue(path)) as ForestDataProvider<T>["useByPath"],
 
 		useFetchers: () => {
 			const queries = useQueries()
@@ -204,7 +204,8 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 				getByPath: queries.getByPath.getValue as ForestDataFetchers<T>["getByPath"],
 				getPathById: queries.getPathById.getValue as ForestDataFetchers<T>["getPathById"],
 				getReferrers: queries.getReferrers.getValue,
-				create: queries.create
+				create: queries.create,
+				getForest: queries.getForest.getValue
 			}
 		},
 
