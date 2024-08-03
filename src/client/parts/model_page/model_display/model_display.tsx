@@ -44,7 +44,7 @@ export const ModelDisplay = ({modelId}: Props) => {
 	}
 
 	return (
-		<UnsavedChanges {...editable.changesProps}>
+		<UnsavedChanges {...editable.changesProps} saveOnUnmount>
 			<ModelDisplayContextProvider model={editable.value} setModel={editable.setValue} projectConfig={config}>
 				<SidebarLayout>
 					<Sidebar>

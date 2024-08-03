@@ -26,7 +26,7 @@ export const SettingsPage = withDataLoaded(
 	({rootForestData: [rootForest], settingsData: {value: settings, setValue: setSettings, changesProps}}) => {
 
 		return (
-			<UnsavedChanges {...changesProps}>
+			<UnsavedChanges {...changesProps} saveOnUnmount>
 				<CentralColumn width={["400px", "75vw", "800px"]}>
 					<Form fieldLabelWidth="20rem" fieldInputWidth="30rem" showAllErrors>
 						<Separator>General settings</Separator>
