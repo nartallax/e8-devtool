@@ -1,6 +1,8 @@
 import {Growable2DBitmap} from "common/bitmap/growable_2d_bitmap"
 import {XY} from "@nartallax/e8"
 
+// TODO: this file is moving into the engine. consider removing it.
+
 type Rect = {
 	width: number
 	height: number

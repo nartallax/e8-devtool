@@ -13,7 +13,12 @@
         },
 
         "esModuleInterop": true,
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
+        "module": "es6",
+        "target": "es2022",
+        "importsNotUsedAsValues": "remove",
+        "isolatedModules": true,
+        
         "lib": ["dom", "ESNext"],
 
         "allowJs": false,
@@ -23,21 +28,12 @@
         "downlevelIteration": true,
         "skipLibCheck": true,
 
-        "noImplicitUseStrict": false,
-        "alwaysStrict": true,
-        "newLine": "lf",
-        "noEmitOnError": true,
-        "pretty": false,
-        "removeComments": true,
-        "sourceMap": false,
-        "declaration": false,
-        "emitBOM": false,
-        "module": "amd",
-        "target": "esnext",
+        "useDefineForClassFields": true,
 
-        "importsNotUsedAsValues": "remove",
         "forceConsistentCasingInFileNames": true,
         
+        "noImplicitUseStrict": false,
+        "alwaysStrict": true,
         "strict": true,
         "strictFunctionTypes": true,
         "strictNullChecks": true,

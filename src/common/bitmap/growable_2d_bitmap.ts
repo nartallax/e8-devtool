@@ -1,3 +1,5 @@
+// TODO: moved into engine
+
 /** 2d array of booleans that grows
  * x and y could be any int in [0, 2^31) (maybe more!)
  * Just keep in mind that it is always rectangular;
