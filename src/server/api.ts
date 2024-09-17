@@ -1,6 +1,5 @@
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Tree} from "common/tree"
-import {projectToAtlasLayout} from "data/project_to_resourcepack/project_to_resourcepack"
 import {XY} from "@nartallax/e8"
 import {DevtoolActions} from "server/actions"
 import {isEnoent} from "common/is_enoent"
@@ -26,6 +25,7 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 	}
 
 	const getAtlasLayout = async(): Promise<(SvgTextureFile & XY)[]> => {
+		/*
 		try {
 			return await projectToAtlasLayout(actions)
 		} catch(e){
@@ -34,6 +34,8 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 			}
 			throw new ApiError("Texture directory not found. Check project configuration.")
 		}
+		*/
+		throw new Error("Not implemented")
 	}
 
 	const generateResourcePack = async(): Promise<void> => {

@@ -1,19 +1,12 @@
-import {getSortedProjectBinds, mappedForestToArray} from "data/project_utils"
-import {optimizeSvg, setSvgPosition} from "data/optimize_svg"
-import {decomposeShapes} from "data/polygon_decomposition"
-import {SvgTextureFile, getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
-import {buildAtlasLayout} from "data/project_to_resourcepack/build_atlas_layout"
-import {AltasPartWithLayer, Atlas, InputBindDefinition, Model, ResourcePack, XY} from "@nartallax/e8"
-import {promises as Fs} from "fs"
-import * as Path from "path"
-import {UUID} from "common/uuid"
-import {omit} from "common/omit"
-import {Tree} from "common/tree"
 import {DevtoolActions} from "server/actions"
-import {nonNull} from "common/non_null"
+
+// FIXME: delete this file
 
 /** Convert project into ResourcePack structure. */
-export async function projectToResourcePack(actions: DevtoolActions): Promise<ResourcePack> {
+export async function projectToResourcePack(actions: DevtoolActions): Promise<any> {
+	void actions
+	throw new Error("Not implemented")
+	/*
 	const allModels = (await actions.dirs.models.getAllItemsAsArray()).sort((a, b) => a.id > b.id ? 1 : -1)
 	const texturesWithPositions = await projectToAtlasLayout(actions)
 	const atlasSideLength = getAtlasSideLength(texturesWithPositions)
@@ -142,4 +135,5 @@ async function readAllTextures(paths: string[], actions: DevtoolActions): Promis
 		result[index] = {...optimizeSvg(fileContent, path), path}
 	}))
 	return result
+	*/
 }

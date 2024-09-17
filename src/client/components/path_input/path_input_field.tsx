@@ -1,4 +1,4 @@
-import {Tree} from "common/tree"
+import {Tree} from "@nartallax/e8"
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {TextInput} from "client/components/text_input/text_input"
 import {FormField} from "client/components/form/form_field"

@@ -200,6 +200,7 @@ function resolveTreeIndicesToTrees<T, B>(trees: Tree<T, B>[], indices: number[])
 	return result
 }
 
+// TODO: reuse function from e8
 export function getTreeByPath<T, B>(trees: Tree<T, B>[], path: TreePath): Tree<T, B> {
 	for(let i = 0; i < path.length; i++){
 		const currentKey = path[i]!

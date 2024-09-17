@@ -5,7 +5,7 @@ import {useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {Icon} from "generated/icons"
 import {InlineTreeElementEditor} from "client/components/tree_view/inline_tree_element_editor"
-import React = require("react")
+import React from "react"
 import {Button} from "client/components/button/button"
 import {SetState} from "client/ui_utils/react_types"
 import {isInButton} from "client/ui_utils/dom_queries"
@@ -61,7 +61,7 @@ export type TreeBranchChildrenProps<L, B> = BaseProps<L, B> & {
 	tree: Tree<L, B>[]
 }
 
-const TreeBranch = <T, B>({branch, isEverythingExpanded, ...props}: BranchProps<T, B>) => {
+const TreeBranchEl = <T, B>({branch, isEverythingExpanded, ...props}: BranchProps<T, B>) => {
 	const [isExpanded, setExpanded] = useState(false)
 	const isEffectiveExpanded = isExpanded || isEverythingExpanded
 
@@ -287,7 +287,7 @@ export const TreeBranchChildren = <T, B>({
 						throw new Error("Cannot get branch key: no function provided")
 					}
 					return (
-						<TreeBranch
+						<TreeBranchEl
 							branch={tree}
 							key={getBranchKey(tree.value, newPath, tree)}
 							squares={squares}

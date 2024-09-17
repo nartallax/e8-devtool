@@ -1,4 +1,4 @@
-import {Chord, InputKey, browserKeyboardKeyToInputKey, knownMouseButtonInputs} from "@nartallax/e8"
+import {Chord, InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "@nartallax/e8"
 import {useCallback, useEffect, useRef} from "react"
 import * as css from "./chord_input.module.scss"
 import {cn} from "client/ui_utils/classname"
@@ -56,13 +56,13 @@ export const ChordInput = ({value, onChange, variant = "default"}: Props) => {
 		}
 
 		const keyDownHandler = (e: KeyboardEvent) => {
-			const key = browserKeyboardKeyToInputKey(e.code)
+			const key = browserKeyboardCodeToInputKey(e.code)
 			if(key !== null){
 				onInputKeyDown(e, key)
 			}
 		}
 		const keyUpHandler = (e: KeyboardEvent) => {
-			const key = browserKeyboardKeyToInputKey(e.code)
+			const key = browserKeyboardCodeToInputKey(e.code)
 			if(key !== null){
 				onInputKeyUp(e, key)
 			}

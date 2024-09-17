@@ -3,10 +3,8 @@ import {promises as Fs} from "fs"
 import {isEnoent} from "common/is_enoent"
 import * as Tempy from "tempy"
 import * as Path from "path"
-import {projectToResourcePack} from "data/project_to_resourcepack/project_to_resourcepack"
 import {projectToTypescript} from "data/project_to_ts"
 import {log} from "common/log"
-import {encodeResourcePack} from "@nartallax/e8"
 import {Tree} from "common/tree"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
@@ -74,10 +72,11 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 	}
 
 	const produceResourcePack = async() => {
-		const config = await actions.getProjectConfig()
-		const resourcePack = await projectToResourcePack(actions)
-		const bytes = encodeResourcePack(resourcePack)
-		await safeWrite(resolveProjectPath(config.resourcePackPath), bytes)
+		throw new Error("Not implemented")
+		// const config = await actions.getProjectConfig()
+		// const resourcePack = await projectToResourcePack(actions)
+		// const bytes = encodeResourcePack(resourcePack)
+		// await safeWrite(resolveProjectPath(config.resourcePackPath), bytes)
 	}
 
 	const produceTypescript = async() => {
