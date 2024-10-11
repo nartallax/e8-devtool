@@ -1,23 +1,24 @@
 import {ProjectInputBind, ProjectModel} from "data/project"
 import {sortBy} from "common/sort_by"
-import {Tree, TreePath, allTreeNodes, getForestLeaves, isTreeBranch, treePathToValues} from "common/tree"
 import {UUID} from "common/uuid"
+import {Forest, ForestPath, Tree} from "@nartallax/forest"
+import {isTreeBranch} from "common/tree"
 
 // only this function should be used to get all project modals
 // because it will guarantee that the order is the same each time
 // and order is important, because index of the model is its id
 /** @returns [all folder labels, in descendance order; model] */
-export function getAllProjectModelsWithFolders(forest: Tree<string, string>[], map: Record<string, ProjectModel>): [string[], ProjectModel][] {
+export function getAllProjectModelsWithFolders(forest: readonly Tree<string, string>[], map: Record<string, ProjectModel>): [string[], ProjectModel][] {
 	const allModels: [string[], ProjectModel][] = [...modelsWithPaths(forest, map)]
 	sortBy(allModels, x => x[1].id)
 	return allModels
 }
 
-export function getAllProjectModels(forest: Tree<string, string>[], map: Record<string, ProjectModel>): ProjectModel[] {
+export function getAllProjectModels(forest: readonly Tree<string, string>[], map: Record<string, ProjectModel>): ProjectModel[] {
 	return getAllProjectModelsWithFolders(forest, map).map(x => x[1])
 }
 
-export function getSortedProjectBinds(forest: Tree<string, string>[], map: Record<string, ProjectInputBind>): [ProjectInputBind, string[]][] {
+export function getSortedProjectBinds(forest: readonly Tree<string, string>[], map: Record<string, ProjectInputBind>): [ProjectInputBind, string[]][] {
 	const arr = mappedForestToArrayWithPath(forest, map)
 	sortBy(arr, ([bind]) => bind.id)
 	return arr
@@ -54,8 +55,8 @@ export function replaceLastPathPart(path: string, name: string): string {
 	return parts.join("/")
 }
 
-export function treePathToString(forest: Tree<string, string>[], path: TreePath, addedPart?: string, type?: "leaf" | "branch"): string {
-	const parts = treePathToValues(forest, path)
+export function treePathToString(forest: readonly Tree<string, string>[], path: ForestPath, addedPart?: string, type?: "leaf" | "branch"): string {
+	const parts = new Forest(forest).pathToValues(path)
 	if(addedPart){
 		parts.push(addedPart)
 	}
@@ -63,10 +64,10 @@ export function treePathToString(forest: Tree<string, string>[], path: TreePath,
 	return mergePath(parts, type === "branch")
 }
 
-export const pathById = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>, id: UUID): TreePath => {
-	for(const [branches, leaf, path] of getForestLeaves(forest)){
-		const pathParts = branches.map(x => x.value)
-		pathParts.push(leaf)
+export const pathById = (trees: Tree<string, string>[], map: Record<string, {id: UUID}>, id: UUID): ForestPath => {
+	const forest = new Forest(trees)
+	for(const [, path] of forest.getLeavesWithPaths()){
+		const pathParts = forest.pathToValues(path)
 		const pathStr = mergePath(pathParts)
 		const value = map[pathStr]!
 		if(value.id === id){
@@ -76,23 +77,23 @@ export const pathById = (forest: Tree<string, string>[], map: Record<string, {id
 	throw new Error(`Object with id = ${id} not found`)
 }
 
-export const pathStrById = (forest: Tree<string, string>[], map: Record<string, {id: UUID}>, id: UUID): string => {
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const pathParts = branches.map(x => x.value)
-		pathParts.push(leaf)
-		const path = mergePath(pathParts)
-		const value = map[path]!
+export const pathStrById = (trees: Tree<string, string>[], map: Record<string, {id: UUID}>, id: UUID): string => {
+	const forest = new Forest(trees)
+	for(const [, path] of forest.getLeavesWithPaths()){
+		const pathParts = forest.pathToValues(path)
+		const pathStr = mergePath(pathParts)
+		const value = map[pathStr]!
 		if(value.id === id){
-			return path
+			return pathStr
 		}
 	}
 	throw new Error(`Object with id = ${id} not found`)
 }
 
-export function* modelsWithPaths(forest: Tree<string, string>[], map: Record<string, ProjectModel>): IterableIterator<[string[], ProjectModel]> {
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
+export function* modelsWithPaths(trees: readonly Tree<string, string>[], map: Record<string, ProjectModel>): IterableIterator<[string[], ProjectModel]> {
+	const forest = new Forest(trees)
+	for(const [, path] of forest.getLeavesWithPaths()){
+		const fullPath = forest.pathToValues(path)
 		const pathStr = mergePath(fullPath)
 		const model = map[pathStr]
 		if(!model){
@@ -104,11 +105,11 @@ export function* modelsWithPaths(forest: Tree<string, string>[], map: Record<str
 
 // TODO: most of functions in this file should become outdated after converting to API
 
-export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Record<string, T>): T[] => {
+export const mappedForestToArray = <T>(trees: Tree<string, string>[], map: Record<string, T>): T[] => {
+	const forest = new Forest(trees)
 	const result: T[] = []
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
+	for(const [, path] of forest.getLeavesWithPaths()){
+		const fullPath = forest.pathToValues(path)
 		const pathStr = mergePath(fullPath)
 		const item = map[pathStr]
 		if(item){
@@ -118,11 +119,11 @@ export const mappedForestToArray = <T>(forest: Tree<string, string>[], map: Reco
 	return result
 }
 
-export const mappedForestToArrayWithPath = <T>(forest: Tree<string, string>[], map: Record<string, T>): [T, string[]][] => {
+export const mappedForestToArrayWithPath = <T>(trees: readonly Tree<string, string>[], map: Record<string, T>): [T, string[]][] => {
+	const forest = new Forest(trees)
 	const result: [T, string[]][] = []
-	for(const [branches, leaf] of getForestLeaves(forest)){
-		const fullPath = branches.map(x => x.value)
-		fullPath.push(leaf)
+	for(const [, path] of forest.getLeavesWithPaths()){
+		const fullPath = forest.pathToValues(path)
 		const pathStr = mergePath(fullPath)
 		const item = map[pathStr]
 		if(item){
@@ -132,19 +133,19 @@ export const mappedForestToArrayWithPath = <T>(forest: Tree<string, string>[], m
 	return result
 }
 
-export const getForestPaths = (forest: Tree<string, string>[], includeBranches?: boolean): [string, string[]][] => {
+export const getForestPaths = (trees: readonly Tree<string, string>[], includeBranches?: boolean): [string, string[]][] => {
+	const forest = new Forest(trees)
 	const result: [string, string[]][] = []
 	if(!includeBranches){
-		for(const [branches, leaf] of getForestLeaves(forest)){
-			const fullPath = branches.map(x => x.value)
-			fullPath.push(leaf)
+		for(const [, path] of forest.getLeavesWithPaths()){
+			const fullPath = forest.pathToValues(path)
 			const pathStr = mergePath(fullPath)
 			result.push([pathStr, fullPath])
 		}
 	} else {
-		for(const nodes of allTreeNodes(forest)){
-			const fullPath = nodes.map(x => x.value)
-			const pathStr = mergePath(fullPath, isTreeBranch(nodes[nodes.length - 1]!))
+		for(const [tree, path] of forest.getAllTrees()){
+			const fullPath = forest.pathToValues(path)
+			const pathStr = mergePath(fullPath, isTreeBranch(tree))
 			result.push([pathStr, fullPath])
 		}
 	}

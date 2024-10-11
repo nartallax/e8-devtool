@@ -1,4 +1,4 @@
-import {Tree} from "@nartallax/e8"
+
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {TextInput} from "client/components/text_input/text_input"
 import {FormField} from "client/components/form/form_field"
@@ -9,6 +9,7 @@ import {Form} from "client/components/form/form"
 import {Col} from "client/components/row_col/row_col"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {StringForestView} from "client/components/tree_view/string_forest_view"
+import {Tree} from "@nartallax/forest"
 
 type Props = FormInputProps<string> & {
 	forest: Tree<string, string>[] | null
@@ -71,7 +72,7 @@ type PathSelectionModalProps = {
 	onClose: (value?: string | null) => void
 	canSelectLeaf?: boolean
 	canSelectBranch?: boolean
-	forest: Tree<string, string>[]
+	forest: readonly Tree<string, string>[]
 	pathSeparator: string
 }
 
@@ -101,7 +102,7 @@ export const PathSelectionModal = ({
 				<Col gap stretch grow>
 					<StringForestView
 						makePath={(parts, isPrefix) => parts.join(pathSeparator) + (isPrefix ? pathSeparator : "")}
-						forest={forest}
+						trees={forest}
 						selectedPath={path ?? null}
 						isBranchClickable={canSelectBranch}
 						onItemClick={getOnSelect(false)}

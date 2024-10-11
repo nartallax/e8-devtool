@@ -1,15 +1,15 @@
 import {RefObject, useRef} from "react"
 import * as css from "./tree_view.module.scss"
-import {Tree, TreeBranch, TreePath, getBranchByPath, getTreeByPath, isTreeBranch} from "common/tree"
 import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"
 import {lockUserSelect, unlockUserSelect} from "client/ui_utils/user_select_lock"
 import {AnyPointerEvent, pointerEventsToClientCoords, pointerEventsToOffsetCoords, useMouseDragProps} from "client/ui_utils/use_mouse_drag"
+import {Forest, ForestPath, Tree, TreeBranch, isTreeBranch} from "@nartallax/forest"
 
 
 
 type DragDestinationDisposition = "above" | "below" | "inside"
 type DragDestination<T, B> = {
-	path: TreePath
+	path: ForestPath
 	tree: Tree<T, B>
 	disposition: DragDestinationDisposition
 	rect: DOMRect
@@ -17,19 +17,21 @@ type DragDestination<T, B> = {
 
 type RowElPath = {
 	el: HTMLElement
-	path: TreePath
+	path: ForestPath
 }
 
 type TreeDragParams<T, B> = {
-	onDrag?: (from: TreePath, to: TreePath) => void
+	onDrag?: (from: ForestPath, to: ForestPath) => void
 	rootRef: RefObject<HTMLElement | null>
-	forest: Tree<T, B>[]
+	trees: readonly Tree<T, B>[]
 	canBeChildOf?: (child: Tree<T, B>, parent: TreeBranch<T, B> | null) => boolean
 }
 
 export const useTreeViewDragProps = <T, B>({
-	onDrag: _onDrag, rootRef, canBeChildOf, forest
+	onDrag: _onDrag, rootRef, canBeChildOf, trees
 }: TreeDragParams<T, B>) => {
+	const forest = new Forest(trees)
+
 	const offset = useRef({x: 0, y: 0})
 	const destination = useRef<DragDestination<T, B> | null>(null)
 	const draggedRow = useRef<RowElPath | null>(null)
@@ -55,11 +57,11 @@ export const useTreeViewDragProps = <T, B>({
 			} else {
 				const parentPath = newDest.path.slice(0, newDest.path.length - 1)
 				if(parentPath.length > 0){
-					parent = getBranchByPath(forest, parentPath)
+					parent = forest.getBranchTreeAt(parentPath)
 				}
 			}
 
-			if(!canBeChildOf(getTreeByPath(forest, draggedRow.current.path), parent)){
+			if(!canBeChildOf(forest.getTreeAt(draggedRow.current.path), parent)){
 				return
 			}
 		}
@@ -135,7 +137,7 @@ export const useTreeViewDragProps = <T, B>({
 }
 
 
-const getDragDestination = <T, B>(tree: Tree<T, B>[], event: AnyPointerEvent): DragDestination<T, B> | null => {
+const getDragDestination = <T, B>(forest: Forest<T, B>, event: AnyPointerEvent): DragDestination<T, B> | null => {
 	const searchResult = getRowPath(event)
 	if(!searchResult){
 		return null
@@ -146,7 +148,7 @@ const getDragDestination = <T, B>(tree: Tree<T, B>[], event: AnyPointerEvent): D
 	const {y} = pointerEventsToClientCoords(event)
 	const dispositionYPercent = (y - targetRect.top) / targetRect.height
 
-	const targetTree = getTreeByPath(tree, path)
+	const targetTree = forest.getTreeAt(path)
 	let disp: DragDestinationDisposition = isTreeBranch(targetTree)
 		? dispositionYPercent < 0.25 ? "above" : dispositionYPercent > 0.75 ? "below" : "inside"
 		: dispositionYPercent < 0.5 ? "above" : "below"
@@ -181,11 +183,11 @@ const getRowPath = (event: AnyPointerEvent): RowElPath | null => {
 		return null
 	}
 
-	const path: TreePath = JSON.parse(el.getAttribute("data-path")!)
+	const path: ForestPath = JSON.parse(el.getAttribute("data-path")!)
 	return {path, el}
 }
 
-const isPathInsidePath = (maybeParent: TreePath, maybeChild: TreePath): boolean => {
+const isPathInsidePath = (maybeParent: ForestPath, maybeChild: ForestPath): boolean => {
 	if(maybeChild.length < maybeParent.length){
 		return false
 	}

@@ -1,5 +1,3 @@
-import {Tree, TreeBranch, TreePath, areTreePathsEqual, getTreeSiblings, isTreeBranch} from "common/tree"
-
 import * as css from "./tree_view.module.scss"
 import {useState} from "react"
 import {cn} from "client/ui_utils/classname"
@@ -10,39 +8,40 @@ import {Button} from "client/components/button/button"
 import {SetState} from "client/ui_utils/react_types"
 import {isInButton} from "client/ui_utils/dom_queries"
 import {ValidatorsMaybeFactory} from "client/components/form/validators"
+import {Forest, ForestPath, Tree, TreeBranch, areForestPathsEqual, isTreeBranch} from "@nartallax/forest"
 
 type BaseProps<L, B> = {
-	forest: Tree<L, B>[]
+	forest: readonly Tree<L, B>[]
 	// eslint-disable-next-line react/no-unused-prop-types
-	getBranchKey?: (branch: B, path: TreePath, node: Tree<L, B>) => string
+	getBranchKey?: (branch: B, path: ForestPath, node: Tree<L, B>) => string
 	// eslint-disable-next-line react/no-unused-prop-types
-	getLeafKey: (leaf: L, path: TreePath, node: Tree<L, B>) => string
-	getBranchLabel?: (branch: B, path: TreePath, node: Tree<L, B>) => string
-	getBranchSublabel?: (leaf: B, path: TreePath, node: Tree<L, B>) => string
-	getLeafLabel: (leaf: L, path: TreePath, node: Tree<L, B>) => string
-	getLeafSublabel?: (leaf: L, path: TreePath, node: Tree<L, B>) => React.ReactNode
-	onLeafClick?: (leaf: L, path: TreePath) => void
-	onLeafDoubleclick?: (leaf: L, path: TreePath) => void
-	onBranchClick?: (branch: B, path: TreePath) => void
-	onBranchDoubleclick?: (branch: B, path: TreePath) => void
-	onAddChild?: (parentPath: TreePath) => void
+	getLeafKey: (leaf: L, path: ForestPath, node: Tree<L, B>) => string
+	getBranchLabel?: (branch: B, path: ForestPath, node: Tree<L, B>) => string
+	getBranchSublabel?: (leaf: B, path: ForestPath, node: Tree<L, B>) => string
+	getLeafLabel: (leaf: L, path: ForestPath, node: Tree<L, B>) => string
+	getLeafSublabel?: (leaf: L, path: ForestPath, node: Tree<L, B>) => React.ReactNode
+	onLeafClick?: (leaf: L, path: ForestPath) => void
+	onLeafDoubleclick?: (leaf: L, path: ForestPath) => void
+	onBranchClick?: (branch: B, path: ForestPath) => void
+	onBranchDoubleclick?: (branch: B, path: ForestPath) => void
+	onAddChild?: (parentPath: ForestPath) => void
 	squares?: SquareName[]
 	// eslint-disable-next-line react/no-unused-prop-types
-	path: TreePath
-	inlineEditPath: TreePath | null
+	path: ForestPath
+	inlineEditPath: ForestPath | null
 	canEditBranchLabel: boolean
 	canEditLeafLabel: boolean
-	onLabelEditComplete: (path: TreePath, tree: Tree<L, B>, newLabel: string | null) => void
-	setInlineEditPath: SetState<TreePath | null>
-	onNodeDelete: (path: TreePath, tree: Tree<L, B>) => void
+	onLabelEditComplete: (path: ForestPath, tree: Tree<L, B>, newLabel: string | null) => void
+	setInlineEditPath: SetState<ForestPath | null>
+	onNodeDelete: (path: ForestPath, tree: Tree<L, B>) => void
 	canDeleteLeaf: boolean
 	canDeleteBranch: boolean
-	leafLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
-	branchLabelValidators?: ValidatorsMaybeFactory<string, TreePath>
-	selectedPath?: TreePath
+	leafLabelValidators?: ValidatorsMaybeFactory<string, ForestPath>
+	branchLabelValidators?: ValidatorsMaybeFactory<string, ForestPath>
+	selectedPath?: ForestPath
 	// eslint-disable-next-line react/no-unused-prop-types
 	isEverythingExpanded?: boolean
-	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: TreePath, validators?: ValidatorsMaybeFactory<string, TreePath>, siblingNames: string[]}) => React.ReactNode
+	InlineEditor?: (props: {initialValue: string, onComplete: (newValue: string | null) => void, treePath: ForestPath, validators?: ValidatorsMaybeFactory<string, ForestPath>, siblingNames: string[]}) => React.ReactNode
 }
 
 type SquareName = "vertical" | "split" | "corner" | "empty"
@@ -58,7 +57,7 @@ type RowProps<L, B> = BaseProps<L, B> & {
 }
 
 export type TreeBranchChildrenProps<L, B> = BaseProps<L, B> & {
-	tree: Tree<L, B>[]
+	tree: readonly Tree<L, B>[]
 }
 
 const TreeBranchEl = <T, B>({branch, isEverythingExpanded, ...props}: BranchProps<T, B>) => {
@@ -84,7 +83,7 @@ const TreeBranchEl = <T, B>({branch, isEverythingExpanded, ...props}: BranchProp
 	)
 }
 
-const getLabel = <T, B>(row: Tree<T, B>, path: TreePath, getBranchLabel: RowProps<T, B>["getBranchLabel"], getLeafLabel: RowProps<T, B>["getLeafLabel"], siblingIndex?: number) => {
+const getLabel = <T, B>(row: Tree<T, B>, path: ForestPath, getBranchLabel: RowProps<T, B>["getBranchLabel"], getLeafLabel: RowProps<T, B>["getLeafLabel"], siblingIndex?: number) => {
 
 	if(siblingIndex !== undefined && path.length > 0){
 		const lastPathPart = path[path.length - 1]!
@@ -112,14 +111,14 @@ const TreeRow = <T, B>({
 	onBranchClick, onBranchDoubleclick,
 	forest
 }: RowProps<T, B>) => {
-	const isSelected = !!selectedPath && areTreePathsEqual(selectedPath, path)
-	const isInlineEdited = !!inlineEditPath && areTreePathsEqual(path, inlineEditPath)
+	const isSelected = !!selectedPath && areForestPathsEqual(selectedPath, path)
+	const isInlineEdited = !!inlineEditPath && areForestPathsEqual(path, inlineEditPath)
 
 	const label = getLabel(row, path, getBranchLabel, getLeafLabel)
 
 	let labelOrEditor: React.ReactNode
 	if(isInlineEdited){
-		const siblingNames = getTreeSiblings(forest, path)
+		const siblingNames = new Forest(forest).getSiblingTreesAt(path)
 			.map((tree, siblingIndex) => getLabel(tree, path, getBranchLabel, getLeafLabel, siblingIndex))
 		labelOrEditor = (
 			<InlineEditor

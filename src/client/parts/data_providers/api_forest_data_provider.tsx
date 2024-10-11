@@ -1,3 +1,4 @@
+import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 import {useAlert} from "client/components/modal/alert_modal"
 import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {useWrapSaveableState} from "client/components/unsaved_changes_context/use_saveable_state"
@@ -6,7 +7,6 @@ import {ProjectObjectReferrer, ProjectObjectType} from "client/parts/data_provid
 import {AbortError} from "client/ui_utils/abort_error"
 import {makeQueryGroup} from "client/ui_utils/cacheable_query"
 import {SetState} from "client/ui_utils/react_types"
-import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, isTreeLeaf, moveTreeByPath, updateTreeByPath} from "common/tree"
 import {UUID} from "common/uuid"
 import {mergePath, treePathToString} from "data/project_utils"
 import {useCallback} from "react"
@@ -14,11 +14,11 @@ import {useCallback} from "react"
 type ChangesProps = Pick<React.ComponentProps<typeof UnsavedChanges>, "saveOnUnmount" | "save" | "isUnsaved">
 
 type EditableForest = {
-	forest: Tree<string, string>[]
-	createNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
-	moveNode: (node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => Promise<void>
-	renameNode: (node: Tree<string, string>, path: TreePath, newName: string) => Promise<void>
-	deleteNode: (node: Tree<string, string>, path: TreePath) => Promise<void>
+	trees: readonly Tree<string, string>[]
+	createNode: (node: Tree<string, string>, path: ForestPath) => Promise<void>
+	moveNode: (node: Tree<string, string>, fromPath: ForestPath, toPath: ForestPath) => Promise<void>
+	renameNode: (node: Tree<string, string>, path: ForestPath, newName: string) => Promise<void>
+	deleteNode: (node: Tree<string, string>, path: ForestPath) => Promise<void>
 	makePath: (parts: string[], isPrefix: boolean) => string
 }
 
@@ -99,7 +99,11 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 
 	function useEditableForest({createItem}: EditableForestProps<T>): EditableForest | null {
 		const queries = useQueries()
-		const [forest, setForest, {isLoaded}] = useAsyncCall([], () => queries.getForest.getValue(), [])
+		const [forest, setForest, {isLoaded}] = useAsyncCall<readonly Tree<string, string>[]>(
+			[],
+			() => queries.getForest.getValue(),
+			[]
+		)
 		const getReferrers = useReferrerFetcher()
 
 		const {showAlert} = useAlert()
@@ -125,35 +129,35 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 			throw new AbortError(`Deletion prevented, ${itemType} is used from ${refs.length} objects.`)
 		}
 
-		const createNode = async(node: Tree<string, string>, path: TreePath) => {
+		const createNode = async(node: Tree<string, string>, path: ForestPath) => {
 			const pathStr = treePathToString(forest, path.slice(0, -1), node.value)
-			if(isTreeLeaf(node)){
+			if(!isTreeBranch(node)){
 				const item = createItem()
 				await queries.create(pathStr, path[path.length - 1]!, item)
 			} else {
 				await queries.createDirectory(pathStr, path[path.length - 1]!)
 			}
-			setForest(forest => addTreeByPath(forest, node, path))
+			setForest(forest => new Forest(forest).insertTreeAt(path, node).trees)
 		}
 
-		const moveNode = async(node: Tree<string, string>, fromPath: TreePath, toPath: TreePath) => {
+		const moveNode = async(node: Tree<string, string>, fromPath: ForestPath, toPath: ForestPath) => {
 			await queries.move(
 				treePathToString(forest, fromPath),
 				treePathToString(forest, toPath.slice(0, -1), node.value),
 				toPath[toPath.length - 1]!
 			)
-			setForest(forest => moveTreeByPath(forest, fromPath, toPath))
+			setForest(forest => new Forest(forest).move(fromPath, toPath).trees)
 		}
 
-		const renameNode = async(node: Tree<string, string>, path: TreePath, newName: string) => {
+		const renameNode = async(node: Tree<string, string>, path: ForestPath, newName: string) => {
 			void node // we don't actually need node here, it's here for sake of regularity of handler arguments
 			await queries.rename(treePathToString(forest, path), newName)
-			setForest(forest => updateTreeByPath(forest, path, tree => ({...tree, value: newName})))
+			setForest(forest => new Forest(forest).updateTreeAt(path, tree => ({...tree, value: newName})).trees)
 		}
 
-		const deleteNode = async(node: Tree<string, string>, path: TreePath) => {
+		const deleteNode = async(node: Tree<string, string>, path: ForestPath) => {
 			const pathStr = treePathToString(forest, path)
-			if(isTreeLeaf(node)){
+			if(!isTreeBranch(node)){
 				if(getReferrers !== noopReferers){
 					const item = await queries.getByPath.getValue(pathStr)
 					const refs = (await Promise.all(getReferrers(item!))).flat()
@@ -161,11 +165,11 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 				}
 			}
 			await queries.delete(pathStr)
-			setForest(forest => deleteFromTreeByPath(forest, path))
+			setForest(forest => new Forest(forest).deleteAt(path).trees)
 		}
 
 		return {
-			createNode, moveNode, renameNode, deleteNode, forest, makePath: mergePath
+			createNode, moveNode, renameNode, deleteNode, trees: forest, makePath: mergePath
 		}
 	}
 

@@ -1,8 +1,8 @@
+import {Forest} from "@nartallax/forest"
 import {FormInputProps} from "client/components/form/form_context"
 import {ValueSelectorField} from "client/components/value_selector/value_selector"
 import {ForestDataProvider} from "client/parts/data_providers/api_forest_data_provider"
 import {throwPlaceholder} from "client/ui_utils/noop"
-import {getFirstTreeLeafPath} from "common/tree"
 import {UUID} from "common/uuid"
 import {getLastPathPart, treePathToString} from "data/project_utils"
 import {useCallback, useState} from "react"
@@ -54,7 +54,7 @@ export function StringForestIdSelector<V extends {id: UUID}>({
 		}
 
 		const forest = await getForest()
-		const leafPath = getFirstTreeLeafPath(forest)
+		const leafPath = new Forest(forest).getFirstLeafPath()
 		if(leafPath){
 			newPath = treePathToString(forest, leafPath)
 			const id = (await getByPath(newPath)).id

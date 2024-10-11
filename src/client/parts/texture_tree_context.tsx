@@ -1,6 +1,6 @@
+import {Tree} from "@nartallax/forest"
 import {useApi, useApiClient} from "client/parts/api_context"
 import {defineContext} from "client/ui_utils/define_context"
-import {Tree} from "common/tree"
 import {getForestPaths} from "data/project_utils"
 import {useCallback, useMemo} from "react"
 

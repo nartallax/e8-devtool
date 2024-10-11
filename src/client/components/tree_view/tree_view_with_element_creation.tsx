@@ -1,17 +1,17 @@
+import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 import {Button} from "client/components/button/button"
 import {Row} from "client/components/row_col/row_col"
 import {SearchableTreeView, SearchableTreeViewProps} from "client/components/tree_view/searchable_tree_view"
 import {TreeControls} from "client/components/tree_view/tree_view"
-import {Tree, TreePath, addTreeByPath, isTreeBranch} from "common/tree"
 import {getRandomUUID} from "common/uuid"
 import {Icon} from "generated/icons"
 import {useCallback, useMemo, useRef, useState} from "react"
 
 export type TreeViewWithCreationProps<L, B> = Omit<SearchableTreeViewProps<L, B>, "onLabelEdit" | "onLabelEditCancel" | "onAddChild" | "controlRef"> & {
 	itemName?: string
-	onRename?: (path: TreePath, newName: string, node: Tree<L, B>) => void
-	onLeafCreated?: (name: string, path: TreePath) => void
-	onBranchCreated?: (name: string, path: TreePath) => void
+	onRename?: (path: ForestPath, newName: string, node: Tree<L, B>) => void
+	onLeafCreated?: (name: string, path: ForestPath) => void
+	onBranchCreated?: (name: string, path: ForestPath) => void
 	buttons?: () => React.ReactNode
 }
 
@@ -23,21 +23,21 @@ export const TreeViewWithElementCreation = <L, B>({
 }: TreeViewWithCreationProps<L, B>) => {
 	const [createdNode, setCreatedNode] = useState<{
 		node: Tree<string, string>
-		path: TreePath
+		path: ForestPath
 	} | null>(null)
 
 	const treeControls = useRef<TreeControls | null>(null)
 
 	const forest = useMemo(() => {
-		let tree = srcForest
+		let trees = srcForest
 		if(createdNode){
 			// yeah, that's weird. but treeview won't mind.
-			tree = addTreeByPath(tree, createdNode.node as any, createdNode.path)
+			trees = new Forest(trees).insertTreeAt(createdNode.path, createdNode.node as any).trees
 		}
-		return tree
+		return trees
 	}, [srcForest, createdNode])
 
-	const onEdit = !onRename ? undefined : (path: TreePath, newLabel: string, node: Tree<L, B>) => {
+	const onEdit = !onRename ? undefined : (path: ForestPath, newLabel: string, node: Tree<L, B>) => {
 		if(node !== createdNode?.node){
 			onRename(path, newLabel, node)
 			return
@@ -51,18 +51,18 @@ export const TreeViewWithElementCreation = <L, B>({
 		setCreatedNode(null)
 	}
 
-	const onEditCancel = (_: TreePath, node: Tree<L, B>) => {
+	const onEditCancel = (_: ForestPath, node: Tree<L, B>) => {
 		if(node === createdNode?.node){
 			setCreatedNode(null)
 		}
 	}
 
-	const addRenameNode = useCallback((isBranch: boolean, path: TreePath = [0]) => {
+	const addRenameNode = useCallback((isBranch: boolean, path: ForestPath = [0]) => {
 		setCreatedNode({node: isBranch ? {value: "", children: []} : {value: ""}, path})
 		treeControls.current?.setInlineEditPath(path)
 	}, [])
 
-	const onAddChild = !onLeafCreated ? undefined : (path: TreePath) => {
+	const onAddChild = !onLeafCreated ? undefined : (path: ForestPath) => {
 		addRenameNode(false, [...path, 0])
 	}
 
@@ -73,7 +73,7 @@ export const TreeViewWithElementCreation = <L, B>({
 		addRenameNode(false)
 	}
 
-	function shiftPathByCreatedNode(path: TreePath): TreePath {
+	function shiftPathByCreatedNode(path: ForestPath): ForestPath {
 		if(!createdNode){
 			return path
 		}
@@ -82,14 +82,15 @@ export const TreeViewWithElementCreation = <L, B>({
 			return path
 		}
 		if(createdPath[path.length - 1]! < path[path.length - 1]!){
-			path = [...path]
-			path[path.length - 1]--
+			const newPath = [...path]
+			newPath[newPath.length - 1]--
+			path = newPath
 		}
 		return path
 	}
 
-	function getKey<V extends L | B, T extends Tree<L, B>>(innerGetKey?: (tree: V, path: TreePath, node: T) => string) {
-		return (tree: V, path: TreePath, node: T) => {
+	function getKey<V extends L | B, T extends Tree<L, B>>(innerGetKey?: (tree: V, path: ForestPath, node: T) => string) {
+		return (tree: V, path: ForestPath, node: T) => {
 			if(createdNode){
 				if(node === createdNode.node){
 					return createdNodeId

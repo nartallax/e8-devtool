@@ -2,13 +2,13 @@ import {useCallback, useEffect, useRef, useState} from "react"
 import * as css from "./tree_view.module.scss"
 import {cn} from "client/ui_utils/classname"
 import {Validators, ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/components/form/validators"
-import {TreePath} from "common/tree"
+import {ForestPath} from "@nartallax/forest"
 
 type Props = {
 	initialValue: string
 	onComplete: (newValue: string | null) => void
-	treePath: TreePath
-	validators?: ValidatorsMaybeFactory<string, TreePath>
+	treePath: ForestPath
+	validators?: ValidatorsMaybeFactory<string, ForestPath>
 	siblingNames: string[]
 }
 

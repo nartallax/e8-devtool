@@ -13,7 +13,7 @@ type Props = {
 	value?: string | null
 	onClose: (value?: string | null) => void
 	isSelectionModal?: boolean
-	textureForest: Tree<string, string>[]
+	textureForest: readonly Tree<string, string>[]
 }
 
 export const TextureTreeModal = ({
@@ -31,7 +31,7 @@ export const TextureTreeModal = ({
 				<Col gap stretch grow>
 					<StringForestView
 						makePath={mergePath}
-						forest={textureForest}
+						trees={textureForest}
 						selectedPath={!isSelectionModal ? undefined : value}
 						onItemClick={!isSelectionModal ? undefined : (leaf: string) => setValue(leaf)}
 						onItemDoubleclick={!isSelectionModal ? undefined : (leaf: string) => onClose(leaf)}

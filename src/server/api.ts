@@ -1,5 +1,4 @@
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
-import {Tree} from "common/tree"
 import {XY} from "@nartallax/e8"
 import {DevtoolActions} from "server/actions"
 import {isEnoent} from "common/is_enoent"
@@ -8,12 +7,13 @@ import {readdirAsTree} from "common/readdir_as_tree"
 import {OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
 import {UUID} from "common/uuid"
 import * as Path from "path"
+import {Tree} from "@nartallax/forest"
 
 export async function getApi(actions: DevtoolActions): Promise<Record<string, (...args: any[]) => unknown>> {
 
 	// TODO: cleanup outdated API stuff
 
-	const getTextureFiles = async(): Promise<Tree<string, string>[]> => {
+	const getTextureFiles = async(): Promise<readonly Tree<string, string>[]> => {
 		try {
 			return await actions.getTextureTree()
 		} catch(e){
@@ -42,7 +42,7 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 		await actions.produceEverything()
 	}
 
-	const getProjectRootForest = async(): Promise<Tree<string, string>[]> => {
+	const getProjectRootForest = async(): Promise<readonly Tree<string, string>[]> => {
 		return await readdirAsTree(actions.resolveProjectPath("."), path => {
 			return path === actions.projectDataRoot || Path.basename(path).startsWith(".")
 		})

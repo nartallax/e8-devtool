@@ -1,4 +1,3 @@
-import {Tree, getForestLeaves, treePathToValues} from "common/tree"
 import {UUID} from "common/uuid"
 import {ObjectPartitioner} from "server/tree_fs/object_partitioner"
 import {OrderedDirectory} from "server/tree_fs/ordered_directory"
@@ -6,6 +5,7 @@ import * as Path from "path"
 import {DualMap} from "common/dual_map"
 import {nonNull} from "common/non_null"
 import {replaceLastPathPart} from "data/project_utils"
+import {Forest, Tree} from "@nartallax/forest"
 
 export type AfterOrderedDirectoryModifyEvent = {
 	// valueType === "item" guarantees that tree wasn't changed
@@ -26,17 +26,18 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	static async createAt<T extends {id: UUID}>(path: string, props: Props<T>): Promise<OrderedIdentifiedDirectory<T>> {
 		let partitioner = new ObjectPartitioner<T>()
 		partitioner = props.getPartitions(partitioner)
-		const forest = await OrderedDirectory.getInitialForest(path)
-		const map = await this.getIdPathMapping(path, forest, partitioner)
-		return new OrderedIdentifiedDirectory<T>(new OrderedDirectory(path, forest), map, partitioner, props)
+		const trees = await OrderedDirectory.getInitialForest(path)
+		const map = await this.getIdPathMapping(path, trees, partitioner)
+		return new OrderedIdentifiedDirectory<T>(new OrderedDirectory(path, trees), map, partitioner, props)
 	}
 
-	protected static async getIdPathMapping<T extends {id: UUID}>(path: string, forest: Tree<string, string>[], partitioner: ObjectPartitioner<T>): Promise<DualMap<UUID, string>> {
+	protected static async getIdPathMapping<T extends {id: UUID}>(path: string, trees: readonly Tree<string, string>[], partitioner: ObjectPartitioner<T>): Promise<DualMap<UUID, string>> {
 		const result = new DualMap<UUID, string>()
 
+		const forest = new Forest(trees)
 		await Promise.all(
-			[...getForestLeaves(forest)].map(async([,,treePath]) => {
-				const pathParts = treePathToValues(forest, treePath)
+			[...forest.getLeavesWithPaths()].map(async([,treePath]) => {
+				const pathParts = forest.pathToValues(treePath)
 				const relPath = pathParts.join("/")
 				const itemDirPath = Path.resolve(path, relPath)
 				const id = await partitioner.readField(itemDirPath, "id")
@@ -137,7 +138,7 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 		}))).filter(nonNull)
 	}
 
-	getForest(): Tree<string, string>[] {
+	getForest(): readonly Tree<string, string>[] {
 		return this.dir.forest
 	}
 

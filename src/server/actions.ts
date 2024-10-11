@@ -5,12 +5,12 @@ import * as Tempy from "tempy"
 import * as Path from "path"
 import {projectToTypescript} from "data/project_to_ts"
 import {log} from "common/log"
-import {Tree} from "common/tree"
 import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
 import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
 import {UUID} from "common/uuid"
 import {AfterOrderedDirectoryModifyEvent, OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
+import {Tree} from "@nartallax/forest"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 	const tmpFile = await Tempy.temporaryWrite(value)
@@ -65,7 +65,7 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 		await Fs.writeFile(collisionPairsPath, JSON.stringify(pairs, null, "\t"), "utf-8")
 	}
 
-	const getTextureTree = async(): Promise<Tree<string, string>[]> => {
+	const getTextureTree = async(): Promise<readonly Tree<string, string>[]> => {
 		const config = await getProjectConfig()
 		const fileTree = await readdirAsTree(resolveProjectPath(config.textureDirectoryPath))
 		return fileTree

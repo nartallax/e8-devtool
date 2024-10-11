@@ -1,9 +1,9 @@
+import {Tree} from "@nartallax/forest"
 import {nonNull} from "common/non_null"
-import {Tree} from "common/tree"
 import {promises as Fs} from "fs"
 import * as Path from "path"
 
-export async function readdirAsTree(dir: string, shouldOmit?: (fullPath: string) => boolean): Promise<Tree<string, string>[]> {
+export async function readdirAsTree(dir: string, shouldOmit?: (fullPath: string) => boolean): Promise<readonly Tree<string, string>[]> {
 	const entries = await Fs.readdir(dir)
 	return (await Promise.all(entries.map(async entry => {
 		const fullPath = Path.resolve(dir, entry)

@@ -1,7 +1,7 @@
+import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 import {ApiError} from "common/api_response"
 import {directoryExists} from "common/file_exists"
 import {pathPartRegexp} from "common/regexps"
-import {Tree, TreePath, addTreeByPath, deleteFromTreeByPath, getForestLeaves, getTreeByPath, isTreeBranch, moveTreeByPath, treePathToValues, treeValuesToTreePath, updateTreeByPath} from "common/tree"
 import {dropLastPathPart, splitPath} from "data/project_utils"
 import {promises as Fs} from "fs"
 import * as Path from "path"
@@ -18,13 +18,13 @@ type Ordering = OrderingEntry[]
 Trees are ordered; ordering is stored in a special files inside each directory.
 Caches forest representation of the directory */
 export class OrderedDirectory {
-	constructor(readonly path: string, public forest: Tree<string, string>[]) {}
+	constructor(readonly path: string, public forest: readonly Tree<string, string>[]) {}
 
 	static async createAt(path: string): Promise<OrderedDirectory> {
 		return new OrderedDirectory(path, await this.getInitialForest(path))
 	}
 
-	static async getInitialForest(path: string): Promise<Tree<string, string>[]> {
+	static async getInitialForest(path: string): Promise<readonly Tree<string, string>[]> {
 		if(!(await directoryExists(path))){
 			await createOrderedDirectoryAt(path, true)
 			return []
@@ -33,15 +33,15 @@ export class OrderedDirectory {
 		}
 	}
 
-	private relPathToTreePath(relPath: string): TreePath {
-		const path = treeValuesToTreePath(this.forest, relPath.split(/[/\\]/g).filter(x => !!x))
+	private relPathToTreePath(relPath: string): ForestPath {
+		const path = new Forest(this.forest).valuesToPath(relPath.split(/[/\\]/g).filter(x => !!x))
 		if(!path){
 			throw new Error("Path not found in tree: " + relPath)
 		}
 		return path
 	}
 
-	private newRelPathToTreePath(relPath: string, index: number): TreePath {
+	private newRelPathToTreePath(relPath: string, index: number): ForestPath {
 		return [...this.relPathToTreePath(dropLastPathPart(relPath)), index]
 	}
 
@@ -66,7 +66,7 @@ export class OrderedDirectory {
 		if(isBranch){
 			tree = {...tree, children: []}
 		}
-		this.forest = addTreeByPath(this.forest, tree, this.newRelPathToTreePath(relPath, index))
+		this.forest = new Forest(this.forest).insertTreeAt(this.newRelPathToTreePath(relPath, index), tree).trees
 		return fullPath
 	}
 
@@ -80,11 +80,11 @@ export class OrderedDirectory {
 
 		if(onLeafDeleted){
 			const deletedTreePath = this.relPathToTreePath(relPath)
-			const tree = getTreeByPath(this.forest, deletedTreePath)
+			const tree = new Forest(this.forest).getTreeAt(deletedTreePath)
 			if(isTreeBranch(tree)){
-				for(const [,,treePath] of getForestLeaves(tree.children)){
+				for(const [,treePath] of new Forest(tree.children).getLeavesWithPaths()){
 					const fullLeafPath = [...deletedTreePath, ...treePath]
-					const leafRelPath = treePathToValues(this.forest, fullLeafPath).join("/")
+					const leafRelPath = new Forest(this.forest).pathToValues(fullLeafPath).join("/")
 					onLeafDeleted(leafRelPath)
 				}
 			} else {
@@ -92,7 +92,7 @@ export class OrderedDirectory {
 			}
 		}
 
-		this.forest = deleteFromTreeByPath(this.forest, this.relPathToTreePath(relPath))
+		this.forest = new Forest(this.forest).deleteAt(this.relPathToTreePath(relPath)).trees
 	}
 
 	async moveNode(fromRelPath: string, toRelPath: string, index: number, onLeafMoved?: (oldRelPath: string, newRelPath: string) => void): Promise<string> {
@@ -110,12 +110,13 @@ export class OrderedDirectory {
 		const newTreePath = this.newRelPathToTreePath(toRelPath, index)
 
 		if(onLeafMoved){
-			const tree = getTreeByPath(this.forest, oldTreePath)
+			const rootForest = new Forest(this.forest)
+			const tree = rootForest.getTreeAt(oldTreePath)
 			if(isTreeBranch(tree)){
-				for(const [,,treePath] of getForestLeaves(tree.children)){
+				for(const [,treePath] of new Forest(tree.children).getLeavesWithPaths()){
 					const fullLeafPath = [...oldTreePath, ...treePath]
-					const oldRelPath = treePathToValues(this.forest, fullLeafPath).join("/")
-					const newRelPath = treePathToValues(this.forest, fullLeafPath).join("/")
+					const oldRelPath = rootForest.pathToValues(fullLeafPath).join("/")
+					const newRelPath = rootForest.pathToValues(fullLeafPath).join("/")
 					onLeafMoved(oldRelPath, newRelPath)
 				}
 			} else {
@@ -123,7 +124,7 @@ export class OrderedDirectory {
 			}
 		}
 
-		this.forest = moveTreeByPath(this.forest, oldTreePath, newTreePath)
+		this.forest = new Forest(this.forest).move(oldTreePath, newTreePath).trees
 		return toFullPath
 	}
 
@@ -137,15 +138,17 @@ export class OrderedDirectory {
 			updateOrderingNameAt(Path.dirname(fromFullPath), Path.basename(fromFullPath), Path.basename(toFullPath))
 		])
 
+		const rootForest = new Forest(this.forest)
 		const treePath = this.relPathToTreePath(oldRelPath)
 		if(onLeafMoved){
-			const tree = getTreeByPath(this.forest, treePath)
-			const oldPathBase = treePathToValues(this.forest, treePath)
+			const tree = rootForest.getTreeAt(treePath)
+			const oldPathBase = rootForest.pathToValues(treePath)
 			const newPathBase = [...oldPathBase.slice(0, -1), newName]
 			if(isTreeBranch(tree)){
-				for(const [,,treePath] of getForestLeaves(tree.children)){
-					const oldRelPath = [...oldPathBase, ...treePathToValues(tree.children, treePath)].join("/")
-					const newRelPath = [...newPathBase, ...treePathToValues(tree.children, treePath)].join("/")
+				const childForest = new Forest(tree.children)
+				for(const [,treePath] of childForest.getLeavesWithPaths()){
+					const oldRelPath = [...oldPathBase, ...childForest.pathToValues(treePath)].join("/")
+					const newRelPath = [...newPathBase, ...childForest.pathToValues(treePath)].join("/")
 					onLeafMoved(oldRelPath, newRelPath)
 				}
 			} else {
@@ -154,12 +157,13 @@ export class OrderedDirectory {
 			}
 		}
 
-		this.forest = updateTreeByPath(this.forest, this.relPathToTreePath(oldRelPath), tree => ({...tree, value: newName}))
+		this.forest = rootForest.updateTreeAt(this.relPathToTreePath(oldRelPath), tree => ({...tree, value: newName})).trees
 	}
 
 	* relPathsOfLeaves(): IterableIterator<string> {
-		for(const [,,treePath] of getForestLeaves(this.forest)){
-			const pathParts = treePathToValues(this.forest, treePath)
+		const forest = new Forest(this.forest)
+		for(const [,treePath] of forest.getLeavesWithPaths()){
+			const pathParts = forest.pathToValues(treePath)
 			const relPath = pathParts.join("/")
 			yield relPath
 		}

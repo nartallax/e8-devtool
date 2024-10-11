@@ -1,10 +1,10 @@
+import {Tree, isTreeBranch} from "@nartallax/forest"
 import {defineNestedContext} from "client/ui_utils/define_nested_context"
 import {SetState} from "client/ui_utils/react_types"
-import {Tree, isTreeBranch} from "common/tree"
 import {UUID, getRandomUUID} from "common/uuid"
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 
-type Forest<T> = Tree<T, UUID>[]
+type Trees<T> = readonly Tree<T, UUID>[]
 
 type Args<PR, VR, PN, VN> = {
 	useRootValue: (props: PR, services: TreeContextServices<VN>) => VR
@@ -20,7 +20,7 @@ type NestedValue<VN> = {
 }
 type RootValue<VN, VR> = {
 	treeServices: TreeContextServices<VN>
-	setForest: SetState<Forest<VN>>
+	setForest: SetState<Trees<VN>>
 	id: UUID
 	value: VR
 }
@@ -31,14 +31,14 @@ export function defineNestedTreeContext<PR, VR, PN, VN>({useRootValue, useNested
 		name,
 
 		useRootValue: (props: PR) => {
-			const [forest, setForestState] = useState<Forest<VN>>([])
+			const [forest, setForestState] = useState<Trees<VN>>([])
 			const forestRef = useRef(forest)
 			forestRef.current = forest
 
-			const setForest = useCallback((valueOrCallback: Forest<VN> | ((oldForest: Forest<VN>) => Forest<VN>)) => {
+			const setForest = useCallback((valueOrCallback: Trees<VN> | ((oldForest: Trees<VN>) => Trees<VN>)) => {
 				if(typeof(valueOrCallback) === "function"){
 					setForestState(() => {
-						return forestRef.current = (valueOrCallback as ((oldForest: Forest<VN>) => Forest<VN>))(forestRef.current)
+						return forestRef.current = (valueOrCallback as ((oldForest: Trees<VN>) => Trees<VN>))(forestRef.current)
 					})
 				} else {
 					setForestState(forestRef.current = valueOrCallback)
@@ -83,7 +83,7 @@ export function defineNestedTreeContext<PR, VR, PN, VN>({useRootValue, useNested
 
 class TreeContextServices<T> {
 
-	constructor(readonly forest: Forest<T>) {}
+	constructor(readonly forest: Trees<T>) {}
 
 	/** Returns array of values, sorted by depth in the forest, roots (zero depth) go first */
 	getSortedByDepth(filter?: (value: T) => boolean): T[] {
@@ -97,8 +97,8 @@ class TreeContextServices<T> {
 	}
 }
 
-function addTree<T>(forest: Forest<T>, child: T, childId: UUID, parentIds: UUID[], parentIndex: number): Forest<T> {
-	let result: Forest<T> = []
+function addTree<T>(forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[], parentIndex: number): Trees<T> {
+	let result: Tree<T, UUID>[] = []
 	const parentId = parentIds[parentIndex]
 	if(!parentId){
 		let haveBranch = false
@@ -144,7 +144,7 @@ function addTree<T>(forest: Forest<T>, child: T, childId: UUID, parentIds: UUID[
 	return result
 }
 
-function deleteTree<T>(forest: Forest<T>, childId: UUID, parentIds: UUID[], parentIndex: number): Forest<T> {
+function deleteTree<T>(forest: Trees<T>, childId: UUID, parentIds: UUID[], parentIndex: number): Trees<T> {
 	const parentId = parentIds[parentIndex]
 	if(!parentId){
 		return trimForest(forest.map(node => {
@@ -155,7 +155,7 @@ function deleteTree<T>(forest: Forest<T>, childId: UUID, parentIds: UUID[], pare
 		}))
 	}
 
-	const result: Forest<T> = []
+	const result: Tree<T, UUID>[] = []
 	for(const tree of forest){
 		if(isTreeBranch(tree) && tree.value === parentId){
 			result.push({...tree, children: deleteTree(tree.children, childId, parentIds, parentIndex + 1)})
@@ -169,8 +169,8 @@ function deleteTree<T>(forest: Forest<T>, childId: UUID, parentIds: UUID[], pare
 	return trimForest(result)
 }
 
-function trimForest<T>(forest: Forest<T>): Forest<T> {
-	const result: Forest<T> = []
+function trimForest<T>(forest: Trees<T>): Trees<T> {
+	const result: Tree<T, UUID>[] = []
 	for(const tree of forest){
 		if(isTreeBranch(tree)){
 			const children = trimForest(tree.children)
@@ -184,8 +184,8 @@ function trimForest<T>(forest: Forest<T>): Forest<T> {
 	return result
 }
 
-function filterForest<T>(forest: Forest<T>, filter: (value: T) => boolean): Forest<T> {
-	const result: Forest<T> = []
+function filterForest<T>(forest: Trees<T>, filter: (value: T) => boolean): Trees<T> {
+	const result: Tree<T, UUID>[] = []
 	for(const tree of forest){
 		if(isTreeBranch(tree)){
 			const children = filterForest(tree.children, filter)
@@ -199,8 +199,8 @@ function filterForest<T>(forest: Forest<T>, filter: (value: T) => boolean): Fore
 	return result
 }
 
-function sortForestByDepth<T>(forest: Forest<T>, result: T[]): void {
-	const nextLevel: Forest<T> = []
+function sortForestByDepth<T>(forest: Trees<T>, result: T[]): void {
+	const nextLevel: Tree<T, UUID>[] = []
 	for(const tree of forest){
 		if(isTreeBranch(tree)){
 			nextLevel.push(...tree.children)
