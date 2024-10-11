@@ -1,8 +1,7 @@
 import {ProjectInputBind, ProjectModel} from "data/project"
 import {sortBy} from "common/sort_by"
 import {UUID} from "common/uuid"
-import {Forest, ForestPath, Tree} from "@nartallax/forest"
-import {isTreeBranch} from "common/tree"
+import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 
 // only this function should be used to get all project modals
 // because it will guarantee that the order is the same each time
