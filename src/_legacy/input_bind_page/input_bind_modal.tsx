@@ -19,7 +19,7 @@ type Props = {
 }
 
 export const InputBindModal = ({path, onClose}: Props) => {
-	const editable = inputBindProvider.useEditableItemByPath(path)
+	const editable = inputBindProvider.useEditableItem(path)
 	if(!editable){
 		return null
 	}

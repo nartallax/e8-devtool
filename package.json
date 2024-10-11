@@ -77,7 +77,7 @@
   },
   "dependencies": {
     "@nartallax/cli": "^1.0.2",
-    "@nartallax/forest": "^1.0.3",
+    "@nartallax/forest": "^1.0.5",
     "fernandez-polygon-decomposition": "^2.0.0",
     "mime-types": "^2.1.35",
     "open": "^10.1.0",

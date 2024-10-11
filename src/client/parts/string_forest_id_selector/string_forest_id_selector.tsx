@@ -32,7 +32,7 @@ type PropsFor<V extends {id: UUID}, T, P> = FormInputProps<T> & {
 export function StringForestIdSelector<V extends {id: UUID}>({
 	provider, value, onChange, modal, absentValueLabel = "<none>", loadingValueLabel = "...", isNullable, ...props
 }: Props<V>) {
-	const {getByPath, getForest} = provider.useFetchers()
+	const {get: getByPath, getForest} = provider.useFetchers()
 	const createEmpty = !isNullable ? (props as NonNullableProps<V>).createEmpty : throwPlaceholder
 
 	const [isOpen, setOpen] = useState(false)

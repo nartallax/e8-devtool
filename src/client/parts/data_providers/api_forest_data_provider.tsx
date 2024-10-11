@@ -7,8 +7,7 @@ import {ProjectObjectReferrer, ProjectObjectType} from "client/parts/data_provid
 import {AbortError} from "client/ui_utils/abort_error"
 import {makeQueryGroup} from "client/ui_utils/cacheable_query"
 import {SetState} from "client/ui_utils/react_types"
-import {UUID} from "common/uuid"
-import {mergePath, treePathToString} from "data/project_utils"
+import {mergePath, replaceLastPathPart, treePathToString} from "data/project_utils"
 import {useCallback} from "react"
 
 type ChangesProps = Pick<React.ComponentProps<typeof UnsavedChanges>, "saveOnUnmount" | "save" | "isUnsaved">
@@ -30,34 +29,30 @@ type EditableItem<T> = {
 }
 
 type ForestDataFetchers<T> = {
-	getByPath: ((path: string) => Promise<T>) & ((path: null) => Promise<null>)
-	getPathById: ((id: UUID) => Promise<string>) & ((id: null) => Promise<null>)
-	getAsMap: () => Promise<Map<string, T>>
-	getReferrers: <K extends keyof T>(fieldName: K, value: T[K]) => Promise<ProjectObjectReferrer[]>
+	get: ((path: string) => Promise<T>) & ((path: null) => Promise<null>)
 	getForest: () => Promise<Tree<string, string>[]>
-	create: (path: string, index: number, item: T) => Promise<void>
+	create: (path: string, item: T) => Promise<void>
 }
 
 type EditableForestProps<T> = {
 	createItem: () => T
 }
 
-export type ForestDataProvider<T> = ForestFetcherHooks<T> & {
-	useEditableForest: (props: EditableForestProps<T>) => EditableForest | null
-	useEditableItem: (id: UUID) => EditableItem<T> | null
-	useEditableItemByPath: (path: string) => EditableItem<T> | null
-	useFetchers: () => ForestDataFetchers<T>
-}
-
-type ForestFetcherHooks<T> = {
+export type ForestDataProvider<T> = {
 	useByPath: ((path: string) => T | null) & ((path: null) => null)
-	usePathById: ((id: UUID | null) => string | null) & ((id: null) => null)
-	useAsMap: () => Map<string, T> | null
+	useEditableForest: (props: EditableForestProps<T>) => EditableForest | null
+	useEditableItem: (path: string) => EditableItem<T> | null
+	useFetchers: () => ForestDataFetchers<T>
 }
 
 const noopReferers = () => []
 
-export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindingsName: keyof DevtoolApiClient["forestBindings"], useReferrerFetcher: () => (item: T) => Promise<ProjectObjectReferrer[]>[] = () => noopReferers): ForestDataProvider<T> {
+export function makeApiForestDataProvider<T>(
+	itemType: ProjectObjectType,
+	bindingsName: keyof DevtoolApiClient["forestBindings"],
+	useReferrerFetcher: () => (item: T) => Promise<ProjectObjectReferrer[]>[] = () => noopReferers
+): ForestDataProvider<T> {
+
 	const useQueries = () => {
 		const apiClient = useApiClient()
 		const bindings = apiClient.forestBindings[bindingsName] as unknown as ForestApiBindings<T>
@@ -67,30 +62,9 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 				update: mutation(bindings.update),
 				createDirectory: mutation(bindings.createDirectory),
 				move: mutation(bindings.move),
-				rename: mutation(bindings.rename),
 				delete: mutation(bindings.delete),
 				getForest: query(bindings.getForest),
-				getReferrers: query(async <K extends keyof T>(field: K, value: T[K]) => {
-					const paths = await bindings.getPathsByFieldValue(field, value)
-					return paths.map(path => ({path, type: itemType}))
-				}),
-				getAsMap: query(async() => {
-					const record = await bindings.getAll()
-					return new Map(Object.entries(record))
-				}),
-				getPathById: query(async(id: UUID | null) => {
-					if(id === null){
-						return null
-					}
-					return await bindings.getPathById(id)
-				}),
-				get: query(bindings.get),
-				getByPath: query(async(path: string) => {
-					if(path === null){
-						return null
-					}
-					return await bindings.getByPath(path)
-				})
+				get: query(bindings.get)
 			}
 		})
 	}
@@ -133,9 +107,9 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 			const pathStr = treePathToString(forest, path.slice(0, -1), node.value)
 			if(!isTreeBranch(node)){
 				const item = createItem()
-				await queries.create(pathStr, path[path.length - 1]!, item)
+				await queries.create(pathStr, item)
 			} else {
-				await queries.createDirectory(pathStr, path[path.length - 1]!)
+				await queries.createDirectory(pathStr)
 			}
 			setForest(forest => new Forest(forest).insertTreeAt(path, node).trees)
 		}
@@ -143,15 +117,16 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		const moveNode = async(node: Tree<string, string>, fromPath: ForestPath, toPath: ForestPath) => {
 			await queries.move(
 				treePathToString(forest, fromPath),
-				treePathToString(forest, toPath.slice(0, -1), node.value),
-				toPath[toPath.length - 1]!
+				treePathToString(forest, toPath.slice(0, -1), node.value)
 			)
 			setForest(forest => new Forest(forest).move(fromPath, toPath).trees)
 		}
 
 		const renameNode = async(node: Tree<string, string>, path: ForestPath, newName: string) => {
 			void node // we don't actually need node here, it's here for sake of regularity of handler arguments
-			await queries.rename(treePathToString(forest, path), newName)
+			const oldPath = treePathToString(forest, path)
+			const newPath = replaceLastPathPart(oldPath, newName)
+			await queries.move(oldPath, newPath)
 			setForest(forest => new Forest(forest).updateTreeAt(path, tree => ({...tree, value: newName})).trees)
 		}
 
@@ -159,7 +134,7 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 			const pathStr = treePathToString(forest, path)
 			if(!isTreeBranch(node)){
 				if(getReferrers !== noopReferers){
-					const item = await queries.getByPath.getValue(pathStr)
+					const item = await queries.get.getValue(pathStr)
 					const refs = (await Promise.all(getReferrers(item!))).flat()
 					await showRefErrors(refs)
 				}
@@ -173,13 +148,13 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 		}
 	}
 
-	const useEditableItemByFetcher = (fetcher: (queries: Queries) => Promise<T>) => {
+	const useEditableItemByFetcher = (path: string, fetcher: (queries: Queries) => Promise<T>) => {
 		const queries = useQueries()
 		const [rawValue, rawSetValue] = useAsyncCall(() => fetcher(queries), [fetcher])
 		const {
 			state, setState, saveIfUnsaved, isUnsaved
 		} = useWrapSaveableState(rawValue, rawSetValue, async value => {
-			await queries.update(value!)
+			await queries.update(path, value!)
 		})
 
 		if(!state){
@@ -197,30 +172,20 @@ export function makeApiForestDataProvider<T>(itemType: ProjectObjectType, bindin
 	}
 
 	return {
-		useAsMap: () => useQueries().getAsMap.useValue(),
-		usePathById: ((id: UUID | null) => useQueries().getPathById.useValue(id)) as ForestDataProvider<T>["usePathById"],
-		useByPath: ((path: string) => useQueries().getByPath.useValue(path)) as ForestDataProvider<T>["useByPath"],
+		useByPath: ((path: string) => useQueries().get.useValue(path)) as ForestDataProvider<T>["useByPath"],
 
 		useFetchers: () => {
 			const queries = useQueries()
 			return {
-				getAsMap: queries.getAsMap.getValue,
-				getByPath: queries.getByPath.getValue as ForestDataFetchers<T>["getByPath"],
-				getPathById: queries.getPathById.getValue as ForestDataFetchers<T>["getPathById"],
-				getReferrers: queries.getReferrers.getValue,
+				get: queries.get.getValue as ForestDataFetchers<T>["get"],
 				create: queries.create,
 				getForest: queries.getForest.getValue
 			}
 		},
 
-		useEditableItem: (id: UUID) => {
-			const fetcher = useCallback(async(queries: Queries) => await queries.get.getValue(id), [id])
-			return useEditableItemByFetcher(fetcher)
-		},
-
-		useEditableItemByPath: (path: string) => {
-			const fetcher = useCallback(async(queries: Queries) => (await queries.getByPath.getValue(path))!, [path])
-			return useEditableItemByFetcher(fetcher)
+		useEditableItem: (path: string) => {
+			const fetcher = useCallback(async(queries: Queries) => (await queries.get.getValue(path))!, [path])
+			return useEditableItemByFetcher(path, fetcher)
 		},
 
 		useEditableForest

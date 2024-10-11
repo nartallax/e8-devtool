@@ -1,21 +1,28 @@
+import {XY} from "@nartallax/e8"
 import {Tree} from "@nartallax/forest"
 import {useToastContext} from "client/components/toast/toast_context"
 import {defineContext} from "client/ui_utils/define_context"
 import {SetState} from "client/ui_utils/react_types"
 import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
-import {getRandomUUID} from "common/uuid"
-import {ProjectConfig} from "data/project"
+import {UUID, getRandomUUID} from "common/uuid"
+import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
+import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
 
 export type ForestApiBindings<T> = {
-	create: (relPath: string, value: T) => Promise<void>
-	update: (relPath: string, item: T) => Promise<void>
-	createDirectory: (relPath: string) => Promise<void>
-	move: (fromRelPath: string, toRelPath: string) => Promise<void>
+	create: (relPath: string, index: number, value: T) => Promise<void>
+	update: (item: T) => Promise<void>
+	createDirectory: (relPath: string, index: number) => Promise<void>
+	move: (fromRelPath: string, toRelPath: string, index: number) => Promise<void>
+	rename: (oldRelPath: string, newName: string) => Promise<void>
 	delete: (relPath: string) => Promise<void>
-	get: (relPath: string) => Promise<T>
+	getPathsByFieldValue: <K extends keyof T>(field: K, value: T[K]) => Promise<string[]>
+	getAll: () => Promise<Record<string, T>>
+	getPathById: (id: UUID) => Promise<string>
+	get: (id: UUID) => Promise<T>
+	getByPath: (path: string) => Promise<T>
 	getForest: () => Promise<Tree<string, string>[]>
 }
 
@@ -30,19 +37,37 @@ export class DevtoolApiClient extends ApiClient {
 			update: (...args) => this.call({name: `${prefix}/update`, body: args}),
 			createDirectory: (...args) => this.call({name: `${prefix}/createDirectory`, body: args}),
 			move: (...args) => this.call({name: `${prefix}/move`, body: args}),
+			rename: (...args) => this.call({name: `${prefix}/rename`, body: args}),
 			delete: (...args) => this.call({name: `${prefix}/delete`, body: args}),
+			getPathsByFieldValue: (...args) => this.call({name: `${prefix}/getPathsByFieldValue`, body: args}),
+			getAll: () => this.call({name: `${prefix}/getAll`}),
+			getPathById: (...args) => this.call({name: `${prefix}/getPathById`, body: args}),
 			get: (...args) => this.call({name: `${prefix}/get`, body: args}),
+			getByPath: (...args) => this.call({name: `${prefix}/getByPath`, body: args}),
 			getForest: () => this.call({name: `${prefix}/getForest`})
 		}
 	}
 
 	generateResourcePack = () => this.call({name: "generateResourcePack"})
-	getTextureUrl = (texturePath: string) => "/project_file/" + texturePath
+	getTextureFiles = () => this.call<Tree<string, string>[]>({name: "getTextureFiles"})
+	getTextureUrl = (texturePath: string) => "/textures/" + texturePath
+	getAtlasLayout = () => this.call<(SvgTextureFile & XY)[]>({name: "getAtlasLayout"})
+	getProjectRootForest = () => this.call<Tree<string, string>[]>({name: "getProjectRootForest"})
 
 	getProjectConfig = () => this.call<ProjectConfig>({name: "getProjectConfig"})
 	updateProjectConfig = (config: ProjectConfig) => this.call<void>({name: "updateProjectConfig", body: [config]})
 
-	fsBindings = this.makeForestBindings<unknown>("fs")
+	getCollisionPairs = () => this.call<[UUID, UUID][]>({name: "getCollisionPairs"})
+	updateCollisionPairs = (pairs: [UUID, UUID][]) => this.call<void>({name: "updateCollisionPairs", body: [pairs]})
+
+	forestBindings = {
+		model: this.makeForestBindings<ProjectModel>("model"),
+		particle: this.makeForestBindings<ProjectParticle>("particle"),
+		collisionGroup: this.makeForestBindings<ProjectCollisionGroup>("collisionGroup"),
+		layer: this.makeForestBindings<ProjectLayer>("layer"),
+		inputGroup: this.makeForestBindings<ProjectInputGroup>("inputGroup"),
+		inputBind: this.makeForestBindings<ProjectInputBind>("inputBind")
+	}
 }
 
 const apiErrorToastId = getRandomUUID()

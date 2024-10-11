@@ -1,6 +1,6 @@
 import {UUID} from "common/uuid"
-import {ObjectPartitioner} from "server/tree_fs/object_partitioner"
-import {OrderedDirectory} from "server/tree_fs/ordered_directory"
+import {ObjectPartitioner} from "_legacy/object_partitioner"
+import {OrderedDirectory} from "_legacy/ordered_directory"
 import * as Path from "path"
 import {DualMap} from "common/dual_map"
 import {nonNull} from "common/non_null"

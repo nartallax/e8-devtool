@@ -37,7 +37,7 @@ export const ModelDisplay = ({modelId}: Props) => {
 	const [isShowingGrid, setShowGrid] = useLocalStorageState("modelDisplay.isShowingGrid", true)
 	const [isShowingTexture, setShowTexture] = useLocalStorageState("modelDisplay.isShowingTexture", true)
 
-	const editable = modelProvider.useEditableItem(modelId)
+	const editable = modelProvider.useEditableItemById(modelId)
 	const config = projectConfigProvider.useData()
 	if(!editable || !config){
 		return null

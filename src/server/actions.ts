@@ -1,16 +1,13 @@
-import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle, makeBlankProjectConfig} from "data/project"
+import {ProjectConfig, makeBlankProjectConfig} from "data/project"
 import {promises as Fs} from "fs"
 import {isEnoent} from "common/is_enoent"
 import * as Tempy from "tempy"
 import * as Path from "path"
 import {projectToTypescript} from "data/project_to_ts"
 import {log} from "common/log"
-import {readdirAsTree} from "common/readdir_as_tree"
 import {CLIArgs} from "server/cli"
 import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
-import {UUID} from "common/uuid"
-import {AfterOrderedDirectoryModifyEvent, OrderedIdentifiedDirectory} from "server/tree_fs/ordered_identified_directory"
-import {Tree} from "@nartallax/forest"
+import {AfterOrderedDirectoryModifyEvent, DirectoryController} from "server/tree_fs/directory_controller"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 	const tmpFile = await Tempy.temporaryWrite(value)
@@ -20,7 +17,7 @@ const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 
 export type DevtoolActions = Awaited<ReturnType<typeof getActions>>
 
-export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: ProjectConfig) => void) => {
+export const getActions = async(cli: CLIArgs) => {
 	const projectDataRoot = Path.resolve(cli.projectRoot, "e8_project")
 
 	const projectConfigPath = Path.resolve(projectDataRoot, "config.e8.json")
@@ -43,32 +40,6 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 	const updateProjectConfig = async(config: ProjectConfig) => {
 		configCache = JSON.parse(JSON.stringify(config))
 		await Fs.writeFile(projectConfigPath, JSON.stringify(config, null, "\t"), "utf-8")
-		afterConfigUpdate(config)
-	}
-
-	const collisionPairsPath = Path.resolve(projectDataRoot, "collision_pairs.e8.json")
-	const getCollisionPairs = async(): Promise<[UUID, UUID][]> => {
-		try {
-			return JSON.parse(await Fs.readFile(collisionPairsPath, "utf-8"))
-		} catch(e){
-			if(!isEnoent(e)){
-				throw e
-			}
-			return []
-		}
-	}
-
-	const updateCollisionPairs = async(pairs: [UUID, UUID][]) => {
-		pairs = pairs.sort(([aa, ab], [ba, bb]) =>
-			aa > ba ? 1 : aa < ba ? -1 : ab > bb ? 1 : ab < bb ? -1 : 0
-		)
-		await Fs.writeFile(collisionPairsPath, JSON.stringify(pairs, null, "\t"), "utf-8")
-	}
-
-	const getTextureTree = async(): Promise<readonly Tree<string, string>[]> => {
-		const config = await getProjectConfig()
-		const fileTree = await readdirAsTree(resolveProjectPath(config.textureDirectoryPath))
-		return fileTree
 	}
 
 	const produceResourcePack = async() => {
@@ -93,6 +64,7 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 		log("Done.")
 	}
 
+	// TODO: do we still need it?
 	const resolveProjectPath = (path: string): string => {
 		const rootDir = cli.projectRoot
 		const result = Path.resolve(rootDir, path)
@@ -109,29 +81,8 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 	}
 
 	log("Loading project...")
-	const models = await OrderedIdentifiedDirectory.createAt<ProjectModel>(Path.resolve(projectDataRoot, "models"), {
-		// TODO: proper partitioning here
-		getPartitions: part => part.addRestFile("model_def.e8.json"),
-		afterModified
-	})
-	const particles = await OrderedIdentifiedDirectory.createAt<ProjectParticle>(Path.resolve(projectDataRoot, "particles"), {
-		getPartitions: part => part.addRestFile("particle.e8.json"),
-		afterModified
-	})
-	const collsionGroups = await OrderedIdentifiedDirectory.createAt<ProjectCollisionGroup>(Path.resolve(projectDataRoot, "collision_groups"), {
-		getPartitions: part => part.addRestFile("collision_group.e8.json"),
-		afterModified
-	})
-	const layers = await OrderedIdentifiedDirectory.createAt<ProjectLayer>(Path.resolve(projectDataRoot, "layers"), {
-		getPartitions: part => part.addRestFile("layer.e8.json"),
-		afterModified
-	})
-	const inputGroups = await OrderedIdentifiedDirectory.createAt<ProjectInputGroup>(Path.resolve(projectDataRoot, "input_groups"), {
-		getPartitions: part => part.addRestFile("input_group.e8.json"),
-		afterModified
-	})
-	const inputBinds = await OrderedIdentifiedDirectory.createAt<ProjectInputBind>(Path.resolve(projectDataRoot, "input_binds"), {
-		getPartitions: part => part.addRestFile("input_bind.e8.json"),
+	const projectDirectoryController = await DirectoryController.create({
+		rootPath: Path.resolve(projectDataRoot, "."),
 		afterModified
 	})
 	log("Project is loaded.")
@@ -140,17 +91,12 @@ export const getActions = async(cli: CLIArgs, afterConfigUpdate: (config: Projec
 		produceResourcePack,
 		produceTypescript,
 		produceEverything,
-		getTextureTree,
 		resolveProjectPath,
 
-		dirs: {
-			models, particles, collsionGroups, layers, inputGroups, inputBinds
-		},
+		projectDirectoryController,
 
 		getProjectConfig,
 		updateProjectConfig,
-		getCollisionPairs,
-		updateCollisionPairs,
 
 		projectDataRoot
 	}

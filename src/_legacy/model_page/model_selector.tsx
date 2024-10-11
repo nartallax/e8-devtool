@@ -48,7 +48,7 @@ export const ModelSelector = withDataLoaded(
 		const forestProps = modelProvider.useEditableForest({
 			createItem: () => getModelWithDefaults()
 		})
-		const {getByPath} = modelProvider.useFetchers()
+		const {get: getByPath} = modelProvider.useFetchers()
 
 		if(!forestProps){
 			return null

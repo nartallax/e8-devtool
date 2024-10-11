@@ -6,10 +6,7 @@ import {ToastProvider} from "client/components/toast/toast_context"
 import {ToastDisplay} from "client/components/toast/toast_list"
 import {UnsavedChangesProvider, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {ApiProvider} from "client/parts/api_context"
-import {AtlasPage} from "client/parts/atlas_page/atlas_page"
 import {GlobalHotkeyManager} from "client/parts/global_hotkeys/global_hotkey_manager"
-import {InputBindPage} from "client/parts/input_bind_page/input_bind_page"
-import {ModelPage} from "client/parts/model_page/model_page"
 import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
 import {PropsWithChildren} from "react"
 import faviconDefault from "../favicon.svg"
@@ -86,22 +83,6 @@ const Content = () => {
 			<Favicon src={favicon}/>
 			<TabsAndRouter
 				tabs={[
-					{
-						suffix: "/models",
-						text: "Models",
-						isDefault: true,
-						render: () => <ModelPage/>
-					},
-					{
-						suffix: "/inputs",
-						text: "Inputs",
-						render: () => <InputBindPage/>
-					},
-					{
-						suffix: "/atlas",
-						text: "Atlas",
-						render: () => <AtlasPage/>
-					},
 					{
 						suffix: "/settings",
 						text: "Settings",

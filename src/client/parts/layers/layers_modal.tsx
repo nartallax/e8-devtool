@@ -25,7 +25,7 @@ export const LayersModal = ({
 
 	const layerMap = layerProvider.useAsMap()
 
-	const {getByPath: getLayerByPath} = layerProvider.useFetchers()
+	const {get: getLayerByPath} = layerProvider.useFetchers()
 
 	const ifTypeIsRight = async(path: string, callback: () => void) => {
 		// TODO: right now this bugs out, because getLayerByPath uses old version of project

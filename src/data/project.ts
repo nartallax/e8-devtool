@@ -7,12 +7,6 @@ export type ProjectConfig = {
 	Used to determine how to render vector textures, if there are any, and some other values related to resolution. */
 	inworldUnitPixelSize: number
 	resourcePackPath: string
-	// TODO: remove this, refer to textures by ID
-	textureDirectoryPath: string
-	/** Path that contains classes related to entities */
-	// TODO: remove this. we should have tree of ts files related to objects, automatically linked
-	// this way, we won't have as much magic as "just name a file with special ending"
-	entityClassesDirectoryPath: string
 	ts: {
 		entityEnumName: string
 		inputBindsEnumName: string
@@ -68,8 +62,6 @@ export type ProjectChord = {
 export const makeBlankProjectConfig = (): ProjectConfig => ({
 	inworldUnitPixelSize: 100,
 	resourcePackPath: "./generated/resource_pack.e8.bin",
-	textureDirectoryPath: "./textures",
-	entityClassesDirectoryPath: "./entities",
 	ts: {
 		path: "./generated/resource_pack_content.e8.ts",
 		inputBindsEnumName: "Bind",
