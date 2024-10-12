@@ -26,7 +26,7 @@ async function main(): Promise<void> {
 		host: cli.host ?? "localhost",
 		static: {
 			"/": {url: cli.html, defaultMimeType: "text/html"},
-			"/project_file/": {url: actions.projectDataRoot}
+			"/project_file/": {url: actions.projectRoot}
 		},
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,

@@ -2,6 +2,8 @@ import {UUID} from "common/uuid"
 import {XY, Chord, LayerType, StartEnd, DeviatingValueRange} from "@nartallax/e8"
 import {getRandomUUID} from "common/uuid"
 
+// TODO: delete most of this types, they are replaced by types from e8
+
 export type ProjectConfig = {
 	/** Resolution of one inworld unit (on x1 zoom)
 	Used to determine how to render vector textures, if there are any, and some other values related to resolution. */
@@ -59,6 +61,7 @@ export type ProjectChord = {
 	chord: Chord
 }
 
+// TODO: this should be content-something-something
 export const makeBlankProjectConfig = (): ProjectConfig => ({
 	inworldUnitPixelSize: 100,
 	resourcePackPath: "./generated/resource_pack.e8.bin",

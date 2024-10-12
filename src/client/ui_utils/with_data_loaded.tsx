@@ -4,6 +4,8 @@ type NoNull<T> = T extends null ? never : T
 type NoNullObjValues<T> = {[key in keyof T]: NoNull<T[key]>}
 
 
+
+// TODO: rm?
 export function withDataLoaded<P extends object, D extends Record<string, unknown>>(useData: (props: P) => D, Component: React.FC<P & NoNullObjValues<D>>) {
 	return (props: PropsWithChildren<P>) => {
 		const dataObj = useData(props)

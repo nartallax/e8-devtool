@@ -6,6 +6,7 @@ import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
 import {getRandomUUID} from "common/uuid"
 import {ProjectConfig} from "data/project"
+import {ProjectObjectReferrer} from "data/project_referrers"
 import {Icon} from "generated/icons"
 import {useEffect, useMemo, useState} from "react"
 
@@ -42,6 +43,8 @@ export class DevtoolApiClient extends ApiClient {
 	getProjectConfig = () => this.call<ProjectConfig>({name: "getProjectConfig"})
 	updateProjectConfig = (config: ProjectConfig) => this.call<void>({name: "updateProjectConfig", body: [config]})
 
+	getObjectReferrers = (path: string) => this.call<ProjectObjectReferrer[]>({name: "getObjectReferrers", body: [path]})
+
 	fsBindings = this.makeForestBindings<unknown>("fs")
 }
 
@@ -71,7 +74,7 @@ type MiscAsyncResult = {
 	isError: boolean
 }
 
-export function useApi<T, D>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>, MiscAsyncResult]
+export function useApi<T, D = T>(defaultValue: D, caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | D, SetState<T | D>, MiscAsyncResult]
 export function useApi<T>(caller: (api: DevtoolApiClient) => Promise<T>, deps: unknown[]): [T | null, SetState<T | null>, MiscAsyncResult]
 export function useApi(...args: unknown[]): [unknown, SetState<unknown>, MiscAsyncResult] {
 	const defaultValue = args.length === 2 ? null : args[0]

@@ -37,13 +37,18 @@ export const RouteTabs = ({tabs, matchedUrl, isAutoRoutingToDefaultEnabled = fal
 		navigate(mergeUrls(baseUrl, defaultTab.suffix))
 	}, [effMatchedUrl, tabs, baseUrl, isAutoRoutingToDefaultEnabled, navigate])
 
+	const matchingTabSuffix = tabs
+		.filter(tab => isMatching(tab, effMatchedUrl))
+		.map(tab => tab.suffix)
+		.reduce((a, b) => a.length > b.length ? a : b, "")
+
 	return (
 		<Tabs tabs={tabs.map(tab => ({
 			key: tab.suffix,
 			text: tab.text,
 			icon: tab.icon,
 			hotkey: tab.hotkey,
-			isActive: isMatching(tab, effMatchedUrl),
+			isActive: tab.suffix === matchingTabSuffix,
 			onClick: () => navigate(mergeUrls(baseUrl, tab.suffix))
 		}))}
 		/>

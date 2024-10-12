@@ -3,6 +3,8 @@ import {sortBy} from "common/sort_by"
 import {UUID} from "common/uuid"
 import {Forest, ForestPath, Tree, isTreeBranch} from "@nartallax/forest"
 
+// TODO: make up your mind about forest vs tree array in this file
+
 // only this function should be used to get all project modals
 // because it will guarantee that the order is the same each time
 // and order is important, because index of the model is its id
@@ -54,8 +56,8 @@ export function replaceLastPathPart(path: string, name: string): string {
 	return parts.join("/")
 }
 
-export function treePathToString(forest: readonly Tree<string, string>[], path: ForestPath, addedPart?: string, type?: "leaf" | "branch"): string {
-	const parts = new Forest(forest).pathToValues(path)
+export function treePathToString(forest: Forest<string, string>, path: ForestPath, addedPart?: string, type?: "leaf" | "branch"): string {
+	const parts = forest.pathToValues(path)
 	if(addedPart){
 		parts.push(addedPart)
 	}

@@ -8,8 +8,11 @@ import {log} from "common/log"
 import {CLIArgs} from "server/cli"
 import {isPathEqualPath, isPathInsidePath} from "common/is_path_inside_path"
 import {AfterOrderedDirectoryModifyEvent, DirectoryController} from "server/tree_fs/directory_controller"
+import {ProjectObjectReferrer, getProjectObjectReferrers} from "data/project_referrers"
+import {getProjectObjectTypeByFilename} from "data/project_object_types"
 
 const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
+	// TODO: throw away Tempy, use os.tmpdir()
 	const tmpFile = await Tempy.temporaryWrite(value)
 	await Fs.mkdir(Path.dirname(path), {recursive: true})
 	await Fs.rename(tmpFile, path)
@@ -18,9 +21,7 @@ const safeWrite = async(path: string, value: string | Buffer | Uint8Array) => {
 export type DevtoolActions = Awaited<ReturnType<typeof getActions>>
 
 export const getActions = async(cli: CLIArgs) => {
-	const projectDataRoot = Path.resolve(cli.projectRoot, "e8_project")
-
-	const projectConfigPath = Path.resolve(projectDataRoot, "config.e8.json")
+	const projectConfigPath = Path.resolve(cli.projectRoot, "config.e8.json")
 	let configCache: ProjectConfig | null = null
 	const getProjectConfig = async(): Promise<ProjectConfig> => {
 		if(!configCache){
@@ -80,9 +81,25 @@ export const getActions = async(cli: CLIArgs) => {
 		}
 	}
 
+	const getObjectReferrers = async(path: string): Promise<ProjectObjectReferrer[]> => {
+		const items = await projectDirectoryController.findMatchingItems(
+			relPath => !!getProjectObjectTypeByFilename(relPath),
+			(item, relPath) => {
+				const type = getProjectObjectTypeByFilename(relPath)!
+				const refs = getProjectObjectReferrers(item, type)
+				return refs.includes(path)
+			}
+		)
+
+		return items.map(({relPath}) => ({
+			path: relPath,
+			type: getProjectObjectTypeByFilename(relPath)!
+		}))
+	}
+
 	log("Loading project...")
 	const projectDirectoryController = await DirectoryController.create({
-		rootPath: Path.resolve(projectDataRoot, "."),
+		rootPath: cli.projectRoot,
 		afterModified
 	})
 	log("Project is loaded.")
@@ -97,8 +114,9 @@ export const getActions = async(cli: CLIArgs) => {
 
 		getProjectConfig,
 		updateProjectConfig,
+		getObjectReferrers,
 
-		projectDataRoot
+		projectRoot: cli.projectRoot
 	}
 
 	return actions

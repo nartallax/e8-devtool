@@ -4,17 +4,15 @@ import {TabsAndRouter} from "client/components/tabs/tabs_and_router"
 import {TitleProvider} from "client/components/title_context/title_context"
 import {ToastProvider} from "client/components/toast/toast_context"
 import {ToastDisplay} from "client/components/toast/toast_list"
-import {UnsavedChangesProvider, useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {ApiProvider} from "client/parts/api_context"
 import {GlobalHotkeyManager} from "client/parts/global_hotkeys/global_hotkey_manager"
-import {TextureTreeProvider, useTextures} from "client/parts/texture_tree_context"
 import {PropsWithChildren} from "react"
 import faviconDefault from "../favicon.svg"
-import faviconHasChanges from "../favicon_has_changes.svg"
 import {Favicon} from "client/components/favicon/favicon"
 import {HotkeyProvider} from "client/components/hotkey_context/hotkey_context"
 import {ModalProviders} from "client/components/modal/modal_providers"
 import {SettingsPage} from "client/parts/settings_page/settings_page"
+import {useFsForest} from "client/data/fs_forest_provider"
 
 export const App = () => (
 	<Providers>
@@ -37,52 +35,42 @@ const CommonProviders = ({children}: PropsWithChildren) => (
 	</TitleProvider>
 )
 
-/** API interactions providers */
-const DataProviders = ({children}: PropsWithChildren) => (
-	<ApiProvider>
-		<TextureTreeProvider>
-			{children}
-		</TextureTreeProvider>
-	</ApiProvider>
-)
-
-/** App-specific providers that are not directly related to API interaction process */
 const AppProviders = ({children}: PropsWithChildren) => {
 	return (
-		<UnsavedChangesProvider preventUnsavedClose>
+		<ApiProvider>
 			<RootRoutingContextProvider>
 				{children}
 			</RootRoutingContextProvider>
-		</UnsavedChangesProvider>
+		</ApiProvider>
 	)
 }
 
 const Providers = ({children}: PropsWithChildren) => (
 	<CommonProviders>
-		<DataProviders>
-			<AppProviders>
-				{children}
-			</AppProviders>
-		</DataProviders>
+		<AppProviders>
+			{children}
+		</AppProviders>
 	</CommonProviders>
 )
 
 const Content = () => {
-	const {isLoaded: isTexturesLoaded} = useTextures()
-	const isEverythingLoaded = isTexturesLoaded
-	const {hasChanges} = useUnsavedChanges()
+	const {isLoaded: isForestLoaded} = useFsForest()
 
-	if(!isEverythingLoaded){
+	if(!isForestLoaded){
 		return null
 	}
 
-	const favicon = hasChanges ? faviconHasChanges : faviconDefault
-
 	return (
 		<GlobalHotkeyManager>
-			<Favicon src={favicon}/>
+			<Favicon src={faviconDefault}/>
 			<TabsAndRouter
 				tabs={[
+					{
+						suffix: "/",
+						text: "Assets",
+						render: () => "uwu",
+						isDefault: true
+					},
 					{
 						suffix: "/settings",
 						text: "Settings",

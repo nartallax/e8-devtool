@@ -1,8 +1,7 @@
 import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 import {preventUndoRedoGlobally} from "client/components/hotkey_context/hotkey_utils"
 import {useToastContext} from "client/components/toast/toast_context"
-import {useUnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
-import {useApiClient} from "client/parts/api_context"
+import {saveAllSaveableQueries} from "client/ui_utils/cacheable_query"
 import {getRandomUUID} from "common/uuid"
 import {Icon} from "generated/icons"
 import {PropsWithChildren, useEffect} from "react"
@@ -19,8 +18,6 @@ export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
 		preventUndoRedoGlobally()
 	}, [])
 
-	const {save} = useUnsavedChanges()
-	const api = useApiClient()
 	const {addToast, updateToast, removeToast} = useToastContext()
 
 	return (
@@ -37,7 +34,7 @@ export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
 				})
 
 				try {
-					await Promise.all([save(), api.generateResourcePack()])
+					await saveAllSaveableQueries()
 				} catch(e){
 					// if there was an error - it was api error and there's a toast already
 					// so all that's left is to remove ours

@@ -8,7 +8,9 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 	}
 
 	const api: Record<string, (...args: any[]) => unknown> = {
-		getProjectConfig: actions.getProjectConfig, updateProjectConfig: actions.updateProjectConfig,
+		getProjectConfig: actions.getProjectConfig,
+		updateProjectConfig: actions.updateProjectConfig,
+		getObjectReferrers: actions.getObjectReferrers,
 		generateResourcePack
 	}
 

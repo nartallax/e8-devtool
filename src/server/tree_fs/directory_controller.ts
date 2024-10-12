@@ -43,6 +43,24 @@ export class DirectoryController {
 		return this.forest.trees
 	}
 
+	async findMatchingItems(pathMatcher: (relPath: string) => boolean, itemMatcher: (item: unknown, relPath: string) => boolean): Promise<{item: unknown, relPath: string}[]> {
+		const result: {item: unknown, relPath: string}[] = []
+
+		await Promise.all([...this.forest.getLeavesWithPaths()].map(async([,path]) => {
+			const relPath = this.treePathToRelPath(path)
+			if(!pathMatcher){
+				return
+			}
+			const absPath = Path.resolve(this.rootPath, relPath)
+			const item = parse(await Fs.readFile(absPath, "utf-8"))
+			if(itemMatcher(item, relPath)){
+				result.push({item, relPath})
+			}
+		}))
+
+		return result
+	}
+
 	async createItem(relPath: string, value: unknown): Promise<void> {
 		this.validatePath(relPath)
 		const absPath = Path.resolve(this.rootPath, relPath)
@@ -132,6 +150,10 @@ export class DirectoryController {
 
 	private newRelPathToTreePath(relPath: string): ForestPath {
 		return [...this.relPathToTreePath(dropLastPathPart(relPath)), 0]
+	}
+
+	private treePathToRelPath(treePath: ForestPath): string {
+		return this.forest.pathToValues(treePath).join("/")
 	}
 
 }

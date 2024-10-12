@@ -28,22 +28,46 @@ export type RouteMatchingResult = {
 export const matchRoutes = (
 	{nonMatchedUrl, matchedUrl, routes}: {nonMatchedUrl: URL, matchedUrl: URL, routes: RouteDefinition[]}
 ): RouteMatchingResult | null => {
+	let route: ParsedRoute | null = null
+	let args: Record<string, string> | null = null
+	let resultNonMatchedUrl: URL | null = null
+	let resultMatchedUrl: URL | null = null
+	let resultRoutePattern: string | null = null
+	let resultRenderer: RouteRenderer | null = null
+
 	for(const [routePattern, renderer] of routes){
-		const parsedRoute = parseRoute(routePattern)
-		const args = extractRouteArgs(parsedRoute, nonMatchedUrl)
-		if(!args){
+		const newRoute = parseRoute(routePattern)
+		const newArgs = extractRouteArgs(newRoute, nonMatchedUrl)
+		if(!newArgs){
 			continue
 		}
 
-		const newNonMatchedUrl = stripUsedRouteParts(parsedRoute, nonMatchedUrl)
-		const newMatchedUrl = appendUsedRouteParts(parsedRoute, args, matchedUrl)
+		const newNonMatchedUrl = stripUsedRouteParts(newRoute, nonMatchedUrl)
+		const newMatchedUrl = appendUsedRouteParts(newRoute, newArgs, matchedUrl)
 
-		return {
-			matchedUrl: newMatchedUrl, nonMatchedUrl: newNonMatchedUrl, arguments: args, renderer, routePattern
+		if(resultMatchedUrl && (resultMatchedUrl + "").length > (newMatchedUrl + "").length){
+			continue
 		}
+
+		resultMatchedUrl = newMatchedUrl
+		resultNonMatchedUrl = newNonMatchedUrl
+		route = newRoute
+		args = newArgs
+		resultRoutePattern = routePattern
+		resultRenderer = renderer
 	}
 
-	return null
+	if(!route || !args || !resultMatchedUrl || !resultNonMatchedUrl || resultRoutePattern === null || !resultRenderer){
+		return null
+	}
+
+	return {
+		matchedUrl: resultMatchedUrl,
+		nonMatchedUrl: resultNonMatchedUrl,
+		arguments: args,
+		renderer: resultRenderer,
+		routePattern: resultRoutePattern
+	}
 }
 
 const parseRoute = (route: string): ParsedRoute => {

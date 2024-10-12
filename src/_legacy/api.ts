@@ -44,7 +44,7 @@ export async function getApi(actions: DevtoolActions): Promise<Record<string, (.
 
 	const getProjectRootForest = async(): Promise<readonly Tree<string, string>[]> => {
 		return await readdirAsTree(actions.resolveProjectPath("."), path => {
-			return path === actions.projectDataRoot || Path.basename(path).startsWith(".")
+			return path === actions.projectRoot || Path.basename(path).startsWith(".")
 		})
 	}
 

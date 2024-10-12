@@ -1,5 +1,5 @@
 import {cn} from "client/ui_utils/classname"
-import {MutableRefObject, ReactNode, useRef} from "react"
+import {MutableRefObject, ReactNode, useEffect, useRef} from "react"
 import * as css from "./text_input.module.scss"
 import {Icon} from "generated/icons"
 import {Button} from "client/components/button/button"
@@ -26,6 +26,13 @@ export const TextInput = ({
 			onChange(input.value)
 		}
 	}
+
+	useEffect(() => {
+		if(lastValue.current !== value && ref.current){
+			lastValue.current = value
+			ref.current.value = value
+		}
+	}, [value, ref])
 
 	let iconEl: ReactNode = null
 	if(icon){
