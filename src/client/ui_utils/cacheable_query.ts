@@ -26,6 +26,8 @@ export type Query<T> = [
 
 const activeQueries = new Map<string, QueryDefinition<any>>()
 
+// TODO: call this on page close? how possible it is?
+// TODO: change favicon depending on unsaved changes
 export const saveAllSaveableQueries = async() => {
 	const saveHandlers = [...activeQueries.values()].flatMap(query => [...query.onSaveRequested])
 	await Promise.all(saveHandlers.map(handler => handler()))
