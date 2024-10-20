@@ -1,0 +1,48 @@
+body {
+  --color-background: #222;
+  --color-middleground: #282828;
+  --color-foreground: #333;
+  --color-interactive: #444;
+  --color-interactive-disabled: #333;
+  --color-interactive-focus: #555;
+  --color-interactive-active: #666;
+  --color-border: #444;
+  --color-error: #a00;
+  --color-font: #ddd;
+  --color-font-disabled: #999;
+  --color-guiding-lines: #888;
+
+  --default-padding: 0.25rem;
+  --default-border-radius: 0.25rem;
+  --default-border-width: 2px;
+  --default-border: var(--default-border-width) solid var(--color-border);
+}
+
+html {
+  /*
+  12px is divisible by 2, 3 and 4 and also a reasonable value for font-size
+  (we can add "divisible by 5" into the mix, but that would be 60px, which is a bit too much)
+  */
+  font-size: 12px;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+* {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  line-height: 1em;
+  font-size: 1.25rem;
+  font-family: "OpenSans", Arial, Helvetica, sans-serif;
+  color: var(--color-font);
+}

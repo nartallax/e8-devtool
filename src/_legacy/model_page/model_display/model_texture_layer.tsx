@@ -1,5 +1,5 @@
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
-import * as css from "./model_display.module.scss"
+import * as css from "./model_display.module.css"
 import {useState} from "react"
 import {useTextures} from "client/parts/texture_tree_context"
 

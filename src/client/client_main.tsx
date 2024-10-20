@@ -1,8 +1,7 @@
 import {App} from "client/parts/app"
 import {createRoot} from "react-dom/client"
-import "./vars.scss"
-import "./style_root.scss"
-import "./../fonts/opensans.scss" // cannot be imported from scss, otherwise paths will break
+import "./style_root.css"
+import "./../fonts/opensans.css" // cannot be imported from scss, otherwise paths will break
 
 const root = createRoot(document.getElementById("app")!)
 root.render(<App/>)

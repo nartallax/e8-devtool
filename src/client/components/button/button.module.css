@@ -45,7 +45,7 @@
 
     &.isActive {
       padding-bottom: 0.5rem;
-      // setting it to 0.01 instead of 0 helps with rounding error that can happen during animation
+      /* setting it to 0.01 instead of 0 helps with rounding error that can happen during animation */
       margin-top: 0.01rem;
       background-color: var(--color-interactive-focus);
     }

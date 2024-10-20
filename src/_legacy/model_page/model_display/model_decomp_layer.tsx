@@ -1,7 +1,7 @@
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {decomposeShapes} from "data/polygon_decomposition"
 import {useMemo, useRef} from "react"
-import * as css from "./model_display.module.scss"
+import * as css from "./model_display.module.css"
 import {shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
 import {getRandomUUID} from "common/uuid"
 import {useToastContext} from "client/components/toast/toast_context"

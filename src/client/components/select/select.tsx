@@ -1,7 +1,7 @@
 import {UUID, getRandomUUID} from "common/uuid"
 import {useCallback, useMemo, useRef} from "react"
 
-import * as css from "./select.module.scss"
+import * as css from "./select.module.css"
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {FormField} from "client/components/form/form_field"
 import {cn} from "client/ui_utils/classname"

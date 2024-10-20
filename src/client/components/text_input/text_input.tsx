@@ -1,6 +1,6 @@
 import {cn} from "client/ui_utils/classname"
 import {MutableRefObject, ReactNode, useEffect, useRef} from "react"
-import * as css from "./text_input.module.scss"
+import * as css from "./text_input.module.css"
 import {Icon} from "generated/icons"
 import {Button} from "client/components/button/button"
 import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"

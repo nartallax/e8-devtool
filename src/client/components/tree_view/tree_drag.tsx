@@ -1,5 +1,5 @@
 import {RefObject, useRef} from "react"
-import * as css from "./tree_view.module.scss"
+import * as css from "./tree_view.module.css"
 import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"
 import {lockUserSelect, unlockUserSelect} from "client/ui_utils/user_select_lock"
 import {AnyPointerEvent, pointerEventsToClientCoords, pointerEventsToOffsetCoords, useMouseDragProps} from "client/ui_utils/use_mouse_drag"

@@ -1,4 +1,4 @@
-import * as css from "./separator.module.scss"
+import * as css from "./separator.module.css"
 import {TooltipIcon} from "client/components/overlay_item/tooltip_icon"
 import {Icon} from "generated/icons"
 import {PropsWithChildren} from "react"

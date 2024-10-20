@@ -34,7 +34,7 @@
   border: var(--default-border);
   border-radius: var(--default-border-radius);
   background: var(--color-background);
-  text-align: left; // to override other text-aligns
+  text-align: left; /* to override other text-aligns */
   line-height: 1.3em;
 
   &.isPreWrapped {

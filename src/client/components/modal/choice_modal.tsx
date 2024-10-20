@@ -1,5 +1,5 @@
 import {Modal} from "client/components/modal/modal"
-import * as css from "./modal.module.scss"
+import * as css from "./modal.module.css"
 import {Icon} from "generated/icons"
 import {Col, Row} from "client/components/row_col/row_col"
 import {Button} from "client/components/button/button"

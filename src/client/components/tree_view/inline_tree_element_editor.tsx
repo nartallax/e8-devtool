@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from "react"
-import * as css from "./tree_view.module.scss"
+import * as css from "./tree_view.module.css"
 import {cn} from "client/ui_utils/classname"
 import {Validators, ValidatorsMaybeFactory, resolveValidatorsMaybeFactory} from "client/components/form/validators"
 import {ForestPath} from "@nartallax/forest"

@@ -1,5 +1,5 @@
 import {MutableRefObject, PropsWithChildren, useCallback, useLayoutEffect, useRef, useState} from "react"
-import * as css from "./workbench.module.scss"
+import * as css from "./workbench.module.css"
 import {useElementSize} from "client/ui_utils/use_element_size"
 import {WorkbenchContextProvider, WorkbenchContextValue} from "client/components/workbench/workbench_context"
 import {AnyPointerEvent, pointerEventsToOffsetCoordsByRect} from "client/ui_utils/use_mouse_drag"

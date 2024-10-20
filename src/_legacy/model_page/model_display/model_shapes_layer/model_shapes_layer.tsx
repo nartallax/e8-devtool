@@ -1,5 +1,5 @@
 import {cn} from "client/ui_utils/classname"
-import * as css from "../model_display.module.scss"
+import * as css from "../model_display.module.css"
 import {shapeToSvgPathD} from "client/parts/model_page/model_display/model_display_data"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {ModelDisplaySvgLayer} from "client/parts/model_page/model_display/model_display_svg_layer"

@@ -1,7 +1,7 @@
 import {Button} from "client/components/button/button"
 import {Modal} from "client/components/modal/modal"
 import {Col, Row} from "client/components/row_col/row_col"
-import * as css from "./modal.module.scss"
+import * as css from "./modal.module.css"
 import {defineContext} from "client/ui_utils/define_context"
 import {useCallback, useState} from "react"
 import {Icon} from "generated/icons"

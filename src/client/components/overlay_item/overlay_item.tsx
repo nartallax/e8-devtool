@@ -1,6 +1,6 @@
 import {RowCol} from "client/components/row_col/row_col"
 import {CSSProperties, PropsWithChildren} from "react"
-import * as css from "./overlay_item.module.scss"
+import * as css from "./overlay_item.module.css"
 
 export type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right"
 

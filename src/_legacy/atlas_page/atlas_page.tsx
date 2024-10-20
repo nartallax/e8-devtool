@@ -1,7 +1,7 @@
 import {Workbench} from "client/components/workbench/workbench"
 import {useApi} from "client/parts/api_context"
 import {getAtlasSideLength} from "data/project_to_resourcepack/atlas_building_utils"
-import * as css from "./atlas_page.module.scss"
+import * as css from "./atlas_page.module.css"
 import {TitlePart} from "client/components/title_context/title_context"
 
 export const AtlasPage = () => {

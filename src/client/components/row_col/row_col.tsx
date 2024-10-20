@@ -1,5 +1,5 @@
 import {DefaultableSideSize, DefaultableSize, MinMaxableSize, resolveDefaultableSideSize, resolveDefaultableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
-import * as css from "./row_col.module.scss"
+import * as css from "./row_col.module.css"
 import {CSSProperties, PropsWithChildren} from "react"
 import {cn} from "client/ui_utils/classname"
 

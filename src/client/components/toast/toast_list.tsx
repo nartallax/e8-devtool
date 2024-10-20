@@ -1,5 +1,5 @@
 import {useToastContext} from "client/components/toast/toast_context"
-import * as css from "./toast.module.scss"
+import * as css from "./toast.module.css"
 import {cn} from "client/ui_utils/classname"
 import {Vanisher} from "client/components/vanisher/vanisher"
 

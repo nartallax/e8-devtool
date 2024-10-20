@@ -1,5 +1,5 @@
 import {Icon} from "generated/icons"
-import * as css from "./button.module.scss"
+import * as css from "./button.module.css"
 import {useCallback, useRef, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {Hotkey} from "client/components/hotkey_context/hotkey_context"

@@ -1,4 +1,4 @@
-import * as css from "./tree_view.module.scss"
+import * as css from "./tree_view.module.css"
 import {useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {Icon} from "generated/icons"

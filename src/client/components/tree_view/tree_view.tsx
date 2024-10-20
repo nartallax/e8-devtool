@@ -1,4 +1,4 @@
-import * as css from "./tree_view.module.scss"
+import * as css from "./tree_view.module.css"
 import {TreeBranchChildren, TreeBranchChildrenProps} from "client/components/tree_view/tree_fragments"
 import {MutableRefObject, useCallback, useMemo, useRef, useState} from "react"
 import {SetState} from "client/ui_utils/react_types"

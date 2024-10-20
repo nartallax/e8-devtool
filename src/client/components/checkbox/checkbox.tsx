@@ -1,5 +1,5 @@
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
-import * as css from "./checkbox.module.scss"
+import * as css from "./checkbox.module.css"
 import {Icon} from "generated/icons"
 import {FormField} from "client/components/form/form_field"
 import {Button} from "client/components/button/button"

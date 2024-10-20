@@ -1,7 +1,7 @@
 import {Corner, OverlayItem} from "client/components/overlay_item/overlay_item"
 import {Icon} from "generated/icons"
 import {PropsWithChildren, useState} from "react"
-import * as css from "./overlay_item.module.scss"
+import * as css from "./overlay_item.module.css"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {

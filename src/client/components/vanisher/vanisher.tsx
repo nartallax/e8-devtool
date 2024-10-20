@@ -1,6 +1,6 @@
 import {CSSProperties, PropsWithChildren, useLayoutEffect, useRef, useState} from "react"
 
-import * as css from "./vanisher.module.scss"
+import * as css from "./vanisher.module.css"
 import {MinMaxableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
 import {cn} from "client/ui_utils/classname"
 

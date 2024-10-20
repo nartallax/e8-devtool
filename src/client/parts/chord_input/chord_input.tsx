@@ -1,6 +1,6 @@
 import {Chord, InputKey, browserKeyboardCodeToInputKey, knownMouseButtonInputs} from "@nartallax/e8"
 import {useCallback, useEffect, useRef} from "react"
-import * as css from "./chord_input.module.scss"
+import * as css from "./chord_input.module.css"
 import {cn} from "client/ui_utils/classname"
 
 type Props = {

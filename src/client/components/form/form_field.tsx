@@ -2,7 +2,7 @@ import {useFormField} from "client/components/form/form_context"
 import {UUID} from "common/uuid"
 import {PropsWithChildren} from "react"
 
-import * as css from "./form.module.scss"
+import * as css from "./form.module.css"
 import {TooltipIcon} from "client/components/overlay_item/tooltip_icon"
 import {Icon} from "generated/icons"
 import {cn} from "client/ui_utils/classname"

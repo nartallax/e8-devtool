@@ -2,7 +2,7 @@ import {Button} from "client/components/button/button"
 import {FormInputProps, useRegisterField} from "client/components/form/form_context"
 import {FormField} from "client/components/form/form_field"
 import {Icon} from "generated/icons"
-import * as css from "./value_selector.module.scss"
+import * as css from "./value_selector.module.css"
 import {useCallback} from "react"
 import {isEventInButton} from "client/ui_utils/dom_queries"
 

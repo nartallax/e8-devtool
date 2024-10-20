@@ -5,7 +5,7 @@ declare module "*.css" {
 	export = css
 }
 
-declare module "*.module.scss" {
+declare module "*.module.css" {
 	const css: {[key: string]: string}
 	export = css
 }

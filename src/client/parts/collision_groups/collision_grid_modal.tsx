@@ -1,6 +1,6 @@
 import {Modal} from "client/components/modal/modal"
 import {UUID} from "common/uuid"
-import * as css from "./collision_grid_modal.module.scss"
+import * as css from "./collision_grid_modal.module.css"
 import {useMemo} from "react"
 import {ProjectCollisionGroup} from "data/project"
 import {Col} from "client/components/row_col/row_col"

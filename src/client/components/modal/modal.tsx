@@ -1,6 +1,6 @@
 import {Vanisher} from "client/components/vanisher/vanisher"
 import {createPortal} from "react-dom"
-import * as css from "./modal.module.scss"
+import * as css from "./modal.module.css"
 import {MinMaxableSize, resolveMinMaxableSize} from "client/ui_utils/sizes"
 import {Icon} from "generated/icons"
 import {PropsWithChildren} from "react"

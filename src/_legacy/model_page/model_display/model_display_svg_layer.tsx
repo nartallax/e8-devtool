@@ -1,5 +1,5 @@
 import {PropsWithChildren} from "react"
-import * as css from "./model_display.module.scss"
+import * as css from "./model_display.module.css"
 import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {useWorkbenchContext} from "client/components/workbench/workbench_context"
 
