@@ -55,11 +55,14 @@ export const useRegisterField = function<T>({
 }: FormFieldDescription<T>): FormInputVisualState {
 	const {registerField, unregisterField, isShowingErrors} = useFormContext()
 	const id = useRef<UUID>(getRandomUUID()).current
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	const error = validators?.map(validator => validator(value))?.find(x => !!x) || null
 
 	useEffect(() => {
 		registerField(id, label, hint, error)
-		return () => unregisterField(id)
+		return () => {
+			unregisterField(id)
+		}
 	}, [registerField, unregisterField, id, label, hint, error])
 
 	return {

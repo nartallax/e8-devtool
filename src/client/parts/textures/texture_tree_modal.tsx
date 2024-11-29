@@ -27,19 +27,31 @@ export const TextureTreeModal = ({
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(value)}>
+			<Form onSubmit={() => {
+				onClose(value)
+			}}>
 				<Col gap stretch grow>
 					<StringForestView
 						makePath={mergePath}
 						trees={textureForest}
 						selectedPath={!isSelectionModal ? undefined : value}
-						onItemClick={!isSelectionModal ? undefined : (leaf: string) => setValue(leaf)}
-						onItemDoubleclick={!isSelectionModal ? undefined : (leaf: string) => onClose(leaf)}
+						onItemClick={!isSelectionModal ? undefined : (leaf: string) => {
+							setValue(leaf)
+						}}
+						onItemDoubleclick={!isSelectionModal ? undefined : (leaf: string) => {
+							onClose(leaf)
+						}}
 					/>
 					{isSelectionModal
 						? <ModalSubmitCancelButtons onCancel={onClose}/>
 						: <Row justify="end">
-							<Button onClick={() => onClose()} icon={Icon.check} text="OK"/>
+							<Button
+								onClick={() => {
+									onClose()
+								}}
+								icon={Icon.check}
+								text="OK"
+							/>
 						</Row>}
 				</Col>
 			</Form>

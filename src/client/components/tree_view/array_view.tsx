@@ -32,14 +32,20 @@ export function ArrayView<T>({
 				newValues[index] = renameItem(values[index]!, name)
 				setValues(newValues)
 			}}
-			onLeafCreated={name => setValues([createItem(name), ...values])}
+			onLeafCreated={name => {
+				setValues([createItem(name), ...values])
+			}}
 			getLeafKey={getKey}
 			getLeafLabel={getLabel}
 			onLeafClick={onItemClick}
 			onLeafDoubleclick={onItemDoubleclick}
 			getSearchText={item => getLabel(item)}
-			onDrag={(from, to) => setValues(moveItemByIndex(values, from[0]!, to[0]!))}
-			onDelete={path => setValues(deleteItemByIndex(values, path[0]!))}
+			onDrag={(from, to) => {
+				setValues(moveItemByIndex(values, from[0]!, to[0]!))
+			}}
+			onDelete={path => {
+				setValues(deleteItemByIndex(values, path[0]!))
+			}}
 			leafLabelValidators={nameValidators}
 		/>
 	)

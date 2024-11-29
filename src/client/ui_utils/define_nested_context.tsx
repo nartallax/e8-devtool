@@ -76,5 +76,7 @@ export function defineNestedContext<PR, VR, PN, VN>({useRootValue, useNestedValu
 		)
 	}
 
-	return {RootProvider, NestedProvider, useRootContext, useMaybeRootContext, useNestedContext}
+	return {
+		RootProvider, NestedProvider, useRootContext, useMaybeRootContext, useNestedContext
+	}
 }

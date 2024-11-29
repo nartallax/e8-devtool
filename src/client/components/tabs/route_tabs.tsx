@@ -49,7 +49,9 @@ export const RouteTabs = ({tabs, matchedUrl, isAutoRoutingToDefaultEnabled = fal
 			icon: tab.icon,
 			hotkey: tab.hotkey,
 			isActive: tab.suffix === matchingTabSuffix,
-			onClick: () => navigate(mergeUrls(baseUrl, tab.suffix))
+			onClick: () => {
+				navigate(mergeUrls(baseUrl, tab.suffix))
+			}
 		}))}
 		/>
 	)

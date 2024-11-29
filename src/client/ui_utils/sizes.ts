@@ -29,13 +29,14 @@ export function resolveDefaultableSideSize(spacing: DefaultableSideSize | undefi
 		case "bottom": return "0 0 " + dflt + " 0"
 		case "left": return "0 0 0 " + dflt
 		case "right": return "0 " + dflt + " 0 0"
-	}
+		default: {
+			if(Array.isArray(spacing)){
+				return spacing.map(x => resolveDefaultableSize(x, dflt)).join(" ")
+			}
 
-	if(Array.isArray(spacing)){
-		return spacing.map(x => resolveDefaultableSize(x, dflt)).join(" ")
+			return resolveDefaultableSize(spacing, dflt)
+		}
 	}
-
-	return resolveDefaultableSize(spacing, dflt)
 }
 
 export function resolveDefaultableSize(size: unknown, dflt: string = defaultPadding): string | undefined {

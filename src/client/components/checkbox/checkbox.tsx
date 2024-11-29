@@ -7,10 +7,16 @@ import {useCallback} from "react"
 
 type FieldProps = FormInputProps<boolean> & Omit<Props, "hasError">
 
-export const CheckboxField = ({value, onChange, isDisabled, ...props}: FieldProps) => {
+export const CheckboxField = ({
+	value, onChange, isDisabled, ...props
+}: FieldProps) => {
 
 	const {id, hasError} = useRegisterField({value, ...props})
-	const toggle = useCallback(() => !isDisabled && onChange(!value), [onChange, value, isDisabled])
+	const toggle = useCallback(() => {
+		if(!isDisabled){
+			onChange(!value)
+		}
+	}, [onChange, value, isDisabled])
 
 	return (
 		<FormField id={id} onLabelClick={toggle}>
@@ -31,8 +37,14 @@ type Props = {
 	hasError?: boolean
 }
 
-export const Checkbox = ({value, onChange, hasError, isDisabled}: Props) => {
-	const toggle = useCallback(() => !isDisabled && onChange(!value), [onChange, value, isDisabled])
+export const Checkbox = ({
+	value, onChange, hasError, isDisabled
+}: Props) => {
+	const toggle = useCallback(() => {
+		if(!isDisabled){
+			onChange(!value)
+		}
+	}, [onChange, value, isDisabled])
 
 	return (
 		<div className={css.checkbox}>

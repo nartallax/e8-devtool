@@ -91,6 +91,8 @@ const usePreventBrowserClose = (isEnabled: boolean) => {
 		const oldBeforeunload = window.onbeforeunload
 		const newBeforeunload = (e: BeforeUnloadEvent) => {
 			e.preventDefault()
+			// yes, I know it's deprecated. but it actually makes a difference sometimes
+			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			e.returnValue = true
 			return true
 		}

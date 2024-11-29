@@ -20,7 +20,7 @@ export const SearchableTreeView = <L, B>({
 
 		let leafCount = 0
 		const resultTree = new Forest(forest).filterLeaves(leaf => {
-			if(getSearchText(leaf).toLowerCase().indexOf(text) >= 0){
+			if(getSearchText(leaf).toLowerCase().includes(text)){
 				leafCount++
 				return true
 			}

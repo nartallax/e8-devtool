@@ -52,7 +52,9 @@ export const useWrapSaveableState = <T>(currentValue: T, rawSetState: (newValue:
 		}
 	}, [doSave])
 
-	const markSaved = useCallback(() => setUnsaved(false), [])
+	const markSaved = useCallback(() => {
+		setUnsaved(false)
+	}, [])
 
 	return {
 		state: currentValue, setState, isUnsaved, save: doSave, saveIfUnsaved, markSaved

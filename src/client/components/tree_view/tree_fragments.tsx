@@ -26,7 +26,7 @@ type BaseProps<L, B> = {
 	onBranchDoubleclick?: (branch: B, path: ForestPath) => void
 	onAddChild?: (parentPath: ForestPath) => void
 	squares?: SquareName[]
-	// eslint-disable-next-line react/no-unused-prop-types
+
 	path: ForestPath
 	inlineEditPath: ForestPath | null
 	canEditBranchLabel: boolean
@@ -70,7 +70,9 @@ const TreeBranchEl = <T, B>({branch, isEverythingExpanded, ...props}: BranchProp
 				row={branch}
 				{...props}
 				isExpanded={isEffectiveExpanded}
-				onExpandChange={() => setExpanded(exp => !exp)}
+				onExpandChange={() => {
+					setExpanded(exp => !exp)
+				}}
 			/>
 			{!!isEffectiveExpanded && <div className={css.treeChildrenWrap}>
 				<TreeBranchChildren
@@ -83,6 +85,7 @@ const TreeBranchEl = <T, B>({branch, isEverythingExpanded, ...props}: BranchProp
 	)
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params
 const getLabel = <T, B>(row: Tree<T, B>, path: ForestPath, getBranchLabel: RowProps<T, B>["getBranchLabel"], getLeafLabel: RowProps<T, B>["getLeafLabel"], siblingIndex?: number) => {
 
 	if(siblingIndex !== undefined && path.length > 0){
@@ -124,7 +127,9 @@ const TreeRow = <T, B>({
 			<InlineEditor
 				siblingNames={siblingNames}
 				initialValue={label}
-				onComplete={label => onLabelEditComplete(path, row, label)}
+				onComplete={label => {
+					onLabelEditComplete(path, row, label)
+				}}
 				treePath={path}
 				validators={isTreeBranch(row) ? branchLabelValidators : leafLabelValidators}
 			/>
@@ -161,7 +166,9 @@ const TreeRow = <T, B>({
 		buttons.push(<Button
 			variant="plain-icon"
 			icon={Icon.pencil}
-			onClick={() => setInlineEditPath(path)}
+			onClick={() => {
+				setInlineEditPath(path)
+			}}
 			key="edit"
 		/>)
 	}
@@ -171,7 +178,9 @@ const TreeRow = <T, B>({
 		buttons.push(<Button
 			variant="plain-icon"
 			icon={Icon.close}
-			onClick={() => onNodeDelete(path, row)}
+			onClick={() => {
+				onNodeDelete(path, row)
+			}}
 			holdTimeUntilAction={500}
 			key="delete"
 		/>)

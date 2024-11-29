@@ -35,8 +35,12 @@ export const TooltipIcon = ({
 					[css.isDisabled!]: variant === "disabled",
 					[css.isHidden!]: isHidden
 				})}
-				onMouseLeave={() => setIsVisible(false)}
-				onMouseEnter={() => setIsVisible(true)}
+				onMouseLeave={() => {
+					setIsVisible(false)
+				}}
+				onMouseEnter={() => {
+					setIsVisible(true)
+				}}
 			/>
 		</OverlayItem>
 	)

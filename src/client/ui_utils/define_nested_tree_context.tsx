@@ -72,8 +72,14 @@ export function defineNestedTreeContext<PR, VR, PN, VN>({useRootValue, useNested
 					parentIds = parents.map(parent => parent.id)
 				}
 
-				setForest(forest => addTree(forest, value, id, parentIds, 0))
-				return () => setForest(forest => deleteTree(forest, id, parentIds, 0))
+				setForest(forest => addTree({
+					forest, child: value, childId: id, parentIds, parentIndex: 0
+				}))
+				return () => {
+					setForest(forest => deleteTree({
+						forest, childId: id, parentIds, parentIndex: 0
+					}))
+				}
 			}, [value, parents, setForest, rootId, id])
 
 			return useMemo(() => ({value, rootId, id}), [value, rootId, id])
@@ -97,7 +103,9 @@ class TreeContextServices<T> {
 	}
 }
 
-function addTree<T>(forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[], parentIndex: number): Trees<T> {
+function addTree<T>({
+	forest, child, childId, parentIds, parentIndex
+}: {forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[], parentIndex: number}): Trees<T> {
 	let result: Tree<T, UUID>[] = []
 	const parentId = parentIds[parentIndex]
 	if(!parentId){
@@ -109,7 +117,7 @@ function addTree<T>(forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[]
 
 			haveBranch = true
 			// result could have this tree already if its descendant was added first
-			const newChildren = tree.children.filter(child => isTreeBranch(child))
+			const newChildren: Tree<T, UUID>[] = tree.children.filter(child => isTreeBranch(child))
 			newChildren.push({value: child})
 			return {
 				...tree,
@@ -128,7 +136,9 @@ function addTree<T>(forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[]
 				found = true
 				result.push({
 					...tree,
-					children: addTree(tree.children, child, childId, parentIds, parentIndex + 1)
+					children: addTree({
+						forest: tree.children, child, childId, parentIds, parentIndex: parentIndex + 1
+					})
 				})
 			} else {
 				result.push(tree)
@@ -138,13 +148,19 @@ function addTree<T>(forest: Trees<T>, child: T, childId: UUID, parentIds: UUID[]
 		if(!found){
 			// sometimes child is added ahead of parent
 			// this is normal and we should just add the parent too
-			result.push({children: addTree(forest, child, childId, parentIds, parentIndex + 1), value: parentId})
+			result.push({
+				children: addTree({
+					forest, child, childId, parentIds, parentIndex: parentIndex + 1
+				}), value: parentId
+			})
 		}
 	}
 	return result
 }
 
-function deleteTree<T>(forest: Trees<T>, childId: UUID, parentIds: UUID[], parentIndex: number): Trees<T> {
+function deleteTree<T>({
+	forest, childId, parentIds, parentIndex
+}: {forest: Trees<T>, childId: UUID, parentIds: UUID[], parentIndex: number}): Trees<T> {
 	const parentId = parentIds[parentIndex]
 	if(!parentId){
 		return trimForest(forest.map(node => {
@@ -158,7 +174,11 @@ function deleteTree<T>(forest: Trees<T>, childId: UUID, parentIds: UUID[], paren
 	const result: Tree<T, UUID>[] = []
 	for(const tree of forest){
 		if(isTreeBranch(tree) && tree.value === parentId){
-			result.push({...tree, children: deleteTree(tree.children, childId, parentIds, parentIndex + 1)})
+			result.push({
+				...tree, children: deleteTree({
+					forest: tree.children, childId, parentIds, parentIndex: parentIndex + 1
+				})
+			})
 		} else {
 			result.push(tree)
 		}

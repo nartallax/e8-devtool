@@ -30,7 +30,9 @@ const updateToasts = (activeToasts: Toast[], args: UpdateToastArgs, removeToast:
 	}
 
 	if(args.ttl){
-		toast.ttlHandler = setTimeout(() => removeToast(args.id), args.ttl)
+		toast.ttlHandler = setTimeout(() => {
+			removeToast(args.id)
+		}, args.ttl)
 	}
 
 	toast = {
@@ -73,13 +75,17 @@ export const [ToastProvider, useToastContext] = defineContext({
 				return [{
 					...args,
 					id,
-					ttlHandler: args.ttl !== undefined ? setTimeout(() => removeToast(id), args.ttl) : null
+					ttlHandler: args.ttl !== undefined ? setTimeout(() => {
+						removeToast(id)
+					}, args.ttl) : null
 				}, ...activeToasts]
 			})
 
 			return id
 		}, [removeToast])
 
-		return {activeToasts, addToast, updateToast, removeToast}
+		return {
+			activeToasts, addToast, updateToast, removeToast
+		}
 	}
 })

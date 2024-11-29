@@ -1,11 +1,16 @@
-import {getAllProjectModelsWithFolders, getSortedProjectBinds, mappedForestToArrayWithPath} from "data/project_utils"
 import {capitalize} from "common/capitalize"
-import {readdirAsArray} from "common/readdir_as_array"
-import * as Path from "path"
 import {DevtoolActions} from "server/actions"
 
 export async function projectToTypescript(actions: DevtoolActions): Promise<string> {
-
+	await new Promise<void>(ok => {
+		// just to keep the function async
+		ok()
+	})
+	void actions
+	void makeTsIdentifier
+	void getCommentCode
+	throw new Error("Not implemented")
+/*
 	const [inputBindForest, inputBindMap, config, particlesForest, particlesMap, modelsForest, modelsMap] = await Promise.all([
 		actions.dirs.inputBinds.getForest(),
 		actions.dirs.inputBinds.getAllItemsAsMap(),
@@ -80,6 +85,7 @@ function getConstEnumCode(offset: string, name: string, comment: string, entries
 ${offset}export const enum ${makeTsIdentifier([name], true)} {
 ${offset}	${entryStrings.join(",\n\t" + offset)}
 ${offset}}`
+*/
 }
 
 function getCommentCode(content: string): string {

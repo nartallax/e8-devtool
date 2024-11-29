@@ -1,12 +1,8 @@
 export class ApiError extends Error {
 	isApiError = true
 
-	constructor(message: string) {
-		super(message)
-	}
-
 	static isApiError(x: unknown): x is ApiError {
-		return !!x && typeof(x) === "object" && (x as ApiError).isApiError === true
+		return !!x && typeof(x) === "object" && (x as ApiError).isApiError
 	}
 }
 

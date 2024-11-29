@@ -135,7 +135,7 @@ export function makeApiForestDataProvider<T>(
 			if(!isTreeBranch(node)){
 				if(getReferrers !== noopReferers){
 					const item = await queries.get.getValue(pathStr)
-					const refs = (await Promise.all(getReferrers(item!))).flat()
+					const refs = (await Promise.all(getReferrers(item))).flat()
 					await showRefErrors(refs)
 				}
 			}
@@ -154,7 +154,7 @@ export function makeApiForestDataProvider<T>(
 		const {
 			state, setState, saveIfUnsaved, isUnsaved
 		} = useWrapSaveableState(rawValue, rawSetValue, async value => {
-			await queries.update(path, value!)
+			await queries.update(path, value)
 		})
 
 		if(!state){

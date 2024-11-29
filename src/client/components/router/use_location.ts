@@ -32,14 +32,14 @@ const patchHistory = () => {
 export const useLocation = (): URL => {
 	patchHistory()
 
-	const [location, setLocation] = useState(new URL(window.location + ""))
+	const [location, setLocation] = useState(new URL(window.location.toString()))
 
 	// it's useLayoutEffect and not just useEffect because useEffect is too asynchronous
 	// URL can change between this hook is called and useEffect taking place, losing us an update
 	// with useLayoutEffect this should not happen
 	useLayoutEffect(() => {
 		const onChange = () => requestAnimationFrame(() => {
-			setLocation(new URL(window.location + ""))
+			setLocation(new URL(window.location.toString()))
 		})
 
 		listeners.add(onChange)

@@ -40,7 +40,9 @@ export const AlertModal = ({header, body, onClose}: Props) => {
 const emptyProps: Props & {isOpen: boolean} = {
 	header: "Warning",
 	body: null,
-	onClose: () => {},
+	onClose: () => {
+		// nothing!
+	},
 	isOpen: false
 }
 

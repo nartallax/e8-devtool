@@ -47,7 +47,9 @@ export const Vanisher = ({
 	}
 
 	useLayoutEffect(() => {
-		requestAnimationFrame(() => setIsVisible(true))
+		requestAnimationFrame(() => {
+			setIsVisible(true)
+		})
 
 		return () => {
 			setIsVisible(false)
@@ -79,7 +81,9 @@ export const Vanisher = ({
 				})
 			})
 
-			setTimeout(() => el.remove(), duration)
+			setTimeout(() => {
+				el.remove()
+			}, duration)
 		}
 	}, [property, emptyValue, duration, retainPosition])
 

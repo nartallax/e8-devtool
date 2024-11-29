@@ -39,7 +39,7 @@ const tailZeroesRegexp = /\.?0+$/
 const stringify = (x: number, step: number): string => {
 	const digitsLimit = calcFractionDigitsInStep(step)
 	let result = x.toFixed(digitsLimit)
-	if(result.indexOf(".") >= 0){
+	if(result.includes(".")){
 		result = result.replace(tailZeroesRegexp, "")
 	}
 	return result

@@ -2,11 +2,7 @@
 export class AbortError extends Error {
 	isAbortError = true
 
-	constructor(message: string) {
-		super(message)
-	}
-
 	static isAbortError(x: unknown): x is AbortError {
-		return !!x && typeof(x) === "object" && (x as AbortError).isAbortError === true
+		return !!x && typeof(x) === "object" && (x as AbortError).isAbortError
 	}
 }

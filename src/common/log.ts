@@ -1,3 +1,5 @@
+import {errToString} from "common/err_to_string"
+
 function nowStr(): string {
 	const d = new Date()
 	return `${d.getFullYear()}.${td(d.getMonth() + 1)}.${td(d.getDate())} ${td(d.getHours())}:${td(d.getMinutes())}:${td(d.getSeconds())}:${threed(d.getMilliseconds())}`
@@ -14,10 +16,10 @@ export function log(str: string): void {
 }
 
 export function logError(e: unknown): void {
-	log(e instanceof Error ? e.stack || e.message : (e + ""))
+	log(errToString(e))
 }
 
-export function wrapInCatchLog<T extends unknown[]>(fn: (...args: T) => void): (...args: T) => Promise<void> {
+export function wrapInCatchLog<T extends unknown[]>(fn: (...args: T) => void | Promise<void>): (...args: T) => Promise<void> {
 	return async(...args) => {
 		try {
 			await Promise.resolve(fn(...args))

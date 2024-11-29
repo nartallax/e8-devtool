@@ -48,7 +48,7 @@ export class Growable2DBitmap {
 		}
 
 		const byteIndex = ((y << this.widthPow) + x) >> 3
-		this.data[byteIndex] |= 1 << (x & 0x7)
+		this.data[byteIndex]! |= 1 << (x & 0x7)
 	}
 
 	reset(x: number, y: number): void {
@@ -61,7 +61,7 @@ export class Growable2DBitmap {
 		}
 
 		const byteIndex = ((y << this.widthPow) + x) >> 3
-		this.data[byteIndex] &= ~(1 << (x & 0x7))
+		this.data[byteIndex]! &= ~(1 << (x & 0x7))
 	}
 
 	setRect(_x: number, _y: number, xLength: number, yLength: number): void {

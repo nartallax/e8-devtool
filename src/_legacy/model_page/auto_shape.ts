@@ -1,6 +1,6 @@
-import {distanceFromPointToLine} from "client/parts/model_page/model_display/model_display_data"
 import {Growable2DBitmap} from "common/bitmap/growable_2d_bitmap"
 import {XY} from "@nartallax/e8"
+import {distanceFromPointToLine} from "_legacy/model_page/model_display/model_display_data"
 
 // resolution multiplier.
 // allows to counter some border-effects
@@ -17,7 +17,9 @@ export async function buildObjectShapeByImage(imgUrl: string, widthUnits: number
 	points = scale(points, 1 / resMult)
 	points = removeCollinearsByDistance(points, 0.1, 1, 1) // removing pixel sides
 	points = removeCollinearsByDistance(points, 0.5, 2, 2) // smoothing individual pixels
-	points = normalizePxCoords(points, widthPx, heightPx, widthUnits, heightUnits)
+	points = normalizePxCoords({
+		coords: points, widthPx, heightPx, widthUnits, heightUnits
+	})
 	points = groupClosePoints(points, 0.025)
 	points = removeCollinearsByDistance(points, 0.01, 1, 1)
 	return points
@@ -30,7 +32,9 @@ async function loadImage(imgUrl: string): Promise<HTMLImageElement> {
 		if(img.complete){
 			ok()
 		} else {
-			img.addEventListener("load", () => ok(), {once: true})
+			img.addEventListener("load", () => {
+				ok()
+			}, {once: true})
 		}
 	})
 	return img
@@ -165,7 +169,9 @@ function addPointsAtEdge(bitmap: Growable2DBitmap, width: number, height: number
 	return result
 }
 
-function normalizePxCoords(coords: XY[], widthPx: number, heightPx: number, widthUnits: number, heightUnits: number): XY[] {
+function normalizePxCoords({
+	coords, widthPx, heightPx, widthUnits, heightUnits
+}: {coords: XY[], widthPx: number, heightPx: number, widthUnits: number, heightUnits: number}): XY[] {
 	const dx = widthPx / 2
 	const dy = heightPx / 2
 	const multX = widthUnits / widthPx

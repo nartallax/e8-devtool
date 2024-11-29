@@ -13,14 +13,18 @@ export function httpGet(urlStr: string | URL, headers?: Http.OutgoingHttpHeaders
 			path: url.pathname + (url.search || ""),
 			headers
 		}, async response => {
-			response.on("error", e => bad(e))
+			response.on("error", e => {
+				bad(e)
+			})
 			try {
 				ok(await readStreamToBuffer(response, 1024 * 1024 * 1024, 3 * 60 * 1000))
 			} catch(e){
 				bad(e)
 			}
 		})
-		request.on("error", e => bad(e))
+		request.on("error", e => {
+			bad(e)
+		})
 		request.end()
 	})
 }
@@ -43,7 +47,9 @@ export function httpPost(urlStr: string, body: Buffer, headers?: Http.OutgoingHt
 			}
 
 		})
-		request.on("error", e => bad(e))
+		request.on("error", e => {
+			bad(e)
+		})
 		request.end(body)
 	})
 }

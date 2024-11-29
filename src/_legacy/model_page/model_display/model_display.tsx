@@ -182,14 +182,18 @@ const ModelSidebar = ({
 				min={0}
 				// no strong basis for this value, it's just for sizes to look better
 				step={0.01}
-				onChange={x => setModelSize(x, model.size.y)}
+				onChange={x => {
+					setModelSize(x, model.size.y)
+				}}
 			/>
 			<NumberInputField
 				label="Height"
 				value={model.size.y}
 				min={0}
 				step={0.01}
-				onChange={y => setModelSize(model.size.x, y)}
+				onChange={y => {
+					setModelSize(model.size.x, y)
+				}}
 			/>
 			<CheckboxField label="Show shapes" value={isShowingShapes} onChange={setShowShapes}/>
 			<CheckboxField label="Show decomp" value={isShowingDecomp} onChange={setShowDecomp}/>

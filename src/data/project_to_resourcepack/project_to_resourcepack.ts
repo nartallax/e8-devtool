@@ -5,6 +5,10 @@ import {DevtoolActions} from "server/actions"
 /** Convert project into ResourcePack structure. */
 export async function projectToResourcePack(actions: DevtoolActions): Promise<any> {
 	void actions
+	await new Promise<void>(ok => {
+		// just to keep the function async
+		ok()
+	})
 	throw new Error("Not implemented")
 	/*
 	const allModels = (await actions.dirs.models.getAllItemsAsArray()).sort((a, b) => a.id > b.id ? 1 : -1)

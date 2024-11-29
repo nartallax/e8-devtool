@@ -25,7 +25,9 @@ export function readStreamToBuffer(stream: Fs.ReadStream | Http.IncomingMessage,
 				}
 			}
 
-			const timeoutHandle = setTimeout(() => abort(new Error("Read timed out")), timeout)
+			const timeoutHandle = setTimeout(() => {
+				abort(new Error("Read timed out"))
+			}, timeout)
 
 			let size = 0
 			const chunks = [] as Buffer[]
@@ -44,7 +46,9 @@ export function readStreamToBuffer(stream: Fs.ReadStream | Http.IncomingMessage,
 				}
 			})
 
-			stream.once("error", err => bad(err))
+			stream.once("error", err => {
+				bad(err)
+			})
 			stream.once("end", complete)
 		} catch(e){
 			bad(e)

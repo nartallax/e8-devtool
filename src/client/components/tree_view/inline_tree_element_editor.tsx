@@ -40,7 +40,9 @@ export const InlineTreeElementEditor = ({
 		const hasError = !value || !!resolvedValidators?.find(x => !!x(value))
 		if(hasError){
 			setShaking(x => x + 1)
-			setTimeout(() => setShaking(x => x - 1), 300)
+			setTimeout(() => {
+				setShaking(x => x - 1)
+			}, 300)
 		} else {
 			onComplete(value)
 		}
@@ -79,7 +81,9 @@ export const InlineTreeElementEditor = ({
 			onKeyDown={onKeyDown}
 			onKeyUp={updateValue}
 			onPaste={updateValue}
-			onBlur={() => onComplete(null)}
+			onBlur={() => {
+				onComplete(null)
+			}}
 			ref={ref}
 		/>
 	)

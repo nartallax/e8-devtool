@@ -9,8 +9,8 @@ export type TreeViewProps<L, B> = Omit<TreeBranchChildrenProps<L, B>, "squares" 
 	controlRef?: MutableRefObject<TreeControls | null>
 	onLabelEdit?: (path: ForestPath, newLabel: string, node: Tree<L, B>) => void
 	onLabelEditCancel?: (path: ForestPath, node: Tree<L, B>) => void
-	onDelete?: (path: ForestPath, node: Tree<L, B>) => void
-	onDrag?: (from: ForestPath, to: ForestPath) => void
+	onDelete?: (path: ForestPath, node: Tree<L, B>) => void | Promise<void>
+	onDrag?: (from: ForestPath, to: ForestPath) => void | Promise<void>
 	/** Allows to control if @param child can be dragged to be child of @param parent. Defaults to () => true. */
 	canBeChildOf?: (child: Tree<L, B>, parent: TreeBranch<L, B> | null) => boolean
 }
@@ -45,7 +45,7 @@ export const TreeView = <L, B>({
 
 	const onNodeDelete = useCallback((path: ForestPath, tree: Tree<L, B>) => {
 		setInlineEditPath(null) // just to avoid weird state
-		onDelete?.(path, tree)
+		void onDelete?.(path, tree)
 	}, [onDelete])
 
 	if(controlRef){

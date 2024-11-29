@@ -53,7 +53,7 @@ export const [ModelDisplayContextProvider, useModelDisplayContext] = defineConte
 			}))
 		}, [setModel])
 
-		const getShapes = useCallback(() => shapesRef.current!, [shapesRef])
+		const getShapes = useCallback(() => shapesRef.current, [shapesRef])
 		const workbenchRef = useRef<WorkbenchContextValue | null>(null)
 		const resetPosition = useCallback(() => {
 			workbenchRef?.current?.resetPosition()

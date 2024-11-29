@@ -13,7 +13,9 @@ type Props = {
 	pointerEventToWorkbenchCoords: (e: AnyPointerEvent, zoom?: number) => {x: number, y: number}
 }
 
-export const useWorkbenchInputProps = ({setBenchState, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax}: Props) => {
+export const useWorkbenchInputProps = ({
+	setBenchState, pointerEventToWorkbenchCoords, zoomSpeed, zoomMin, zoomMax
+}: Props) => {
 	const wheelHandler = useCallback((e: React.WheelEvent | WheelEvent) => {
 		setBenchState(({x, y, zoom}) => {
 			const mult = 1 + (e.deltaY < 0 ? 1 : -1) * zoomSpeed

@@ -34,7 +34,9 @@ export const Button = ({
 		onClick?.(e)
 		if(clickRepeatTimeout > 0){
 			setDisabledByTimeoutCount(count => count + 1)
-			setTimeout(() => setDisabledByTimeoutCount(count => count - 1), 250)
+			setTimeout(() => {
+				setDisabledByTimeoutCount(count => count - 1)
+			}, 250)
 		}
 	}, [onClick, clickRepeatTimeout])
 

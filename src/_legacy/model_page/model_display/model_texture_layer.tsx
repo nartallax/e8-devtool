@@ -24,8 +24,12 @@ export const ModelTextureLayer = () => {
 				height: naturalSize.height,
 				transform: `translate(-50%, -50%) scale(${widthRatio}, ${heightRatio}) translate(${naturalSize.width / 2}px, ${naturalSize.height / 2}px)`
 			}}
-			onMouseDown={e => e.preventDefault()}
-			onTouchStart={e => e.preventDefault()}
+			onMouseDown={e => {
+				e.preventDefault()
+			}}
+			onTouchStart={e => {
+				e.preventDefault()
+			}}
 			onLoad={e => {
 				const img = e.target
 				if(img instanceof HTMLImageElement){

@@ -47,15 +47,21 @@ export const LayersModal = ({
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(path)}>
+			<Form onSubmit={() => {
+				onClose(path)
+			}}>
 				<Col gap stretch grow>
 					<StringForestView
 						{...forestProps}
 						itemName="layer"
 						selectedPath={path}
 						setSelectedPath={setPath}
-						onItemClick={path => ifTypeIsRight(path, () => setPath(path))}
-						onItemDoubleclick={path => ifTypeIsRight(path, () => onClose(path))}
+						onItemClick={path => ifTypeIsRight(path, () => {
+							setPath(path)
+						})}
+						onItemDoubleclick={path => ifTypeIsRight(path, () => {
+							onClose(path)
+						})}
 						getItemSublabel={path => !layerMap ? "" : `(${layerMap.get(path)?.type ?? "???"})`}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>

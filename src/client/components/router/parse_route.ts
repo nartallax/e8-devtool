@@ -45,7 +45,7 @@ export const matchRoutes = (
 		const newNonMatchedUrl = stripUsedRouteParts(newRoute, nonMatchedUrl)
 		const newMatchedUrl = appendUsedRouteParts(newRoute, newArgs, matchedUrl)
 
-		if(resultMatchedUrl && (resultMatchedUrl + "").length > (newMatchedUrl + "").length){
+		if(resultMatchedUrl && (resultMatchedUrl.toString()).length > (newMatchedUrl.toString()).length){
 			continue
 		}
 

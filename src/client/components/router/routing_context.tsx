@@ -23,7 +23,7 @@ export const [RoutingContextProvider, useRoutingContext] = defineContext({
 
 export const RootRoutingContextProvider = ({children}: PropsWithChildren) => {
 	const nonMatchedUrl = useLocation()
-	const matchedUrl = new URL("/", window.location + "")
+	const matchedUrl = new URL("/", window.location.toString())
 	const beforeNavigationHandlers = useRef(new Set<NavHandler>()).current
 
 	const navigate = useCallback(async(newLocation: URL) => {

@@ -17,7 +17,9 @@ type Props<T> = FormInputProps<T | null> & {
 	onChange: (value: T) => void
 }
 
-export function SelectField<T>({options, value, onChange: setValue, ...props}: Props<T>) {
+export function SelectField<T>({
+	options, value, onChange: setValue, ...props
+}: Props<T>) {
 	const ref = useRef<HTMLSelectElement | null>(null)
 
 	// option values could be anything, possibly non-string and even non-serializable
@@ -48,14 +50,14 @@ export function SelectField<T>({options, value, onChange: setValue, ...props}: P
 		<FormField id={id} onLabelClick={() => ref.current?.focus()}>
 			<select
 				className={cn(css.select, {[css.hasError!]: hasError})}
-				value={optionValueToId.get(value)!}
+				value={optionValueToId.get(value)}
 				onChange={onChange}
 				ref={ref}>
 				{options.map(option => {
 					const id = optionValueToId.get(option.value)!
 					return <option key={id} value={id}>{option.label}</option>
 				})}
-				<option key='null' hidden value={optionValueToId.get(null)!}/>
+				<option key='null' hidden value={optionValueToId.get(null)}/>
 			</select>
 		</FormField>
 	)

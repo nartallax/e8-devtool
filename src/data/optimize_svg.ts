@@ -2,14 +2,15 @@ import * as XmlJs from "xml-js"
 
 const floatAccuracy = 4
 
+// TODO: remove this, it is in e8 now
 export function optimizeSvg(srcSvgText: string, path: string): {svg: string, width: number, height: number} {
 	const dom = XmlJs.xml2js(srcSvgText, {compact: false}) as XmlJs.Element
 	stripNode(dom)
 	const svgAttrs = getSvgFromDom(dom).attributes ?? {}
-	const width = parseFloat(svgAttrs["width"] + "")
-	const height = parseFloat(svgAttrs["height"] + "")
+	const width = parseFloat(svgAttrs.width + "")
+	const height = parseFloat(svgAttrs.height + "")
 	if(Number.isNaN(width) || Number.isNaN(height)){
-		throw new Error(`SVG at ${path} has weird width/height: ${svgAttrs["width"]}/${svgAttrs["height"]}`)
+		throw new Error(`SVG at ${path} has weird width/height: ${svgAttrs.width}/${svgAttrs.height}`)
 	}
 	return {svg: XmlJs.js2xml(dom), width, height}
 }
@@ -20,9 +21,9 @@ export function setSvgPosition(srcSvgText: string, xy: {x: number, y: number}): 
 	const dom = XmlJs.xml2js(srcSvgText, {compact: false}) as XmlJs.Element
 	const svg = getSvgFromDom(dom)
 
-	const attrs = svg.attributes || {}
-	attrs["x"] = tryFixFloatForSvg(xy.x)
-	attrs["y"] = tryFixFloatForSvg(xy.y)
+	const attrs = svg.attributes ?? {}
+	attrs.x = tryFixFloatForSvg(xy.x)
+	attrs.y = tryFixFloatForSvg(xy.y)
 	svg.attributes = attrs
 	return XmlJs.js2xml(dom)
 }
@@ -53,8 +54,8 @@ function stripNode(node: XmlJs.Element): void {
 	}
 
 	if(node.type === "element" && node.attributes){
-		if(node.name === "path" && node.attributes["d"]){
-			node.attributes["d"] = optimizePath(node.attributes["d"] + "")
+		if(node.name === "path" && node.attributes.d){
+			node.attributes.d = optimizePath(node.attributes.d + "")
 		}
 		for(const attrName of numericAttrs){
 			if(attrName in node.attributes){

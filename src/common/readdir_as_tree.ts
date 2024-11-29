@@ -7,7 +7,7 @@ export async function readdirAsTree(dir: string, shouldOmit?: (fullPath: string)
 	const entries = await Fs.readdir(dir)
 	return (await Promise.all(entries.map(async entry => {
 		const fullPath = Path.resolve(dir, entry)
-		if(shouldOmit && shouldOmit(fullPath)){
+		if(shouldOmit?.(fullPath)){
 			return null
 		}
 		const stat = await Fs.stat(fullPath)

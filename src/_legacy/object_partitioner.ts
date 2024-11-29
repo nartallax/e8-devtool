@@ -69,7 +69,7 @@ export class ObjectPartitioner<T> {
 			throw new Error(`File ${filename} cannot be both rest file and non-rest file`)
 		}
 		if(this.restFile !== null){
-			throw new Error(`Cannot assign ${filename} as rest file: already have rest file, ${this.restFile}`)
+			throw new Error(`Cannot assign ${filename} as rest file: already have rest file, ${this.restFile[0]}`)
 		}
 		this.restFile = [filename, serializer ?? this.jsonSerializer]
 		return this
@@ -110,7 +110,7 @@ export class ObjectPartitioner<T> {
 			return serializer.deserialize(data)
 		}))
 
-		return parts.reduce((a, b) => ({...a, ...b}), {} as Partial<T>) as T
+		return parts.reduce<Partial<T>>((a, b) => ({...a, ...b}), {}) as T
 	}
 
 	async readField<K extends keyof T>(directoryPath: string, field: K): Promise<T[K]> {

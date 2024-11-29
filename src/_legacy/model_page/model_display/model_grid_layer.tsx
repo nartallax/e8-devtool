@@ -49,7 +49,9 @@ type LinesProps = BaseProps & {
 	step?: number
 }
 
-const Lines = ({start = 0, end, step = 1, ...props}: LinesProps): React.ReactNode[] => {
+const Lines = ({
+	start = 0, end, step = 1, ...props
+}: LinesProps): React.ReactNode[] => {
 	const lines: React.ReactNode[] = []
 	const keyBase = `${props.isHorisontal ? "h" : "v"}-`
 	const limit = (end / 2) + 0.001 // that damn machine error on repeated float operations
@@ -70,7 +72,9 @@ type LineProps = BaseProps & {
 	offset: number
 }
 
-const Line = ({isHorisontal, isThick, height, width, offset}: LineProps) => {
+const Line = ({
+	isHorisontal, isThick, height, width, offset
+}: LineProps) => {
 	const thickness = isThick ? 0.01 : 0.005
 	const centralBump = offset === 0 ? 0.1 : 0
 	if(isHorisontal){

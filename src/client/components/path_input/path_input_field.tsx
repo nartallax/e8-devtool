@@ -43,7 +43,11 @@ export const PathInputField = ({
 	}, [pathPrefix, forest, onChange])
 
 	return (
-		<FormField id={id} onLabelClick={() => setSelectionModalOpen(true)}>
+		<FormField
+			id={id}
+			onLabelClick={() => {
+				setSelectionModalOpen(true)
+			}}>
 			{isSelectionModalOpen && forest && <PathSelectionModal
 				pathSeparator={pathSeparator}
 				forest={forest}
@@ -60,7 +64,9 @@ export const PathInputField = ({
 				value={value}
 				onChange={onChange}
 				icon={!forest ? undefined : Icon.filesystem}
-				onIconClick={() => setSelectionModalOpen(true)}
+				onIconClick={() => {
+					setSelectionModalOpen(true)
+				}}
 			/>
 		</FormField>
 	)
@@ -98,7 +104,9 @@ export const PathSelectionModal = ({
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(path)}>
+			<Form onSubmit={() => {
+				onClose(path)
+			}}>
 				<Col gap stretch grow>
 					<StringForestView
 						makePath={(parts, isPrefix) => parts.join(pathSeparator) + (isPrefix ? pathSeparator : "")}

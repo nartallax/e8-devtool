@@ -21,7 +21,9 @@ type Props<T> = {
 	onClose: (result?: T) => void
 }
 
-export function ChoiceModal<T>({header, body, options, onClose}: Props<T>) {
+export function ChoiceModal<T>({
+	header, body, options, onClose
+}: Props<T>) {
 	return (
 		<Modal header={header} hotkeyPriority={ModalHotkeyPriority.alert}>
 			<Col gap align="center" padding>
@@ -38,7 +40,9 @@ export function ChoiceModal<T>({header, body, options, onClose}: Props<T>) {
 							key={option.text}
 							text={option.text}
 							icon={option.icon}
-							onClick={() => onClose(option.value)}
+							onClick={() => {
+								onClose(option.value)
+							}}
 							hotkey={option.hotkey}
 						/>
 					))}
@@ -51,7 +55,9 @@ export function ChoiceModal<T>({header, body, options, onClose}: Props<T>) {
 const emptyProps: Props<any> & {isOpen: boolean} = {
 	header: "Warning",
 	body: null,
-	onClose: () => {},
+	onClose: () => {
+		// nothing here
+	},
 	options: [],
 	isOpen: false
 }
@@ -79,8 +85,12 @@ export const [ChoiceModalProvider, useChoiceModal] = defineContext({
 			return showChoiceModal({
 				...props,
 				options: [
-					{text: "Cancel", value: false, hotkey: e => e.code === "Escape", icon: Icon.close},
-					{text: "OK", value: true, hotkey: e => e.code === "Enter", icon: Icon.check}
+					{
+						text: "Cancel", value: false, hotkey: e => e.code === "Escape", icon: Icon.close
+					},
+					{
+						text: "OK", value: true, hotkey: e => e.code === "Enter", icon: Icon.check
+					}
 				]
 			})
 		}, [showChoiceModal])

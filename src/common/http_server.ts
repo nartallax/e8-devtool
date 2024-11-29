@@ -1,12 +1,13 @@
 import * as Http from "http"
 import * as Path from "path"
 import * as Fs from "fs"
-import {errToStack} from "common/err_to_string"
+import {errToString} from "common/err_to_string"
 import {isPathInsidePath} from "common/is_path_inside_path"
 import {httpGet} from "common/http_request"
 import {isEnoent} from "common/is_enoent"
 import {readStreamToBuffer} from "common/read_stream_to_buffer"
 import * as MimeTypes from "mime-types"
+import {logError} from "common/log"
 
 export interface HttpStaticRoute {
 	/** URL (in case of proxy) or path (in case of filesystem directory) is expected */
@@ -65,30 +66,40 @@ export class HttpServer {
 	}
 
 	stop(): Promise<void> {
-		return new Promise((ok, bad) => this.server.close(err => err ? bad(err) : ok()))
+		return new Promise((ok, bad) => this.server.close(err => {
+			if(err){
+				bad(err)
+			} else {
+				ok()
+			}
+		}))
 	}
 
 	private async processRequest(req: Http.IncomingMessage, res: Http.ServerResponse): Promise<void> {
 		try {
-			req.on("error", err => console.error("Error on HTTP request: " + errToStack(err)))
-			res.on("error", err => console.error("Error on HTTP response: " + errToStack(err)))
+			req.on("error", err => {
+				console.error("Error on HTTP request: " + errToString(err))
+			})
+			res.on("error", err => {
+				console.error("Error on HTTP response: " + errToString(err))
+			})
 
-			const method = (req.method || "").toUpperCase()
+			const method = (req.method ?? "").toUpperCase()
 			if(!method){
-				return await endRequest(res, 400, "Where Is The Method Name You Fucker")
+				await endRequest({res, code: 400, codeStr: "Where Is The Method Name You Fucker"}); return
 			}
 
-			const urlStr = req.url || "/"
+			const urlStr = req.url ?? "/"
 			const hostHeader = req.headers.host
 			if(!hostHeader){
-				return await endRequest(res, 400, "Where Is The Host Header I Require It To Be Present")
+				await endRequest({res, code: 400, codeStr: "Where Is The Host Header I Require It To Be Present"}); return
 			}
 			const url = new URL(urlStr, "http://localhost")
 			const path = url.pathname
 
 			if(path.startsWith(this.opts.apiRoot)){
 				if(method !== "GET" && method !== "POST" && method !== "PUT"){
-					await endRequest(res, 405, "Your HTTP Method Name Sucks")
+					await endRequest({res, code: 405, codeStr: "Your HTTP Method Name Sucks"})
 				}
 				await this.processApiRequest(url, req, res)
 			} else {
@@ -97,13 +108,15 @@ export class HttpServer {
 						await this.processStaticRequest(path, res)
 						return
 					default:
-						await endRequest(res, 400, "What The Fuck Do You Want From Me")
+						await endRequest({res, code: 400, codeStr: "What The Fuck Do You Want From Me"})
 						return
 				}
 			}
 		} catch(e){
-			console.error(errToStack(e))
-			await endRequest(res, 500, "We Fucked Up", "UwU")
+			logError(e)
+			await endRequest({
+				res, code: 500, codeStr: "We Fucked Up", body: "UwU"
+			})
 		}
 	}
 
@@ -118,7 +131,7 @@ export class HttpServer {
 
 		const route = this.opts.static[longestMatchingPrefix]
 		if(route === undefined){
-			await endRequest(res, 404, "No Such Directory Or Path Or Whatever")
+			await endRequest({res, code: 404, codeStr: "No Such Directory Or Path Or Whatever"})
 			return
 		}
 
@@ -183,7 +196,7 @@ export class HttpServer {
 			await waitRequestEnd(res)
 		} catch(e){
 			if(isEnoent(e)){
-				await endRequest(res, 404, "No Such File You Fool")
+				await endRequest({res, code: 404, codeStr: "No Such File You Fool"})
 			} else {
 				throw e
 			}
@@ -195,16 +208,19 @@ export class HttpServer {
 		const methodName = url.pathname.substring(this.opts.apiRoot.length)
 		const apiMethod = Object.hasOwn(this.opts.apiMethods, methodName) ? this.opts.apiMethods[methodName] : null
 		if(!apiMethod){
-			return await endRequest(res, 404, "Unknown API method")
+			await endRequest({res, code: 404, codeStr: "Unknown API method"}); return
 		}
 
 		const body = await readStreamToBuffer(req, this.opts.inputSizeLimit, this.opts.readTimeoutSeconds * 1000)
 
 		try {
 			const callResult = await Promise.resolve(apiMethod(body))
-			await endRequest(res, 200, "OK", callResult)
+			await endRequest({
+				res, code: 200, codeStr: "OK", body: callResult
+			})
 		} catch(e){
-			await endRequest(res, 500, "Server Error")
+			logError(e)
+			await endRequest({res, code: 500, codeStr: "Server Error"})
 		}
 	}
 
@@ -218,7 +234,9 @@ function waitRequestEnd(res: Http.ServerResponse): Promise<void> {
 	return new Promise(ok => res.end(ok))
 }
 
-function endRequest(res: Http.ServerResponse, code: number, codeStr: string, body: string | Buffer = "OwO", headers?: Record<string, string>): Promise<void> {
+function endRequest({
+	res, code, codeStr, body = "OwO", headers
+}: {res: Http.ServerResponse, code: number, codeStr: string, body?: string | Buffer, headers?: Record<string, string>}): Promise<void> {
 	return new Promise(ok => {
 		res.writeHead(code, codeStr, headers)
 		if(typeof(body) === "string"){
@@ -231,7 +249,11 @@ function endRequest(res: Http.ServerResponse, code: number, codeStr: string, bod
 
 function waitReadStreamToEnd(stream: Fs.ReadStream): Promise<void> {
 	return new Promise((ok, bad) => {
-		stream.on("error", e => bad(e))
-		stream.on("end", () => ok())
+		stream.on("error", e => {
+			bad(e)
+		})
+		stream.on("end", () => {
+			ok()
+		})
 	})
 }

@@ -29,14 +29,20 @@ export const InputGroupModal = ({path: value, onClose}: Props) => {
 			onClose={onClose}
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}>
-			<Form onSubmit={() => onClose(path)}>
+			<Form onSubmit={() => {
+				onClose(path)
+			}}>
 				<Col gap grow align="stretch">
 					<StringForestView
 						itemName="input group"
 						selectedPath={path}
 						setSelectedPath={setPath}
-						onItemClick={path => setPath(path)}
-						onItemDoubleclick={path => onClose(path)}
+						onItemClick={path => {
+							setPath(path)
+						}}
+						onItemDoubleclick={path => {
+							onClose(path)
+						}}
 						{...forestProps}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>

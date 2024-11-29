@@ -5,6 +5,7 @@ import {defineContext} from "client/ui_utils/define_context"
 import {SetState} from "client/ui_utils/react_types"
 import {ApiClient} from "common/api_client_base"
 import {ApiError} from "common/api_response"
+import {errToString} from "common/err_to_string"
 import {UUID, getRandomUUID} from "common/uuid"
 import {ProjectCollisionGroup, ProjectConfig, ProjectInputBind, ProjectInputGroup, ProjectLayer, ProjectModel, ProjectParticle} from "data/project"
 import {SvgTextureFile} from "data/project_to_resourcepack/atlas_building_utils"
@@ -75,7 +76,7 @@ const apiErrorToastId = getRandomUUID()
 const [_ApiProvider, useApiContext] = defineContext({
 	name: "ApiContext",
 	useValue: () => {
-	  const {addToast} = useToastContext()
+		const {addToast} = useToastContext()
 		const client = useMemo(() => {
 			return new DevtoolApiClient(error => {
 				addToast({
@@ -127,9 +128,9 @@ export function useAsyncCall(...args: unknown[]): [unknown, SetState<unknown>, M
 				setResult(callResult)
 				setMiscResult({isLoaded: true, isError: false})
 			},
-			error => {
+			(error: unknown) => {
 				setMiscResult({isLoaded: true, isError: true})
-				console.error(error)
+				console.error(errToString(error))
 				// FIXME: toaster here?
 			}
 		)

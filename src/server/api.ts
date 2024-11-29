@@ -1,7 +1,7 @@
 import {DevtoolActions} from "server/actions"
 import {DirectoryController} from "server/tree_fs/directory_controller"
 
-export async function getApi(actions: DevtoolActions): Promise<Record<string, (...args: any[]) => unknown>> {
+export const getApi = (actions: DevtoolActions): Record<string, (...args: any[]) => unknown> => {
 
 	const generateResourcePack = async(): Promise<void> => {
 		await actions.produceEverything()

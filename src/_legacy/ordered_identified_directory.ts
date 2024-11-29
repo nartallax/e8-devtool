@@ -67,7 +67,9 @@ export class OrderedIdentifiedDirectory<T extends {id: UUID} = {id: UUID}> {
 	}
 
 	async deleteNode(relPath: string): Promise<void> {
-		await this.dir.deleteNode(relPath, relPath => this.idPathMap.deleteB(relPath))
+		await this.dir.deleteNode(relPath, relPath => {
+			this.idPathMap.deleteB(relPath)
+		})
 		await this.callAfterModify({valueType: "treeOrItem", path: relPath})
 	}
 

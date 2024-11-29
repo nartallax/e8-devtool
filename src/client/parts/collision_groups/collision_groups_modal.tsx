@@ -33,18 +33,33 @@ export const CollisionGroupsModal = ({path: initialPath, onClose}: Props) => {
 			contentWidth={["300px", "50vw", "600px"]}
 			contentHeight={["300px", "50vh", "800px"]}
 			onClose={onClose}>
-			<Form onSubmit={() => onClose(path)}>
+			<Form onSubmit={() => {
+				onClose(path)
+			}}>
 				<Col gap stretch grow>
-					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => setCollisionGridOpen(false)}/>}
+					{!!isCollisonGridOpen && <CollisionGridModal onClose={() => {
+						setCollisionGridOpen(false)
+					}}
+					/>}
 					<StringForestView
 						{...forestProps}
 						itemName="collision group"
 						selectedPath={path}
 						setSelectedPath={setPath}
-						onItemClick={path => setPath(path)}
-						onItemDoubleclick={path => onClose(path)}
+						onItemClick={path => {
+							setPath(path)
+						}}
+						onItemDoubleclick={path => {
+							onClose(path)
+						}}
 						buttons={() => (
-							<Button text="Collision grid" icon={Icon.wrench} onClick={() => setCollisionGridOpen(true)}/>
+							<Button
+								text="Collision grid"
+								icon={Icon.wrench}
+								onClick={() => {
+									setCollisionGridOpen(true)
+								}}
+							/>
 						)}
 					/>
 					<ModalSubmitCancelButtons onCancel={onClose}/>

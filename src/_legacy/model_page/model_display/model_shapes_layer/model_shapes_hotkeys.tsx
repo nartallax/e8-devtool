@@ -1,6 +1,6 @@
+import {useModelDisplayContext} from "_legacy/model_page/model_display/model_display_context"
 import {Hotkey} from "client/components/hotkey_context/hotkey_context"
 import {isArrowKeypress, isRedoKeypress, isUndoKeypress} from "client/components/hotkey_context/hotkey_utils"
-import {useModelDisplayContext} from "client/parts/model_page/model_display/model_display_context"
 import {PropsWithChildren} from "react"
 
 export const ModelShapesHotkeys = ({children}: PropsWithChildren) => {
@@ -21,6 +21,7 @@ export const ModelShapesHotkeys = ({children}: PropsWithChildren) => {
 			case "ArrowRight": x += step; break
 			case "ArrowUp": y -= step; break
 			case "ArrowDown": y += step; break
+			default: // pass through
 		}
 		updateShapes(shapes => shapes.map(shape => shape.id !== movingPointState.shapeId ? shape : {
 			...shape,
@@ -37,10 +38,14 @@ export const ModelShapesHotkeys = ({children}: PropsWithChildren) => {
 	return (
 		<Hotkey
 			shouldPick={e => isUndoKeypress(e) && shapesStateStack.canUndo()}
-			onPress={() => updateShapes(() => shapesStateStack.undo())}>
+			onPress={() => {
+				updateShapes(() => shapesStateStack.undo())
+			}}>
 			<Hotkey
 				shouldPick={e => isRedoKeypress(e) && shapesStateStack.canRedo()}
-				onPress={() => updateShapes(() => shapesStateStack.redo())}>
+				onPress={() => {
+					updateShapes(() => shapesStateStack.redo())
+				}}>
 				<Hotkey
 					shouldPick={e => e.key === "Delete" && selectedShapeId !== null}
 					onPress={() => {

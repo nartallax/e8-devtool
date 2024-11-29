@@ -71,13 +71,17 @@ export function StringForestIdSelector<V extends {id: UUID}>({
 
 	return (
 		<>
-			{!!isOpen && (value === null || path !== null) && modal(path!, onClose)}
+			{!!isOpen && (value === null || path !== null) && modal(path, onClose)}
 			<ValueSelectorField
 				{...props}
 				value={value!}
 				displayValue={name}
-				onRequestValueChange={() => setOpen(true)}
-				onClear={!isNullable ? undefined : () => onChange(null)}
+				onRequestValueChange={() => {
+					setOpen(true)
+				}}
+				onClear={!isNullable ? undefined : () => {
+					onChange(null)
+				}}
 			/>
 		</>
 	)

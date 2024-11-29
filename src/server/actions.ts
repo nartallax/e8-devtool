@@ -44,6 +44,10 @@ export const getActions = async(cli: CLIArgs) => {
 	}
 
 	const produceResourcePack = async() => {
+		await new Promise<void>(ok => {
+			// just to keep the function async
+			ok()
+		})
 		throw new Error("Not implemented")
 		// const config = await actions.getProjectConfig()
 		// const resourcePack = await projectToResourcePack(actions)

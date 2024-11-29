@@ -36,6 +36,7 @@ export const GlobalHotkeyManager = ({children}: PropsWithChildren) => {
 				try {
 					await saveAllSaveableQueries()
 				} catch(e){
+					void e
 					// if there was an error - it was api error and there's a toast already
 					// so all that's left is to remove ours
 					removeToast(savingToastId)

@@ -31,7 +31,9 @@ const calcOffsetDimension = (isHorisontal: boolean, anchorCorner: Corner, overla
 	}
 }
 
-export const OverlayItem = ({overlayCorner = "top-left", anchorCorner = "bottom-left", item, isVisible, children, ...props}: PropsWithChildren<Props>) => {
+export const OverlayItem = ({
+	overlayCorner = "top-left", anchorCorner = "bottom-left", item, isVisible, children, ...props
+}: PropsWithChildren<Props>) => {
 	const style = {
 		...calcOffsetDimension(true, anchorCorner, overlayCorner),
 		...calcOffsetDimension(false, anchorCorner, overlayCorner)

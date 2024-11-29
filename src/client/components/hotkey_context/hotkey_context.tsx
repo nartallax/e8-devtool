@@ -37,7 +37,7 @@ const onWindowKeyDown = (e: KeyboardEvent) => {
 	const highestPriority = activeRoots.map(x => x.priority).reduce((a, b) => Math.max(a, b), 0)
 	const selectedRoots = activeRoots.filter(x => x.priority === highestPriority)
 
-	const handlers = selectedRoots.flatMap(x => x.getHandlers()).filter(x => x.shouldPick && x.shouldPick(e))
+	const handlers = selectedRoots.flatMap(x => x.getHandlers()).filter(x => x.shouldPick?.(e))
 	for(const handler of handlers){
 		handler.onPress(e)
 	}

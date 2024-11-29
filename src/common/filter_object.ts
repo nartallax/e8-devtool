@@ -4,7 +4,7 @@ export function filterObject<K extends string, V>(map: Record<K, V>, predicate: 
 export function filterObject<K extends string, V>(map: Record<K, V>, predicate: (k: K, v: V) => boolean): Partial<Record<K, V>> {
 	const result: Partial<Record<K, V>> = {}
 	for(const key in map){
-		const value = map[key]!
+		const value = map[key]
 		if(predicate(key, value)){
 			result[key] = value
 		}

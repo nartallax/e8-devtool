@@ -18,7 +18,9 @@ type Props = {
 
 export type WorkbenchPositionState = {x: number, y: number, zoom: number}
 
-export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSpeed = 0.25, width, height, children, contextRef}: PropsWithChildren<Props>) => {
+export const Workbench = ({
+	minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSpeed = 0.25, width, height, children, contextRef
+}: PropsWithChildren<Props>) => {
 	const [benchState, _setBenchState] = useState({x: (-width / 2) / initialZoom, y: (-height / 2) / initialZoom, zoom: initialZoom})
 	const rootRef = useRef<HTMLDivElement | null>(null)
 	const {x, y, zoom} = benchState
@@ -65,7 +67,9 @@ export const Workbench = ({minZoom = 0.25, maxZoom = 10, initialZoom = 1, zoomSp
 		resetPosition()
 	}, [resetPosition, width, height])
 
-	const inputProps = useWorkbenchInputProps({setBenchState: updateBenchState, zoomMin: minZoom, zoomMax: maxZoom, zoomSpeed, pointerEventToWorkbenchCoords})
+	const inputProps = useWorkbenchInputProps({
+		setBenchState: updateBenchState, zoomMin: minZoom, zoomMax: maxZoom, zoomSpeed, pointerEventToWorkbenchCoords
+	})
 
 	return (
 		<WorkbenchContextProvider

@@ -1,3 +1,5 @@
+import {anyToString} from "common/any_to_string"
+
 /** Map that maps a pair of unique values to each other
 Can get either one by other one for O(1) */
 export class DualMap<A, B> {
@@ -23,7 +25,7 @@ export class DualMap<A, B> {
 	getA(b: B): A {
 		const result = this.btoa.get(b)
 		if(!result){
-			throw new Error(`No mapping for ${b}`)
+			throw new Error(`No mapping for ${anyToString(b)}`)
 		}
 		return result
 	}
@@ -31,7 +33,7 @@ export class DualMap<A, B> {
 	getB(a: A): B {
 		const result = this.atob.get(a)
 		if(!result){
-			throw new Error(`No mapping for ${a}`)
+			throw new Error(`No mapping for ${anyToString(a)}`)
 		}
 		return result
 	}

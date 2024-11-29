@@ -33,7 +33,7 @@ export class StateStack<T, M = never> {
 	}
 
 	peekMeta(): M | undefined {
-		return this.states[this.statePointer!]!.meta
+		return this.states[this.statePointer]!.meta
 	}
 
 	canUndo(): boolean {

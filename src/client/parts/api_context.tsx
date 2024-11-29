@@ -53,7 +53,7 @@ const apiErrorToastId = getRandomUUID()
 const [_ApiProvider, useApiContext] = defineContext({
 	name: "ApiContext",
 	useValue: () => {
-	  const {addToast} = useToastContext()
+		const {addToast} = useToastContext()
 		const client = useMemo(() => {
 			return new DevtoolApiClient(error => {
 				addToast({
@@ -105,7 +105,7 @@ export function useAsyncCall(...args: unknown[]): [unknown, SetState<unknown>, M
 				setResult(callResult)
 				setMiscResult({isLoaded: true, isError: false})
 			},
-			error => {
+			(error: unknown) => {
 				setMiscResult({isLoaded: true, isError: true})
 				console.error(error)
 				// FIXME: toaster here?

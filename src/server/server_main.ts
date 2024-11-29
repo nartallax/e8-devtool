@@ -6,6 +6,7 @@ import * as open from "open"
 import {getCliArgs} from "server/cli"
 import {getActions} from "server/actions"
 import {batchJsonApiCalls} from "server/batcher"
+import {errToString} from "common/err_to_string"
 
 // TODO: forbid parcel to auto-install browser implementations for node APIs and modules
 // (I sometimes import them on accident, then remove them, but the installed module stays there, which sucks)
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
 		inputSizeLimit: 8 * 1024 * 1024,
 		readTimeoutSeconds: 180,
 		apiRoot: "/api/",
-		apiMethods: batchJsonApiCalls(await getApi(actions))
+		apiMethods: batchJsonApiCalls(getApi(actions))
 	})
 
 	const addr = await server.start()
@@ -46,7 +47,7 @@ async function mainWrapped(): Promise<void> {
 	try {
 		await main()
 	} catch(e){
-		console.error(e instanceof Error ? e.stack : e + "")
+		console.error(errToString(e))
 		Process.exit(1)
 	}
 }

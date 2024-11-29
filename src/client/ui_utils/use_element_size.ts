@@ -8,7 +8,7 @@ const zeroRect: WH = {
 }
 
 export const useElementSize = (ref: RefObject<HTMLElement | null>): WH => {
-	const [rect, setRect] = useState(ref.current?.isConnected ? ref.current!.getBoundingClientRect() : {...zeroRect})
+	const [rect, setRect] = useState(ref.current?.isConnected ? ref.current.getBoundingClientRect() : {...zeroRect})
 
 	useEffect(() => {
 		const el = ref.current
@@ -26,7 +26,9 @@ export const useElementSize = (ref: RefObject<HTMLElement | null>): WH => {
 		})
 
 		observer.observe(el)
-		return () => observer.disconnect()
+		return () => {
+			observer.disconnect()
+		}
 	}, [ref])
 
 	return rect

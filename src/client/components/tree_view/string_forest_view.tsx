@@ -60,10 +60,18 @@ export const StringForestView = ({
 		getLeafLabel: str => str,
 		getBranchLabel: str => str,
 		itemName: "item",
-		onLeafClick: !onItemClick ? undefined : (_, path) => onItemClick(makePath(new Forest(trees).pathToValues(path), false), false),
-		onLeafDoubleclick: !onItemDoubleclick ? undefined : (_, path) => onItemDoubleclick(makePath(new Forest(trees).pathToValues(path), false), false),
-		onBranchClick: !onItemClick || !isBranchClickable ? undefined : (_, path) => onItemClick(makePath(new Forest(trees).pathToValues(path), true), true),
-		onBranchDoubleclick: !onItemDoubleclick || !isBranchClickable ? undefined : (_, path) => onItemDoubleclick(makePath(new Forest(trees).pathToValues(path), true), true),
+		onLeafClick: !onItemClick ? undefined : (_, path) => {
+			onItemClick(makePath(new Forest(trees).pathToValues(path), false), false)
+		},
+		onLeafDoubleclick: !onItemDoubleclick ? undefined : (_, path) => {
+			onItemDoubleclick(makePath(new Forest(trees).pathToValues(path), false), false)
+		},
+		onBranchClick: !onItemClick || !isBranchClickable ? undefined : (_, path) => {
+			onItemClick(makePath(new Forest(trees).pathToValues(path), true), true)
+		},
+		onBranchDoubleclick: !onItemDoubleclick || !isBranchClickable ? undefined : (_, path) => {
+			onItemDoubleclick(makePath(new Forest(trees).pathToValues(path), true), true)
+		},
 		selectedPath: selectedTreePath,
 		buttons,
 		getLeafSublabel: !getItemSublabel ? undefined : (_, path) => getItemSublabel(makePath(new Forest(trees).pathToValues(path), false)),
@@ -80,11 +88,21 @@ export const StringForestView = ({
 		innerProps = {
 			...innerProps,
 			itemName,
-			onLeafCreated: (name, path) => createNode({value: name}, path),
-			onBranchCreated: (name, path) => createNode({value: name, children: []}, path),
-			onDelete: (path, node) => deleteNode(node, path),
-			onDrag: (from, to) => moveNode(new Forest(trees).getTreeAt(from), from, to),
-			onRename: (path, name, node) => renameNode(node, path, name)
+			onLeafCreated: (name, path) => {
+				createNode({value: name}, path)
+			},
+			onBranchCreated: (name, path) => {
+				createNode({value: name, children: []}, path)
+			},
+			onDelete: (path, node) => {
+				deleteNode(node, path)
+			},
+			onDrag: (from, to) => {
+				moveNode(new Forest(trees).getTreeAt(from), from, to)
+			},
+			onRename: (path, name, node) => {
+				renameNode(node, path, name)
+			}
 		}
 
 		if(arePropsMutableSelectable(props)){

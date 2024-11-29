@@ -9,9 +9,9 @@ import {useCallback, useMemo, useRef, useState} from "react"
 
 export type TreeViewWithCreationProps<L, B> = Omit<SearchableTreeViewProps<L, B>, "onLabelEdit" | "onLabelEditCancel" | "onAddChild" | "controlRef"> & {
 	itemName?: string
-	onRename?: (path: ForestPath, newName: string, node: Tree<L, B>) => void
-	onLeafCreated?: (name: string, path: ForestPath) => void
-	onBranchCreated?: (name: string, path: ForestPath) => void
+	onRename?: (path: ForestPath, newName: string, node: Tree<L, B>) => void | Promise<void>
+	onLeafCreated?: (name: string, path: ForestPath) => void | Promise<void>
+	onBranchCreated?: (name: string, path: ForestPath) => void | Promise<void>
 	buttons?: () => React.ReactNode
 }
 
@@ -39,14 +39,14 @@ export const TreeViewWithElementCreation = <L, B>({
 
 	const onEdit = !onRename ? undefined : (path: ForestPath, newLabel: string, node: Tree<L, B>) => {
 		if(node !== createdNode?.node){
-			onRename(path, newLabel, node)
+			void onRename(path, newLabel, node)
 			return
 		}
 
 		if(isTreeBranch(node)){
-			onBranchCreated!(newLabel, path)
+			void onBranchCreated!(newLabel, path)
 		} else {
-			onLeafCreated!(newLabel, path)
+			void onLeafCreated!(newLabel, path)
 		}
 		setCreatedNode(null)
 	}
@@ -67,7 +67,7 @@ export const TreeViewWithElementCreation = <L, B>({
 	}
 
 	const addRenameBranch = !onBranchCreated ? undefined : () => {
-		return addRenameNode(true)
+		addRenameNode(true)
 	}
 	const addRenameLeaf = !onLeafCreated ? undefined : () => {
 		addRenameNode(false)
@@ -83,7 +83,7 @@ export const TreeViewWithElementCreation = <L, B>({
 		}
 		if(createdPath[path.length - 1]! < path[path.length - 1]!){
 			const newPath = [...path]
-			newPath[newPath.length - 1]--
+			newPath[newPath.length - 1]!--
 			path = newPath
 		}
 		return path

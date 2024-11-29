@@ -9,7 +9,11 @@ export const ToastDisplay = () => {
 		<div className={css.toastList}>
 			{activeToasts.map(toast => (
 				<Vanisher key={toast.id} retainPosition noStretch>
-					<div className={css.toast} onClick={() => removeToast(toast.id)}>
+					<div
+						className={css.toast}
+						onClick={() => {
+							removeToast(toast.id)
+						}}>
 						{toast.icon
 					&& <div className={cn(css.toastIcon, toast.icon, {
 						[css.isStepRotating!]: toast.isStepRotating

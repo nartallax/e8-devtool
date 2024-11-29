@@ -26,8 +26,10 @@ export const mergeUrls = (...urls: (URL | string)[]): URL => {
 
 		if(nextUrl.search){
 			const searchParams = new URLSearchParams(base.searchParams)
-			nextUrl.searchParams.forEach((value, key) => searchParams.set(key, value))
-			base = new URL(base.pathname + "?" + searchParams, base.origin)
+			nextUrl.searchParams.forEach((value, key) => {
+				searchParams.set(key, value)
+			})
+			base = new URL(base.pathname + "?" + searchParams.toString(), base.origin)
 		}
 	}
 

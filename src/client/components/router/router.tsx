@@ -2,6 +2,7 @@ import {RouteDefinition, RouteMatchingResult, matchRoutes} from "client/componen
 import {RoutingContextProvider, useRoutingContext} from "client/components/router/routing_context"
 import {Col} from "client/components/row_col/row_col"
 import {Vanisher} from "client/components/vanisher/vanisher"
+import {anyToString} from "common/any_to_string"
 import {useEffect, useRef, useState} from "react"
 
 
@@ -23,15 +24,15 @@ export const Router = ({routes, onMatchedUrlUpdate}: Props) => {
 			routes
 		})
 		const hasMatchChanged = (newRouteMatch === null) !== (routeMatch === null)
-		const matchedUrlChanged = (newRouteMatch?.matchedUrl + "") !== (routeMatch?.matchedUrl + "")
-		const nonMatchedUrlChanged = (newRouteMatch?.nonMatchedUrl + "") !== (routeMatch?.nonMatchedUrl + "")
+		const matchedUrlChanged = (anyToString(newRouteMatch?.matchedUrl)) !== (anyToString(routeMatch?.matchedUrl))
+		const nonMatchedUrlChanged = (anyToString(newRouteMatch?.nonMatchedUrl)) !== (anyToString(routeMatch?.nonMatchedUrl))
 		if(hasMatchChanged || matchedUrlChanged || nonMatchedUrlChanged || !everCalledUpdateHandler.current){
 			everCalledUpdateHandler.current = true
 			setRouteMatch(newRouteMatch)
 			onMatchedUrlUpdate?.(newRouteMatch?.matchedUrl ?? null)
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [oldNonMatchedUrl + "", oldMatchedUrl + "", routes])
+	}, [anyToString(oldNonMatchedUrl), anyToString(oldMatchedUrl), routes])
 
 
 	return !routeMatch ? null : (

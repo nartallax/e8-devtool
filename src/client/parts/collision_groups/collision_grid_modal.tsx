@@ -8,8 +8,6 @@ import {Form} from "client/components/form/form"
 import {ModalSubmitCancelButtons} from "client/parts/modal_buttons/modal_submit_cancel_buttons"
 import {Checkbox} from "client/components/checkbox/checkbox"
 import {getLastPathPart} from "data/project_utils"
-import {collisionGroupProvider, collisionPairsProvider} from "client/parts/data_providers/data_providers"
-import {UnsavedChanges} from "client/components/unsaved_changes_context/unsaved_changes_context"
 import {reverseMap} from "common/reverse_map"
 import {withDataLoaded} from "client/ui_utils/with_data_loaded"
 
@@ -79,7 +77,7 @@ export const CollisionGridModal = withDataLoaded(
 										(
 											<div className={css.topLabelContainer} key={group.id}>
 												<div className={css.topLabel}>
-													{getLastPathPart(groupPathById.get(group.id)!)}
+													{getLastPathPart(groupPathById.get(group.id))}
 												</div>
 											</div>
 										))}
@@ -87,7 +85,7 @@ export const CollisionGridModal = withDataLoaded(
 								{allGroups.map(groupA => (
 									<div className={css.row} key={groupA.id}>
 										<div key='name'>
-											{getLastPathPart(groupPathById.get(groupA.id)!)}
+											{getLastPathPart(groupPathById.get(groupA.id))}
 										</div>
 										{allGroups.map(groupB =>
 											(
@@ -118,7 +116,12 @@ type CheckboxProps = {
 const PairCheckbox = ({pair, map, onChange}: CheckboxProps) => {
 	return (
 		<div className={css.checkboxContainer}>
-			<Checkbox value={!!map.get(pair[0])?.has(pair[1])} onChange={isChecked => onChange(pair, isChecked)}/>
+			<Checkbox
+				value={!!map.get(pair[0])?.has(pair[1])}
+				onChange={isChecked => {
+					onChange(pair, isChecked)
+				}}
+			/>
 		</div>
 	)
 }
