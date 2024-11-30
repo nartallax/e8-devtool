@@ -14,7 +14,7 @@ import {errToString} from "common/err_to_string"
 
 async function main(): Promise<void> {
 	log("Starting...")
-	const cli = getCliArgs()
+	const cli = getCliArgs() // TODO: use cli's defineMain
 	const actions = await getActions(cli)
 
 	if(cli.generate){

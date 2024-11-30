@@ -107,9 +107,7 @@ const result = tseslint.config(
 			"template-tag-spacing": ["warn", "never"],
 			"unicode-bom": ["warn", "never"],
 			"yield-star-spacing": ["warn", "after"],
-			// it's taken care of by typescript in most cases
-			// and only ever triggers on `console` in build scripts, which is not useful
-			"no-undef": "off",
+			"no-undef": "off", // typescript will take care of this anyway
 			"dot-notation": "off",
 			"max-params": "off",
 			"no-array-constructor": "off",
