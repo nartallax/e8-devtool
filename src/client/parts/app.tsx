@@ -13,6 +13,7 @@ import {HotkeyProvider} from "client/components/hotkey_context/hotkey_context"
 import {ModalProviders} from "client/components/modal/modal_providers"
 import {SettingsPage} from "client/parts/settings_page/settings_page"
 import {useFsForest} from "client/data/fs_forest_provider"
+import {TableExample} from "client/components/table/table_example"
 
 export const App = () => (
 	<Providers>
@@ -68,7 +69,7 @@ const Content = () => {
 					{
 						suffix: "/",
 						text: "Assets",
-						render: () => "uwu",
+						render: () => <TableExample/>,
 						isDefault: true
 					},
 					{

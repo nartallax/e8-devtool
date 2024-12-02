@@ -3,11 +3,13 @@ import * as css from "./row_col.module.css"
 import {CSSProperties, PropsWithChildren} from "react"
 import {cn} from "client/ui_utils/classname"
 
-type Props = {
+export type RowColProps = {
 	padding?: DefaultableSideSize
 	margin?: DefaultableSideSize
 	shrink?: number | boolean
 	grow?: number | boolean
+	/** flex-basis */
+	basis?: number
 	/** Shorthand for align="stretch" */
 	stretch?: boolean
 	/** Shorthand for alignSelf="stretch" */
@@ -25,11 +27,12 @@ type Props = {
 
 const defaultBorder = "var(--default-border-width)"
 
-const propsToStyle = (props: Props): CSSProperties => ({
+export const rowColPropsToStyle = (props: RowColProps): CSSProperties => ({
 	padding: resolveDefaultableSideSize(props.padding),
 	margin: resolveDefaultableSideSize(props.margin),
 	flexShrink: resolveGrowValue(props.shrink),
 	flexGrow: resolveGrowValue(props.grow),
+	flexBasis: props.basis,
 	justifyContent: resolveFlexAlign(props.justify),
 	alignItems: resolveFlexAlign(props.align, props.stretch),
 	alignSelf: resolveFlexAlign(props.alignSelf, props.stretchSelf),
@@ -46,16 +49,16 @@ const resolveFlexAlign = (align?: string, stretch?: boolean): string | undefined
 	return (align === "start" || align === "end" ? "flex-" + align : align) ?? (stretch === true ? "stretch" : undefined)
 }
 
-export const Row = ({children, className, ...props}: PropsWithChildren<Props>) => {
-	return <div className={cn(css.row, className)} style={propsToStyle(props)}>{children}</div>
+export const Row = ({children, className, ...props}: PropsWithChildren<RowColProps>) => {
+	return <div className={cn(css.row, className)} style={rowColPropsToStyle(props)}>{children}</div>
 }
 
-export const Col = ({children, className, ...props}: PropsWithChildren<Props>) => {
-	return <div className={cn(css.col, className)} style={propsToStyle(props)}>{children}</div>
+export const Col = ({children, className, ...props}: PropsWithChildren<RowColProps>) => {
+	return <div className={cn(css.col, className)} style={rowColPropsToStyle(props)}>{children}</div>
 }
 
 export const RowCol
-	= ({children, direction = "row", ...props}: PropsWithChildren<Props & {direction?: "row" | "col"}>) => {
+	= ({children, direction = "row", ...props}: PropsWithChildren<RowColProps & {direction?: "row" | "col"}>) => {
 		if(direction === "row"){
 			return <Row {...props}>{children}</Row>
 		} else {
