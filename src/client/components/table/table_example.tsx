@@ -4,7 +4,8 @@ import {useCallback, useMemo} from "react"
 export const TableExample = () => {
 
 	const pagesTotal = 10
-	const loadNextPage = useCallback((opts: TableDataLoadOptions<string>) => {
+	const loadNextPage = useCallback(async(opts: TableDataLoadOptions<string>) => {
+		await new Promise(ok => setTimeout(ok, 100))
 		let data = ["one", "two", "three"]
 		for(let x = 0; x < 1; x++){
 			data = [...data, ...data]

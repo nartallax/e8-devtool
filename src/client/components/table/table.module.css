@@ -85,6 +85,9 @@
 		align-items: center;
 		justify-content: flex-end;
 		height: calc(var(--trigger-height) + var(--trigger-offset));
+
+		/* this element will overlay over other rows, and it shouldn't prevent interactions */
 		background-color: transparent;
+		pointer-events: none;
 	}
 }
