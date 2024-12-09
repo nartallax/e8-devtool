@@ -2,9 +2,7 @@ import {TableHierarchy} from "client/components/table/table"
 import {useCallback, useMemo} from "react"
 
 export type TableDataSourceDefinition<T> = {
-	/** Get key of the row.
-	Useful for optimizing re-renders; if not passed, index will be used. */
-	getRowKey?: (row: T, index: number) => React.Key
+	getRowKey: (row: T, index: number) => React.Key
 	/** Check if this row can theoretically have children.
 	If true - user will be able to expand the row, at which point children will be loaded */
 	canHaveChildren?: (row: T) => boolean
@@ -14,7 +12,7 @@ export type TableDataSourceDefinition<T> = {
 export type TableDataLoadOptions<T> = {
 	/** Previous row in the sequence of row. Null if this call is supposed to load first row. */
 	previousRow: T | null
-	/** Amount of rows already present in the sequence*/
+	/** Amount of rows already present in the sequence */
 	offset: number
 	/** Hierarchy of rows from root to parent. */
 	hierarchy: TableHierarchy<T>

@@ -1,16 +1,15 @@
+import {Col} from "client/components/row_col/row_col"
 import {Table, TableColumnDefinition} from "client/components/table/table"
 import {TableDataLoadOptions, TableDataSourceDefinition} from "client/components/table/table_data_source"
 import {useMemo} from "react"
 
 export const TableExample = () => {
-	const pagesTotal = 10
+	const pagesTotal = 3
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
+		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
 			await new Promise(ok => setTimeout(ok, 100))
-			let data = ["one", "two", "three"]
-			for(let x = 0; x < 1; x++){
-				data = [...data, ...data]
-			}
+			const data = ["one", "two", "three", "four", "five", "six"]
 			const nextPageIndex = opts.offset / data.length
 			if(nextPageIndex >= pagesTotal){
 				return []
@@ -22,15 +21,49 @@ export const TableExample = () => {
 
 
 	return (
-		<Table
-			dataSource={dataSource}
-			columns={useMemo<TableColumnDefinition<string>[]>(() => [
-				{name: "length", width: "75px", render: x => x.row.length},
-				{name: "name", render: x => x.row, isTreeColumn: true},
-				{name: "length + name", width: "150px", render: x => x.row.length + " " + x.row}
-			], [])}
-			margin
-		/>
+		<Col margin grow>
+			<Table
+				dataSource={dataSource}
+				columns={useMemo<TableColumnDefinition<string>[]>(() => [
+					{
+						id: "length", header: "length", width: "75px", render: x => x.row.length
+					},
+					{
+						id: "name", header: "name", width: "1fr", render: x => x.row, isTreeColumn: true
+					},
+					{
+						id: "length_and_Name", header: "length + name", width: "2fr", render: x => x.row.length + " " + x.row
+					}
+				], [])}
+			/>
+		</Col>
 	)
+
+	/*
+	return (
+		<div style={{
+			display: "grid",
+			gridTemplateColumns: "1fr 100px 1fr",
+			gridAutoFlow: "row dense",
+			"--first-col": "1 / 2",
+			"--second-col": "2 / 3",
+			"--third-col": "3 / 4"
+		} as any}>
+			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
+			<div style={{gridColumn: "var(--first-col)"}}>first col</div>
+			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
+			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
+			<div style={{gridColumn: "var(--first-col)"}}>
+				first col
+				<br/>
+				uwu
+			</div>
+			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
+			<div style={{gridColumn: "var(--first-col)"}}>first col</div>
+			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
+			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
+		</div>
+	)
+	*/
 
 }

@@ -1,10 +1,8 @@
 import * as css from "./table.module.css"
-import {Col, RowColProps, rowColPropsToStyle} from "client/components/row_col/row_col"
-import {cn} from "client/ui_utils/classname"
-import {pick} from "common/pick"
-import {omit} from "common/omit"
 import {TableSegment} from "client/components/table/table_segment"
 import {TableDataSourceDefinition, useTableDataSource} from "client/components/table/table_data_source"
+import {useMemo} from "react"
+import {cn} from "client/ui_utils/classname"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -18,18 +16,26 @@ export type TableHierarchy<T> = TableHierarchyEntry<T>[]
 
 const emptyArray: any[] = []
 
+const validateColumnId = (id: string) => {
+	if(!/^[a-zA-Z\-_]+$/.test(id)){
+		throw new Error(`Incorrect column ID: ${JSON.stringify(id)}`)
+	}
+}
+
 export type TableColumnDefinition<T> = {
-	name?: React.ReactNode
+	// TODO: test if uppercase and dashes-underscores work alright here
+	/** ID of the column. Must consist of alphabetic characters and dashes/underscores only. */
+	id: string
+	header?: React.ReactNode
 	render: (renderArgs: {row: T, hierarchy: TableHierarchy<T>}) => React.ReactNode
-	id?: string
-	/** CSS expression of this column's width.
-	If not specified, will take equal amount of remaining space. */
+	/** CSS expression of this column's width. Can use `fr` units and also `auto` keyword. See grid sizing.
+	If not specified, will default to `auto`. */
 	width?: string
 	/** If enabled, cells in this column will have elements to represent tree structure and interact with it */
 	isTreeColumn?: boolean
 }
 
-type Props<T> = RowColProps & {
+type Props<T> = {
 	dataSource: TableDataSourceDefinition<T>
 	columns: TableColumnDefinition<T>[]
 	/** If false, headers will be hidden. True by default */
@@ -38,37 +44,38 @@ type Props<T> = RowColProps & {
 
 
 export const Table = <T,>({
-	columns, dataSource: dataSourceParams, areHeadersVisible = true, ...props
+	columns, dataSource: dataSourceParams, areHeadersVisible = true
 }: Props<T>) => {
-	const allColsHaveWidth = columns.every(col => !!col.width)
-	// if every single column have width, `table-layout:fixed` will stretch them to fit the table width
-	// however, this is counterintuitive because then column width won't be respected - they will grow
-	// a way to counter it is to set width to `auto`, disabling `table-layout:fixed`
-	const tableStyle = allColsHaveWidth ? {width: "auto"} : rowColPropsToStyle(pick(props, ["width"]))
-
 	const dataSource = useTableDataSource(dataSourceParams)
 
+	const tableStyle = useMemo(() => {
+		const tableVars = Object.fromEntries(columns.map((col, i) => {
+			validateColumnId(col.id)
+			return [`--table-col-${col.id}`, `${i + 1} / ${i + 2}`]
+		}))
+
+		return {
+			gridTemplateColumns: columns.map(col => col.width ?? "auto").join(" "),
+			...tableVars
+		}
+	}, [columns])
+
+
 	return (
-		<Col
-			{...omit(props, "width")}
-			className={cn(css.table, props.className, {
-				[css.withHeaders!]: areHeadersVisible
-			})}>
-			<table style={tableStyle}>
-				{areHeadersVisible
-				&& <thead>
-					<tr>
-						{columns.map((col, index) => <th key={col.id ?? index} style={{width: col.width}}>{col.name}</th>)}
-					</tr>
-				</thead>}
-				<tbody>
-					<TableSegment
-						hierarchy={emptyArray}
-						columns={columns}
-						dataSource={dataSource}
-					/>
-				</tbody>
-			</table>
-		</Col>
+		<div className={cn(css.table, {[css.withHeaders!]: areHeadersVisible})} style={tableStyle}>
+			{areHeadersVisible
+				&& <>
+					{columns.map(col => (
+						<div className={css.tableHeader} key={col.id} style={{gridColumn: `var(--table-col-${col.id})`}}>
+							{col.header}
+						</div>
+					))}
+				</>}
+			<TableSegment
+				hierarchy={emptyArray}
+				columns={columns}
+				dataSource={dataSource}
+			/>
+		</div>
 	)
 }

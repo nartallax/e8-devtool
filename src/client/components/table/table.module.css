@@ -1,88 +1,55 @@
 .table {
-	overflow: auto;
-	flex: 1 1 0;
-	max-height: 100%;
-	max-width: 100%;
-	position: relative;
-
-	--header-border-radius: 0.25rem;
-	--header-border-width: 2px;
-	--table-border-width: 1px;
-	--cell-border-width: 1px;
+	--border-width: 1px;
 	--cell-padding: 0.5rem;
 	--border-color: #444;
+	--border-radius: 0.25rem;
 	--branch-radius: 0.5rem;
   --branch-width: 2px;
   --branch-border: var(--branch-width) solid #888;
 	--tree-element-width: 2rem;
 
+	display: grid;
+	grid-auto-flow: row dense;
+  grid-auto-rows: fit-content(2rem);
+	gap: var(--border-width);
+	flex: 1 1 0;
+	align-self: stretch;
+	overflow: auto;
+	max-height: 100%;
+	max-width: 100%;
+	min-height: 0;
+	min-width: 0;
+	position: relative;
 	/* it's nice to always have border around the whole table
 	it looks better when scrolling */
-	border: var(--table-border-width) solid var(--border-color);
+	border: var(--border-width) solid var(--border-color);
 
 	&.withHeaders {
-		/* actual border radius is set on th
-		here it is only required to avoid parts of table clipping through */
-		--table-border-radius: calc(var(--header-border-radius) + var(--table-border-width));
-		border-radius: var(--table-border-radius) var(--table-border-radius) 0 0;
-	}
-
-	table {
-		table-layout: fixed;
-		width: 100%;
-
-		/* we do borders like this for border-radius, which doesn't really work with non-default border-collapse */
-		border-collapse: separate;
-		border-spacing: 0;
+		border-radius: var(--border-radius) var(--border-radius) 0 0;
 	}
 
 	tbody {
 		overflow: auto;
 	}
 
-	td, th {
+	.tableCell, .tableHeader {
+		outline: var(--border-width) solid var(--border-color);
 		padding: var(--cell-padding);
-
-		&.noPadding {
-			padding: 0;
-		}
+		display: flex;
+		flex-direction: row;
+		align-items: stretch;
+		justify-content: flex-start;
 	}
 
-	td {
-		border: var(--cell-border-width) solid var(--border-color);
+	.tableCell {
 		background-color: #222;
 		border-top: 0;
 	}
 
-	td:not(:first-child){ border-left-width: 0 }
-	td:first-child { border-left-width: calc(var(--cell-border-width) - var(--table-border-width)) }
-	td:last-child { border-right-width: calc(var(--cell-border-width) - var(--table-border-width)) }
-
-	th {
+	.tableHeader {
 		position: sticky;
 		background-color: #333;
 		top: 0; /* that's for position:sticky to work */
-		border: var(--header-border-width) solid var(--border-color);
-	}
-
-	th:not(:first-child) { border-left-width: 0 }
-	th:first-child { 
-		border-top-left-radius: var(--header-border-radius);
-		border-left-width: calc(var(--header-border-width) - var(--table-border-width));
-	}
-	th:last-child { 
-		border-top-right-radius: var(--header-border-radius);
-		border-right-width: calc(var(--header-border-width) - var(--table-border-width))
-	}
-
-	.tdFlexContainer {
-		display: flex;
-		height: 100%;
-		width: 100%;
-		flex-direction: row;
-		align-items: stretch;
-		justify-content: flex-start;
-		padding: var(--cell-padding);
 	}
 
 }
@@ -91,10 +58,9 @@
 	position: relative;
 	--trigger-height: 2rem;
 	height: var(--trigger-height);
+	grid-column: 1 / -1;
 
 	.tableInifiniteScrollTrigger {
-		column-span: all;
-		display: block;
 		position: absolute;
 		bottom: 0;
 		left: 0;

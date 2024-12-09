@@ -14,6 +14,7 @@ export const TableInfiniteScroll = reactMemo(({
 	triggerOffsetPx = 0, onBottomHit, children
 }: PropsWithChildren<Props>) => {
 	const [isLoadedEverything, setLoadedEverything] = useState(false)
+	// TODO: instead of this + useEffect, try making this just a function
 	const triggerRef = useRef<HTMLTableCellElement | null>(null)
 
 	const triggerStyle = {
@@ -82,9 +83,9 @@ export const TableInfiniteScroll = reactMemo(({
 	return (
 		<>
 			{children}
-			{!isLoadedEverything && <tr className={css.tableInfiniteScrollRow}>
-				<td ref={triggerRef} className={css.tableInifiniteScrollTrigger} style={triggerStyle}/>
-			</tr>}
+			{!isLoadedEverything && <div className={css.tableInfiniteScrollRow}>
+				<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}/>
+			</div>}
 		</>
 	)
 })

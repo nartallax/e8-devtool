@@ -17,20 +17,23 @@ export const TableRow = reactMemo(<T,>({hierarchy, columns, dataSource}: Props<T
 
 	return (
 		<>
-			<tr>
-				{columns.map((column, index) => (
-					<TableCell
-						hierarchy={hierarchy}
-						column={column}
-						key={column.id ?? index}
-						isExpanded={isExpanded}
-						setExpanded={!canHaveChildren ? null : setExpanded}
-					/>
-				))}
-			</tr>
+			{columns.map(column => (
+				<TableCell
+					hierarchy={hierarchy}
+					column={column}
+					key={column.id}
+					isExpanded={isExpanded}
+					setExpanded={!canHaveChildren ? null : setExpanded}
+				/>
+			))}
 			{canHaveChildren
 			&& isExpanded
-			&& <TableSegment hierarchy={hierarchy} columns={columns} dataSource={dataSource}/>}
+			&& <TableSegment
+				key="row-children"
+				hierarchy={hierarchy}
+				columns={columns}
+				dataSource={dataSource}
+			/>}
 		</>
 	)
 })

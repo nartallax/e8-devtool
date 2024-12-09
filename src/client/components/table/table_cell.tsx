@@ -29,26 +29,16 @@ const squaresBase: SquareName[] | undefined = !squares
 	const squaresMiddle: SquareName[] | undefined = !squaresBase ? undefined : [...squaresBase, "split"]
 	*/
 
-	let content = column.render({
-		row: hierarchy[hierarchy.length - 1]!.row,
-		hierarchy
-	})
-
-	if(column.isTreeColumn){
-		content = (
-			<div className={css.tdFlexContainer}>
-				<TableCellTreeControls {...props} hierarchy={hierarchy}/>
-				{content}
-			</div>
-		)
-	}
-
-
-
 	return (
-		<td className={cn({[css.noPadding!]: column.isTreeColumn})}>
-			{content}
-		</td>
+		<div
+			className={cn(css.tableCell, {[css.noPadding!]: column.isTreeColumn})}
+			style={{gridColumn: `var(--table-col-${column.id})`}}>
+			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
+			{column.render({
+				row: hierarchy[hierarchy.length - 1]!.row,
+				hierarchy
+			})}
+		</div>
 	)
 })
 
