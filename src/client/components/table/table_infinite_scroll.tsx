@@ -1,23 +1,24 @@
 import {PropsWithChildren, useEffect, useRef, useState} from "react"
 import * as css from "./table.module.css"
 import {sleepFrame} from "client/ui_utils/sleep_frame"
+import {reactMemo} from "common/react_memo"
 
 type Props = {
 	/** Number of pixels from last row when onBottomHit is triggered */
-	offset?: number
+	triggerOffsetPx?: number
 	/** Expected to return true if there's more, false if that's it */
 	onBottomHit: () => boolean | Promise<boolean>
 }
 
-export const TableInfiniteScroll = ({
-	offset = 0, onBottomHit, children
+export const TableInfiniteScroll = reactMemo(({
+	triggerOffsetPx = 0, onBottomHit, children
 }: PropsWithChildren<Props>) => {
 	const [isLoadedEverything, setLoadedEverything] = useState(false)
 	const triggerRef = useRef<HTMLTableCellElement | null>(null)
 
 	const triggerStyle = {
 		display: "flex", // for typing
-		"--trigger-offset": offset + "px"
+		"--trigger-offset": triggerOffsetPx + "px"
 	}
 
 	// there's absolutely no reason to re-create observer each time onBottomHit changes
@@ -86,4 +87,4 @@ export const TableInfiniteScroll = ({
 			</tr>}
 		</>
 	)
-}
+})

@@ -9,7 +9,12 @@
 	--header-border-width: 2px;
 	--table-border-width: 1px;
 	--cell-border-width: 1px;
+	--cell-padding: 0.5rem;
 	--border-color: #444;
+	--branch-radius: 0.5rem;
+  --branch-width: 2px;
+  --branch-border: var(--branch-width) solid #888;
+	--tree-element-width: 2rem;
 
 	/* it's nice to always have border around the whole table
 	it looks better when scrolling */
@@ -36,7 +41,11 @@
 	}
 
 	td, th {
-		padding: 0.5rem;
+		padding: var(--cell-padding);
+
+		&.noPadding {
+			padding: 0;
+		}
 	}
 
 	td {
@@ -66,6 +75,16 @@
 		border-right-width: calc(var(--header-border-width) - var(--table-border-width))
 	}
 
+	.tdFlexContainer {
+		display: flex;
+		height: 100%;
+		width: 100%;
+		flex-direction: row;
+		align-items: stretch;
+		justify-content: flex-start;
+		padding: var(--cell-padding);
+	}
+
 }
 
 .tableInfiniteScrollRow {
@@ -90,4 +109,92 @@
 		background-color: transparent;
 		pointer-events: none;
 	}
+}
+
+.treeControls {
+	align-self: stretch;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	justify-content: flex-start;
+	flex: 0 0 0;
+	margin: calc(var(--cell-padding) * -1) 0 calc(var(--cell-padding) * -1) calc(var(--cell-padding) * -1);
+
+	&.isExpanded .expander {
+		transform: rotate(90deg);
+	}
+
+	.expander {
+		transition: transform 0.25s;
+		transform-origin: calc(var(--tree-element-width) / 2) 50%;
+		cursor: pointer;
+	}
+
+	.empty,
+	.corner,
+	.vertical,
+	.split,
+	.horisontal,
+	.expander {
+		width: var(--tree-element-width);
+		height: 100%;
+		position: relative;
+	}
+
+	.empty,
+	.corner,
+	.vertical,
+	.split,
+	.horisontal {
+		&::before,
+		&::after {
+			border: var(--branch-border);
+			position: absolute;
+		}
+	}
+
+	.split::before {
+    content: "";
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-width: 0 0 0 var(--branch-width);
+  }
+
+  .split::after {
+    content: "";
+    top: 0;
+    bottom: 50%;
+    left: 50%;
+    right: -25%;
+    border-width: 0 0 var(--branch-width) 0;
+    border-radius: 0 0 0 var(--branch-radius);
+  }
+
+	.corner::before {
+    content: "";
+    top: -15%;
+    bottom: 50%;
+    left: 50%;
+    right: -25%;
+    border-width: 0 0 var(--branch-width) var(--branch-width);
+    border-radius: 0 0 0 var(--branch-radius);
+  }
+
+	.vertical::before {
+    content: "";
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-width: 0 0 0 var(--branch-width);
+	}
+
+	.horisontal::before {
+    content: "";
+    bottom: 50%;
+    left: 0;
+    right: 0;
+    border-width: 0 0 var(--branch-width) 0;
+  }
+
 }

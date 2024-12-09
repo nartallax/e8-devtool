@@ -1,5 +1,3 @@
-- infinite scroll pagination
 - tree view
 - drag-n-drop of rows
 - column settings - filter, width, sorting, order
-- totals
