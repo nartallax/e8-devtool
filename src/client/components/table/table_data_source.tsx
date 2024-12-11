@@ -1,8 +1,8 @@
 import {TableHierarchy} from "client/components/table/table"
-import {useCallback, useMemo} from "react"
+import {useCallback, useMemo, useRef, useState} from "react"
 
 export type TableDataSourceDefinition<T> = {
-	getRowKey: (row: T, index: number) => React.Key
+	getRowKey: (row: T, index: number) => string | number
 	/** Check if this row can theoretically have children.
 	If true - user will be able to expand the row, at which point children will be loaded */
 	canHaveChildren?: (row: T) => boolean
@@ -33,14 +33,21 @@ const getSecondParam = <T,>(_: unknown, b: T) => b
 
 /** Data source manages data loading for the table */
 export type TableDataSource<T> = {
-	getRowKey: (row: T, index: number) => React.Key
+	getRowKey: (row: T, index: number) => string | number
 	canHaveChildren: (row: T) => boolean
 	loadNextRows: (hierarchy: TableHierarchy<T>, knownRows: T[]) => Promise<{newRows: T[], isThereMore: boolean}>
 	/** Can this data source ever return something meaningful for non-null parent? */
 	isTreeDataSource: boolean
+	cache: Map<string, {rows: T[], isThereMore: boolean}>
 }
 
 export const useTableDataSource = <T,>({loadData, getRowKey, canHaveChildren}: TableDataSourceDefinition<T>): TableDataSource<T> => {
+
+	const cache = useMemo(() => {
+		void getRowKey
+		return new Map<string, T[]>()
+	}, [getRowKey])
+
 	const loadNextRows = useCallback(async(hierarchy: TableHierarchy<T>, knownRows: T[]) => {
 		const opts: TableDataLoadOptions<T> = {
 			parent: hierarchy[hierarchy.length - 1]?.row ?? null,
@@ -69,6 +76,41 @@ export const useTableDataSource = <T,>({loadData, getRowKey, canHaveChildren}: T
 		getRowKey: getRowKey ?? getSecondParam,
 		canHaveChildren: canHaveChildren ?? getFalse,
 		loadNextRows,
-		isTreeDataSource: !!canHaveChildren
-	}), [getRowKey, canHaveChildren, loadNextRows])
+		isTreeDataSource: !!canHaveChildren,
+		cache
+	}), [getRowKey, canHaveChildren, loadNextRows, cache])
+}
+
+type TableSegmentDataProps<T> = {
+	hierarchy: TableHierarchy<T>
+	dataSource: TableDataSource<T>
+}
+
+export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegmentDataProps<T>) => {
+	const {getRowKey, loadNextRows, cache} = dataSource
+	const key = useMemo(() => {
+		const keySeq = hierarchy.map(entry => getRowKey(entry.row, entry.rowIndex))
+		return JSON.stringify(keySeq)
+	}, [getRowKey, hierarchy])
+
+	const [segmentData, setSegmentData] = useState(() => cache.get(key)?.rows ?? [])
+	const segmentDataRef = useRef(segmentData)
+	segmentDataRef.current = segmentData
+
+	const loadMore = useCallback(async() => {
+		const canLoadMore = cache.get(key)?.isThereMore ?? true
+		if(!canLoadMore){
+			return false
+		}
+
+		const {newRows, isThereMore} = await loadNextRows(hierarchy, segmentDataRef.current)
+		setSegmentData(oldRows => {
+			const newSegmentData = [...oldRows, ...newRows]
+			cache.set(key, {rows: newSegmentData, isThereMore})
+			return newSegmentData
+		})
+		return isThereMore
+	}, [loadNextRows, hierarchy, cache, key])
+
+	return [segmentData, loadMore] as const
 }
