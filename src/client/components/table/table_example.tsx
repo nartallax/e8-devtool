@@ -16,7 +16,7 @@ export const TableExample = () => {
 			}
 			return data.map(x => (opts.parent ?? "") + " " + nextPageIndex + " " + x)
 		},
-		canHaveChildren: row => ((parseInt(row.charAt(1)) % 2) === 1)
+		canHaveChildren: row => ((row.length % 2) === 1)
 	}), [])
 
 

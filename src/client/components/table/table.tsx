@@ -63,19 +63,27 @@ export const Table = <T,>({
 
 	return (
 		<div className={cn(css.table, {[css.withHeaders!]: areHeadersVisible})} style={tableStyle}>
-			{areHeadersVisible
-				&& <>
-					{columns.map(col => (
-						<div className={css.tableHeader} key={col.id} style={{gridColumn: `var(--table-col-${col.id})`}}>
-							{col.header}
-						</div>
-					))}
-				</>}
 			<TableSegment
 				hierarchy={emptyArray}
 				columns={columns}
 				dataSource={dataSource}
 			/>
+			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
+			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
+			{areHeadersVisible
+				&& <>
+					{columns.map(col => (
+						<div
+							className={css.tableHeader}
+							key={col.id}
+							style={{
+								gridColumn: `var(--table-col-${col.id})`,
+								gridRow: "1 / 2"
+							}}>
+							{col.header}
+						</div>
+					))}
+				</>}
 		</div>
 	)
 }

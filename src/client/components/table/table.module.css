@@ -3,7 +3,7 @@
 	--cell-padding: 0.5rem;
 	--border-color: #444;
 	--border-radius: 0.25rem;
-	--branch-radius: 0.5rem;
+	--branch-radius: 0.75rem;
   --branch-width: 2px;
   --branch-border: var(--branch-width) solid #888;
 	--tree-element-width: 2rem;
@@ -60,7 +60,7 @@
 	height: var(--trigger-height);
 	grid-column: 1 / -1;
 
-	.tableInifiniteScrollTrigger {
+	.tableInfiniteScrollTrigger {
 		position: absolute;
 		bottom: 0;
 		left: 0;
@@ -84,7 +84,11 @@
 	align-items: stretch;
 	justify-content: flex-start;
 	flex: 0 0 0;
-	margin: calc(var(--cell-padding) * -1) 0 calc(var(--cell-padding) * -1) calc(var(--cell-padding) * -1);
+	margin: 
+		calc(var(--cell-padding) * -1) 
+		var(--cell-padding) 
+		calc(var(--cell-padding) * -1)
+		calc(var(--cell-padding) * -1);
 
 	&.isExpanded .expander {
 		transform: rotate(90deg);
@@ -92,8 +96,11 @@
 
 	.expander {
 		transition: transform 0.25s;
-		transform-origin: calc(var(--tree-element-width) / 2) 50%;
 		cursor: pointer;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.empty,
@@ -121,18 +128,18 @@
 
 	.split::before {
     content: "";
-    top: 0;
-    bottom: 0;
+    top: calc(var(--border-width) * -1);
+    bottom: calc(var(--border-width) * -1);
     left: 50%;
     border-width: 0 0 0 var(--branch-width);
   }
 
   .split::after {
     content: "";
-    top: 0;
+    top: calc(var(--border-width) * -1);
     bottom: 50%;
     left: 50%;
-    right: -25%;
+    right: -12.5%;
     border-width: 0 0 var(--branch-width) 0;
     border-radius: 0 0 0 var(--branch-radius);
   }
@@ -142,15 +149,15 @@
     top: -15%;
     bottom: 50%;
     left: 50%;
-    right: -25%;
+    right: -12.5%;
     border-width: 0 0 var(--branch-width) var(--branch-width);
     border-radius: 0 0 0 var(--branch-radius);
   }
 
 	.vertical::before {
     content: "";
-    top: 0;
-    bottom: 0;
+    top: calc(var(--border-width) * -1);
+    bottom: calc(var(--border-width) * -1);
     left: 50%;
     border-width: 0 0 0 var(--branch-width);
 	}

@@ -31,7 +31,7 @@ const squaresBase: SquareName[] | undefined = !squares
 
 	return (
 		<div
-			className={cn(css.tableCell, {[css.noPadding!]: column.isTreeColumn})}
+			className={css.tableCell}
 			style={{gridColumn: `var(--table-col-${column.id})`}}>
 			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
 			{column.render({
@@ -43,23 +43,26 @@ const squaresBase: SquareName[] | undefined = !squares
 })
 
 const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<T>) => {
+	const lastHierarchyEntry = hierarchy[hierarchy.length - 1]!
+	const isRowLastInSequence = lastHierarchyEntry.rowIndex === lastHierarchyEntry.parentLoadedRowsCount - 1
 	return (
 		<div className={cn(css.treeControls, {
 			[css.isExpanded!]: isExpanded
 		})}>{
 				hierarchy.map((entry, index) => {
-					const isLast = entry.rowIndex === entry.parentLoadedRowsCount
-					const isPrevLevel = index === hierarchy.length - 2
+					const isParentLevel = index === hierarchy.length - 2
 					const isCurrentLevel = index === hierarchy.length - 1
+					const nextEntry = hierarchy[index + 1]
+					const isNextEntryLastInSequence = !!nextEntry && nextEntry.rowIndex === nextEntry.parentLoadedRowsCount - 1
 					const isRoot = hierarchy.length === 1
 					const canHaveChildren = !!setExpanded
 					const isExpander = isCurrentLevel && canHaveChildren
 					const variant
 						= isExpander ? "expander" as const
 							: isCurrentLevel && !isRoot && !canHaveChildren ? "horisontal" as const
-								: isPrevLevel && !isLast ? "split" as const
-									: isPrevLevel && isLast ? "corner" as const
-										: !isPrevLevel && !isCurrentLevel && !isLast ? "vertical" as const
+								: isParentLevel && !isRowLastInSequence ? "split" as const
+									: isParentLevel && isRowLastInSequence ? "corner" as const
+										: !isParentLevel && !isCurrentLevel && !isNextEntryLastInSequence ? "vertical" as const
 											: "empty" as const
 					const onClick = !isExpander ? undefined : (() => {
 						setExpanded(expanded => !expanded)
