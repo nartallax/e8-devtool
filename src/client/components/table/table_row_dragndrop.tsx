@@ -16,7 +16,7 @@ type Props<T> = {
 	setCurrentlyDraggedRow: SetState<TableHierarchy<T> | null>
 }
 
-const moveDistanceBeforeDragStart = 3
+const moveDistanceBeforeDragStart = 5
 
 export const TableRowDragndrop = <T,>({
 	setCurrentlyDraggedRow, dataSource, tableId
@@ -113,8 +113,8 @@ export const TableRowDragndrop = <T,>({
 			}
 
 			if(!isMoving){
-				const dx = coords.x - dragStartCoords.x
-				const dy = coords.y - dragStartCoords.y
+				const dx = Math.abs(coords.x - dragStartCoords.x)
+				const dy = Math.abs(coords.y - dragStartCoords.y)
 				const distance2 = dx * dy
 				if(distance2 < moveDistanceBeforeDragStart ** 2){
 					return
@@ -138,6 +138,11 @@ export const TableRowDragndrop = <T,>({
 		}
 
 		const onUp = async(e: TouchEvent | MouseEvent) => {
+			if(!isMoving){
+				// this could happen in case of a short click (with movement less than move threshold)
+				cleanup()
+				return
+			}
 			tryUpdateTargetLocation(extractCoordsAndTarget(e))
 			const src = sourceLocation
 			const dest = destinationLocation

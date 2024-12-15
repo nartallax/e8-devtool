@@ -71,6 +71,18 @@ const makeParentCacheKey = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowK
 	return makeCacheKey(getRowKey, hierarchy.slice(0, hierarchy.length - 1))
 }
 
+// this helps to avoid wrong index shift after move happens
+const updateMovePath = (from: number[], to: number[]): number[] => {
+	const result = [...to]
+	for(let i = 0; i < Math.min(from.length, to.length); i++){
+		if(from[i]! < to[i]!){
+			result[i]!--
+			break
+		}
+	}
+	return result
+}
+
 const moveRowsInCache = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], cache: Map<string, CacheEntry<T>>, event: TableRowMoveEvent<T>) => {
 	const fromKey = makeParentCacheKey(getRowKey, event.oldLocation)
 	const toKey = makeParentCacheKey(getRowKey, event.newLocation)
@@ -83,9 +95,11 @@ const moveRowsInCache = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"
 	let fromSeq = fromCacheEntry.rows
 	let toSeq = toCacheEntry.rows
 
-	// TODO: some manipulations of index here is in order, but I don't remember which one and why
-	const fromIndex = event.oldLocation[event.oldLocation.length - 1]!.rowIndex
-	const toIndex = event.newLocation[event.newLocation.length - 1]!.rowIndex
+	const fromPath = event.oldLocation.map(x => x.rowIndex)
+	let toPath = event.newLocation.map(x => x.rowIndex)
+	toPath = updateMovePath(fromPath, toPath)
+	const fromIndex = fromPath[fromPath.length - 1]!
+	const toIndex = toPath[toPath.length - 1]!
 
 	fromSeq = [...fromSeq.slice(0, fromIndex), ...fromSeq.slice(fromIndex + 1)]
 	if(fromKey === toKey){
