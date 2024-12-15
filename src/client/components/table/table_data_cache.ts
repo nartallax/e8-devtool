@@ -103,34 +103,33 @@ export class TableDataCache<T> implements CacheNode<T> {
 		const toIndex = toPath[toPath.length - 1]!
 
 		const fromParentNode = this.findParentNodeByPathOrThrow(fromPath)
-		const toParentNode = this.findParentNodeByPathOrThrow(toPath)
 
 		let fromSeq = fromParentNode.children ?? []
-		let toSeq = toParentNode.children ?? []
 		const movedNode = fromSeq[fromIndex]!
 		fromSeq = [...fromSeq.slice(0, fromIndex), ...fromSeq.slice(fromIndex + 1)]
-		if(fromParentNode === toParentNode){
-			toSeq = fromSeq
-		}
-		toSeq = [...toSeq.slice(0, toIndex), movedNode, ...toSeq.slice(toIndex)]
+		fromParentNode.children = fromSeq
 
+		const toParentNode = this.findParentNodeByPathOrThrow(toPath)
+		let toSeq = fromParentNode === toParentNode ? fromSeq : toParentNode.children ?? []
+		toSeq = [...toSeq.slice(0, toIndex), movedNode, ...toSeq.slice(toIndex)]
 		toParentNode.children = toSeq
-		toParentNode.notifySubscriber?.(toSeq.map(x => x.value))
-		if(fromParentNode !== toParentNode){
-			fromParentNode.children = fromSeq
-			fromParentNode.notifySubscriber?.(fromSeq.map(x => x.value))
+
+		fromParentNode.notifySubscriber?.(fromSeq.map(x => x.value))
+		if(toParentNode.notifySubscriber !== fromParentNode.notifySubscriber){
+			toParentNode.notifySubscriber?.(toSeq.map(x => x.value))
 		}
 	}
 
 	pathToHierarchy(path: number[]): TableHierarchy<T> {
 		const result: TableHierarchy<T> = []
-		const node: CacheNode<T> = this
+		let node: CacheNode<T> = this
 		for(const index of path){
 			const childNode = node.children?.[index]
 			if(!childNode){
 				throw new Error(`Cannot find cache node for path ${JSON.stringify(path)}`)
 			}
 			result.push({row: childNode.value, parentLoadedRowsCount: node.children?.length ?? 0, rowIndex: index})
+			node = childNode
 		}
 		return result
 	}

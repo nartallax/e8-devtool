@@ -8,7 +8,6 @@ export const TableExample = () => {
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
 		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
-			console.log(opts) // just trying to catch weird loading bug
 			await new Promise(ok => setTimeout(ok, 100))
 			const data = ["one", "two", "three", "four", "five", "six"]
 			const nextPageIndex = opts.offset / data.length
