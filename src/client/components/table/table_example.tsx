@@ -8,6 +8,7 @@ export const TableExample = () => {
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
 		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
+			console.log(opts) // just trying to catch weird loading bug
 			await new Promise(ok => setTimeout(ok, 100))
 			const data = ["one", "two", "three", "four", "five", "six"]
 			const nextPageIndex = opts.offset / data.length
@@ -41,32 +42,4 @@ export const TableExample = () => {
 			/>
 		</Col>
 	)
-
-	/*
-	return (
-		<div style={{
-			display: "grid",
-			gridTemplateColumns: "1fr 100px 1fr",
-			gridAutoFlow: "row dense",
-			"--first-col": "1 / 2",
-			"--second-col": "2 / 3",
-			"--third-col": "3 / 4"
-		} as any}>
-			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
-			<div style={{gridColumn: "var(--first-col)"}}>first col</div>
-			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
-			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
-			<div style={{gridColumn: "var(--first-col)"}}>
-				first col
-				<br/>
-				uwu
-			</div>
-			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
-			<div style={{gridColumn: "var(--first-col)"}}>first col</div>
-			<div style={{gridColumn: "var(--second-col)"}}>second col</div>
-			<div style={{gridColumn: "var(--third-col)"}}>third col</div>
-		</div>
-	)
-	*/
-
 }

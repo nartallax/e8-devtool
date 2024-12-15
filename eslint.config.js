@@ -174,6 +174,8 @@ const result = tseslint.config(
 			"@typescript-eslint/no-non-null-asserted-optional-chain": "error",
 			"@typescript-eslint/no-redundant-type-constituents": "warn",
 			"@typescript-eslint/no-require-imports": "error",
+			// why would I ever need this
+			"@typescript-eslint/no-this-alias": "off",
 			"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
 			// good in theory, too stupid in practice (won't pick up on possible variable modification in .forEach() loop for example)
 			"@typescript-eslint/no-unnecessary-condition": "off",

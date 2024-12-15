@@ -80,6 +80,7 @@ export const TableRowDragndrop = <T,>({
 					return
 				}
 				lastCheckedTargetLocation = newTargetLocation
+				// TODO: check common sense here, like "tree cannot be child of itself"
 				if(dataSource.canMoveRowTo(makeMoveEvent(sourceLocation, newTargetLocation))){
 					destinationLocation = newTargetLocation
 					setDropLocatorY(targetToLocatorY(coords.target))

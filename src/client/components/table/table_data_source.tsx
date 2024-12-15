@@ -1,5 +1,6 @@
 import {TableHierarchy} from "client/components/table/table"
-import {useCallback, useMemo, useRef, useState} from "react"
+import {TableDataCache} from "client/components/table/table_data_cache"
+import {useCallback, useLayoutEffect, useMemo, useState} from "react"
 
 export type TableDataSourceDefinition<T> = {
 	getRowKey: (row: T, index: number) => string | number
@@ -63,101 +64,19 @@ const getTrue = () => true
 const asyncNoop = async() => {
 	// absolutely nothing!
 }
-const makeCacheKey = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], hierarchy: TableHierarchy<T>): string => {
-	const keySeq = hierarchy.map(entry => getRowKey(entry.row, entry.rowIndex))
-	return JSON.stringify(keySeq)
-}
-const makeParentCacheKey = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], hierarchy: TableHierarchy<T>): string => {
-	return makeCacheKey(getRowKey, hierarchy.slice(0, hierarchy.length - 1))
-}
-
-// this helps to avoid wrong index shift after move happens
-const updateMovePath = (from: number[], to: number[]): number[] => {
-	const result = [...to]
-	for(let i = 0; i < Math.min(from.length, to.length); i++){
-		if(from[i]! < to[i]!){
-			result[i]!--
-			break
-		}
-	}
-	return result
-}
-
-const moveRowsInCache = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], cache: Map<string, CacheEntry<T>>, event: TableRowMoveEvent<T>) => {
-	const fromKey = makeParentCacheKey(getRowKey, event.oldLocation)
-	const toKey = makeParentCacheKey(getRowKey, event.newLocation)
-	const fromCacheEntry = cache.get(fromKey)
-	const toCacheEntry = cache.get(toKey)
-	if(!fromCacheEntry || !toCacheEntry){
-		// never supposed to happen
-		throw new Error(`No cache entry for either ${fromKey} or ${toKey} when drag-n-drop is finished.`)
-	}
-	let fromSeq = fromCacheEntry.rows
-	let toSeq = toCacheEntry.rows
-
-	const fromPath = event.oldLocation.map(x => x.rowIndex)
-	let toPath = event.newLocation.map(x => x.rowIndex)
-	toPath = updateMovePath(fromPath, toPath)
-	const fromIndex = fromPath[fromPath.length - 1]!
-	const toIndex = toPath[toPath.length - 1]!
-
-	fromSeq = [...fromSeq.slice(0, fromIndex), ...fromSeq.slice(fromIndex + 1)]
-	if(fromKey === toKey){
-		toSeq = fromSeq
-	}
-	toSeq = [...toSeq.slice(0, toIndex), event.row, ...toSeq.slice(toIndex)]
-
-	cache.set(toKey, {...toCacheEntry, rows: toSeq})
-	toCacheEntry.setRows(toSeq)
-	if(fromKey !== toKey){
-		cache.set(fromKey, {...fromCacheEntry, rows: fromSeq})
-		fromCacheEntry.setRows(fromSeq)
-	}
-}
-
-const treePathToHierarchy = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], cache: Map<string, CacheEntry<T>>, path: number[]): TableHierarchy<T> => {
-	// this function is a bit unoptimal and could be better
-	// but that's just how table cache works right now
-	// if this ever becomes a problem - I'll have to rewrite this
-	// (most obvious way would be to store tree cache as a tree and not as plain cache with composite keys)
-
-	const hierarchy: TableHierarchy<T> = []
-	while(hierarchy.length < path.length){
-		const cacheEntry = cache.get(makeCacheKey(getRowKey, hierarchy))
-		if(!cacheEntry){
-			throw new Error("Failed to convert tree path to hierarchy: no cache entry for " + makeCacheKey(getRowKey, hierarchy))
-		}
-
-		const rowIndex = path[hierarchy.length]!
-		if(cacheEntry.rows.length < rowIndex){
-			throw new Error("Failed to convert tree path to hierarchy: cache entry for " + makeCacheKey(getRowKey, hierarchy) + " doesn't have enough rows.")
-		}
-
-		const row = cacheEntry.rows[rowIndex]!
-		hierarchy.push({rowIndex, row, parentLoadedRowsCount: cacheEntry.rows.length})
-	}
-	return hierarchy
-}
-
-type CacheEntry<T> = {
-	rows: T[]
-	isThereMore: boolean
-	setRows: (newRows: T[]) => void
-}
 
 /** Data source manages data loading for the table */
 export type TableDataSource<T> = {
 	getRowKey: (row: T, index: number) => string | number
 	canHaveChildren: (row: T) => boolean
-	loadNextRows: (hierarchy: TableHierarchy<T>, knownRows: T[]) => Promise<{newRows: T[], isThereMore: boolean}>
+	loadNextRows: (hierarchy: TableHierarchy<T>) => Promise<{newRows: T[], isThereMore: boolean}>
 	/** Can this data source ever return something meaningful for non-null parent? */
 	isTreeDataSource: boolean
 	areRowsMovable: boolean
 	onRowMoved: (dragEvent: TableRowMoveEvent<T>) => Promise<void>
 	canMoveRowTo: (dragEvent: TableRowMoveEvent<T>) => boolean
 	treePathToHierarchy: (treePath: number[]) => TableHierarchy<T>
-	// TODO: this sucks, cacheing hierarchical data in flat structure doesn't work in multiple ways
-	cache: Map<string, CacheEntry<T>>
+	cache: TableDataCache<T>
 }
 
 
@@ -166,9 +85,8 @@ export const useTableDataSource = <T,>({
 }: TableDataSourceDefinition<T>): TableDataSource<T> => {
 
 	const cache = useMemo(() => {
-		void getRowKey // just to make sure it will flush every time key fn changes
-		return new Map<string, CacheEntry<T>>()
-	}, [getRowKey])
+		return new TableDataCache<T>()
+	}, [])
 
 	const onRowMovedInternal = useMemo(() => {
 		if(!onRowMoved){
@@ -176,11 +94,12 @@ export const useTableDataSource = <T,>({
 		}
 		return async(evt: TableRowMoveEvent<T>) => {
 			await Promise.resolve(onRowMoved(evt))
-			moveRowsInCache(getRowKey, cache, evt)
+			cache.moveRow(evt.oldLocation, evt.newLocation)
 		}
-	}, [onRowMoved, getRowKey, cache])
+	}, [onRowMoved, cache])
 
-	const loadNextRows = useCallback(async(hierarchy: TableHierarchy<T>, knownRows: T[]) => {
+	const loadNextRows = useCallback(async(hierarchy: TableHierarchy<T>) => {
+		const knownRows = cache.get(hierarchy).rows
 		const opts: TableDataLoadOptions<T> = {
 			parent: hierarchy[hierarchy.length - 1]?.row ?? null,
 			hierarchy,
@@ -202,9 +121,9 @@ export const useTableDataSource = <T,>({
 		}
 
 		return {isThereMore, newRows}
-	}, [loadData])
+	}, [loadData, cache])
 
-	const _treePathToHierarchy = useCallback((treePath: number[]) => treePathToHierarchy(getRowKey, cache, treePath), [getRowKey, cache])
+	const _treePathToHierarchy = useCallback((treePath: number[]) => cache.pathToHierarchy(treePath), [cache])
 
 	return useMemo(() => ({
 		getRowKey: getRowKey ?? getSecondParam,
@@ -225,27 +144,30 @@ type TableSegmentDataProps<T> = {
 }
 
 export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegmentDataProps<T>) => {
-	const {getRowKey, loadNextRows, cache} = dataSource
-	const key = useMemo(() => makeCacheKey(getRowKey, hierarchy), [getRowKey, hierarchy])
+	const {loadNextRows, cache} = dataSource
 
-	const [segmentData, setSegmentData] = useState(() => cache.get(key)?.rows ?? [])
-	const segmentDataRef = useRef(segmentData)
-	segmentDataRef.current = segmentData
+	const [segmentData, setSegmentData] = useState(() => cache.get(hierarchy).rows)
+
+	// this is useLayoutEffect and not just useEffect because I'm afraid that first page load can happen faster than subscription
+	// this can happen in theory in case of inmemory datasources
+	useLayoutEffect(() => {
+		cache.addSubscriber(hierarchy, setSegmentData)
+		return () => {
+			cache.removeSubscriber(hierarchy)
+		}
+	}, [hierarchy, cache])
 
 	const loadMore = useCallback(async() => {
-		const canLoadMore = cache.get(key)?.isThereMore ?? true
+		const canLoadMore = cache.get(hierarchy).isThereMore
 		if(!canLoadMore){
 			return false
 		}
 
-		const {newRows, isThereMore} = await loadNextRows(hierarchy, segmentDataRef.current)
-		setSegmentData(oldRows => {
-			const newSegmentData = [...oldRows, ...newRows]
-			cache.set(key, {rows: newSegmentData, isThereMore, setRows: setSegmentData})
-			return newSegmentData
-		})
+		const {newRows, isThereMore} = await loadNextRows(hierarchy)
+		const oldRows = cache.get(hierarchy).rows
+		cache.set(hierarchy, [...oldRows, ...newRows], isThereMore)
 		return isThereMore
-	}, [loadNextRows, hierarchy, cache, key])
+	}, [loadNextRows, hierarchy, cache])
 
 	return [segmentData, loadMore] as const
 }
