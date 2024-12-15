@@ -1,8 +1,9 @@
 import * as css from "./table.module.css"
 import {TableSegment} from "client/components/table/table_segment"
 import {TableDataSourceDefinition, useTableDataSource} from "client/components/table/table_data_source"
-import {useMemo} from "react"
+import {useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
+import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -11,7 +12,7 @@ export type TableHierarchyEntry<T> = {
 	parentLoadedRowsCount: number
 }
 
-/** Hierarchy is a sequence of rows in tree structure, each one is level further, from the root */
+/** Hierarchy is a sequence of rows in tree structure, each one is level further, starting at the root */
 export type TableHierarchy<T> = TableHierarchyEntry<T>[]
 
 const emptyArray: any[] = []
@@ -60,13 +61,25 @@ export const Table = <T,>({
 		}
 	}, [columns])
 
+	const [currentlyDraggedRow, setCurrentlyDraggedRow] = useState<TableHierarchy<T> | null>(null)
+
+	// this exists to check if a DOM node belongs to this table or different one
+	// helps with drag-n-drop
+	const tableId = useMemo(() => (Math.random() * 0xffffffff).toString(16), [])
 
 	return (
-		<div className={cn(css.table, {[css.withHeaders!]: areHeadersVisible})} style={tableStyle}>
+		<div
+			className={cn(css.table, {
+				[css.withHeaders!]: areHeadersVisible,
+				[css.noTextSelection!]: currentlyDraggedRow !== null
+			})}
+			style={tableStyle}
+			data-table-id={tableId}>
 			<TableSegment
 				hierarchy={emptyArray}
 				columns={columns}
 				dataSource={dataSource}
+				draggedRowHierarchyTail={currentlyDraggedRow}
 			/>
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
@@ -84,6 +97,11 @@ export const Table = <T,>({
 						</div>
 					))}
 				</>}
+			<TableRowDragndrop
+				tableId={tableId}
+				setCurrentlyDraggedRow={setCurrentlyDraggedRow}
+				dataSource={dataSource}
+			/>
 		</div>
 	)
 }

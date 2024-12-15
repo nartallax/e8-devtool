@@ -9,10 +9,11 @@ type Props<T> = {
 	hierarchy: TableHierarchy<T>
 	columns: TableColumnDefinition<T>[]
 	dataSource: TableDataSource<T>
+	draggedRowHierarchyTail: TableHierarchy<T> | null
 }
 
 export const TableSegment = reactMemo(<T,>({
-	hierarchy, dataSource, columns
+	hierarchy, dataSource, columns, draggedRowHierarchyTail
 }: Props<T>) => {
 	const [segmentData, loadMore] = useCachedTableSegmentData({hierarchy, dataSource})
 
@@ -28,6 +29,7 @@ export const TableSegment = reactMemo(<T,>({
 					hierarchy={hierarchy}
 					columns={columns}
 					dataSource={dataSource}
+					draggedRowHierarchyTail={draggedRowHierarchyTail?.[0]?.rowIndex !== index ? null : draggedRowHierarchyTail.slice(1)}
 				/>
 			))}
 		</TableInfiniteScroll>

@@ -16,7 +16,10 @@ export const TableExample = () => {
 			}
 			return data.map(x => (opts.parent ?? "") + " " + nextPageIndex + " " + x)
 		},
-		canHaveChildren: row => ((row.length % 2) === 1)
+		canHaveChildren: row => ((row.length % 2) === 1),
+		onRowMoved: evt => {
+			console.log(evt)
+		}
 	}), [])
 
 

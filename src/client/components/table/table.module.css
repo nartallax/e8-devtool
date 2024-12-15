@@ -7,6 +7,7 @@
   --branch-width: 2px;
   --branch-border: var(--branch-width) solid #888;
 	--tree-element-width: 2rem;
+	--cell-background-color: #222;
 
 	display: grid;
 	grid-auto-flow: row dense;
@@ -28,6 +29,11 @@
 		border-radius: var(--border-radius) var(--border-radius) 0 0;
 	}
 
+	&.noTextSelection {
+		/* wonder if I should add this class to the whole page instead */
+		user-select: none;
+	}
+
 	tbody {
 		overflow: auto;
 	}
@@ -39,10 +45,11 @@
 		flex-direction: row;
 		align-items: stretch;
 		justify-content: flex-start;
+		transition: opacity 0.5s;
 	}
 
 	.tableCell {
-		background-color: #222;
+		background-color: var(--cell-background-color);
 		border-top: 0;
 	}
 
@@ -170,4 +177,52 @@
     border-width: 0 0 var(--branch-width) 0;
   }
 
+}
+
+.movedRowCell {
+	opacity: 0.5;
+}
+
+.moveDropLocator {
+	grid-column: 1 / -1;
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 0;
+	overflow: visible;
+	top: var(--drop-locator-y);
+	pointer-events: none;
+	
+	&:before {
+		content: ' ';
+		position: absolute;
+		left: 50px;
+		right: 50px;
+		top: 50%;
+		border-radius: 0.5rem;
+		height: 0.5rem;
+		background-color: rgba(255, 255, 255, 0.5);
+	}
+}
+
+.moveRowCursor {
+	--cursor-width: 10rem;
+	--cursor-height: 0.5rem;
+	width: 0;
+	height: 0;
+
+	position: absolute;
+	pointer-events: none;
+	top: clamp(calc(var(--cursor-height) / 2), var(--cursor-y), calc(100% - (var(--cursor-height) / 2)));
+	left: clamp(calc(var(--cursor-width) / 2), var(--cursor-x), calc(100% - (var(--cursor-width) / 2)));
+
+	&:before {
+		content: ' ';
+		display: block;
+		width: var(--cursor-width);
+		transform: translate(calc(var(--cursor-width) / -2), calc(var(--cursor-height) / -2));
+		border-radius: 0.5rem;
+		height: var(--cursor-height);
+		background-color: rgba(255, 255, 255, 0.5);
+	}
 }

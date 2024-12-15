@@ -3,10 +3,39 @@ import {useCallback, useMemo, useRef, useState} from "react"
 
 export type TableDataSourceDefinition<T> = {
 	getRowKey: (row: T, index: number) => string | number
+	loadData: (opts: TableDataLoadOptions<T>) => TableDataLoadResult<T>
+
 	/** Check if this row can theoretically have children.
 	If true - user will be able to expand the row, at which point children will be loaded */
 	canHaveChildren?: (row: T) => boolean
-	loadData: (opts: TableDataLoadOptions<T>) => TableDataLoadResult<T>
+
+	/** Checks if the row can be moved to a new location. Defaults to true.
+	Makes no sense to use without onRowDrag. */
+	canMoveRowTo?: (dragEvent: TableRowMoveEvent<T>) => boolean
+	/** Called when user completes drag-n-drop move of a row.
+	Table expects that this handler will perform some operation on source data to move row from old position to new.
+	Table data won't be re-fetched after operation is complete; instead, table will move the rows internally.
+	(it doesn't matter if you're keeping source data in memory and not on server, as you'll have to update datasource anyway in this case)
+
+	This handler can throw to indicate that operation is not successful; table will handle that.
+
+	Keep in mind that moving rows around can cause weirdness when combined with other things, like sorting and pagination.
+	It doesn't make much sense to drag-n-drop sorted rows, because order probably won't be saved (unless you update data in some smart way).
+	It also can cause pagination-by-constraints to load wrong rows if a row is dragged to the last place.
+	Table won't explicitly forbid those use cases, but you should be careful about them. */
+	onRowMoved?: (dragEvent: TableRowMoveEvent<T>) => void | Promise<void>
+}
+
+export type TableRowMoveEvent<T> = {
+	oldLocation: TableHierarchy<T>
+	newLocation: TableHierarchy<T>
+	/** Row that is being moved.
+	Can be calculated both from oldLocation and newLocation; is present as separate field for convenience.
+
+	(same goes for parent rows) */
+	row: T
+	oldParent: T | null
+	newParent: T | null
 }
 
 export type TableDataLoadOptions<T> = {
@@ -30,6 +59,77 @@ type TableDataLoadResult<T> = PromiseOrNot<T[] | {
 
 const getFalse = () => false
 const getSecondParam = <T,>(_: unknown, b: T) => b
+const getTrue = () => true
+const asyncNoop = async() => {
+	// absolutely nothing!
+}
+const makeCacheKey = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], hierarchy: TableHierarchy<T>): string => {
+	const keySeq = hierarchy.map(entry => getRowKey(entry.row, entry.rowIndex))
+	return JSON.stringify(keySeq)
+}
+const makeParentCacheKey = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], hierarchy: TableHierarchy<T>): string => {
+	return makeCacheKey(getRowKey, hierarchy.slice(0, hierarchy.length - 1))
+}
+
+const moveRowsInCache = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], cache: Map<string, CacheEntry<T>>, event: TableRowMoveEvent<T>) => {
+	const fromKey = makeParentCacheKey(getRowKey, event.oldLocation)
+	const toKey = makeParentCacheKey(getRowKey, event.newLocation)
+	const fromCacheEntry = cache.get(fromKey)
+	const toCacheEntry = cache.get(toKey)
+	if(!fromCacheEntry || !toCacheEntry){
+		// never supposed to happen
+		throw new Error(`No cache entry for either ${fromKey} or ${toKey} when drag-n-drop is finished.`)
+	}
+	let fromSeq = fromCacheEntry.rows
+	let toSeq = toCacheEntry.rows
+
+	// TODO: some manipulations of index here is in order, but I don't remember which one and why
+	const fromIndex = event.oldLocation[event.oldLocation.length - 1]!.rowIndex
+	const toIndex = event.newLocation[event.newLocation.length - 1]!.rowIndex
+
+	fromSeq = [...fromSeq.slice(0, fromIndex), ...fromSeq.slice(fromIndex + 1)]
+	if(fromKey === toKey){
+		toSeq = fromSeq
+	}
+	toSeq = [...toSeq.slice(0, toIndex), event.row, ...toSeq.slice(toIndex)]
+
+	cache.set(toKey, {...toCacheEntry, rows: toSeq})
+	toCacheEntry.setRows(toSeq)
+	if(fromKey !== toKey){
+		cache.set(fromKey, {...fromCacheEntry, rows: fromSeq})
+		fromCacheEntry.setRows(fromSeq)
+	}
+}
+
+const treePathToHierarchy = <T,>(getRowKey: TableDataSourceDefinition<T>["getRowKey"], cache: Map<string, CacheEntry<T>>, path: number[]): TableHierarchy<T> => {
+	// this function is a bit unoptimal and could be better
+	// but that's just how table cache works right now
+	// if this ever becomes a problem - I'll have to rewrite this
+	// (most obvious way would be to store tree cache as a tree and not as plain cache with composite keys)
+
+	const hierarchy: TableHierarchy<T> = []
+	while(hierarchy.length < path.length){
+		const cacheEntry = cache.get(makeCacheKey(getRowKey, hierarchy))
+		if(!cacheEntry){
+			throw new Error("Failed to convert tree path to hierarchy: no cache entry for " + makeCacheKey(getRowKey, hierarchy))
+		}
+
+		const rowIndex = path[hierarchy.length]!
+		if(cacheEntry.rows.length < rowIndex){
+			throw new Error("Failed to convert tree path to hierarchy: cache entry for " + makeCacheKey(getRowKey, hierarchy) + " doesn't have enough rows.")
+		}
+
+		const row = cacheEntry.rows[rowIndex]!
+		hierarchy.push({rowIndex, row, parentLoadedRowsCount: cacheEntry.rows.length})
+	}
+	return hierarchy
+}
+
+type CacheEntry<T> = {
+	rows: T[]
+	isThereMore: boolean
+	setRows: (newRows: T[]) => void
+}
 
 /** Data source manages data loading for the table */
 export type TableDataSource<T> = {
@@ -38,15 +138,33 @@ export type TableDataSource<T> = {
 	loadNextRows: (hierarchy: TableHierarchy<T>, knownRows: T[]) => Promise<{newRows: T[], isThereMore: boolean}>
 	/** Can this data source ever return something meaningful for non-null parent? */
 	isTreeDataSource: boolean
-	cache: Map<string, {rows: T[], isThereMore: boolean}>
+	areRowsMovable: boolean
+	onRowMoved: (dragEvent: TableRowMoveEvent<T>) => Promise<void>
+	canMoveRowTo: (dragEvent: TableRowMoveEvent<T>) => boolean
+	treePathToHierarchy: (treePath: number[]) => TableHierarchy<T>
+	// TODO: this sucks, cacheing hierarchical data in flat structure doesn't work in multiple ways
+	cache: Map<string, CacheEntry<T>>
 }
 
-export const useTableDataSource = <T,>({loadData, getRowKey, canHaveChildren}: TableDataSourceDefinition<T>): TableDataSource<T> => {
+
+export const useTableDataSource = <T,>({
+	loadData, getRowKey, canHaveChildren, onRowMoved, canMoveRowTo
+}: TableDataSourceDefinition<T>): TableDataSource<T> => {
 
 	const cache = useMemo(() => {
-		void getRowKey
-		return new Map<string, T[]>()
+		void getRowKey // just to make sure it will flush every time key fn changes
+		return new Map<string, CacheEntry<T>>()
 	}, [getRowKey])
+
+	const onRowMovedInternal = useMemo(() => {
+		if(!onRowMoved){
+			return asyncNoop
+		}
+		return async(evt: TableRowMoveEvent<T>) => {
+			await Promise.resolve(onRowMoved(evt))
+			moveRowsInCache(getRowKey, cache, evt)
+		}
+	}, [onRowMoved, getRowKey, cache])
 
 	const loadNextRows = useCallback(async(hierarchy: TableHierarchy<T>, knownRows: T[]) => {
 		const opts: TableDataLoadOptions<T> = {
@@ -72,13 +190,19 @@ export const useTableDataSource = <T,>({loadData, getRowKey, canHaveChildren}: T
 		return {isThereMore, newRows}
 	}, [loadData])
 
+	const _treePathToHierarchy = useCallback((treePath: number[]) => treePathToHierarchy(getRowKey, cache, treePath), [getRowKey, cache])
+
 	return useMemo(() => ({
 		getRowKey: getRowKey ?? getSecondParam,
 		canHaveChildren: canHaveChildren ?? getFalse,
 		loadNextRows,
 		isTreeDataSource: !!canHaveChildren,
-		cache
-	}), [getRowKey, canHaveChildren, loadNextRows, cache])
+		cache,
+		canMoveRowTo: canMoveRowTo ?? getTrue,
+		areRowsMovable: !!onRowMoved,
+		onRowMoved: onRowMovedInternal,
+		treePathToHierarchy: _treePathToHierarchy
+	}), [getRowKey, canHaveChildren, loadNextRows, cache, canMoveRowTo, onRowMoved, onRowMovedInternal, _treePathToHierarchy])
 }
 
 type TableSegmentDataProps<T> = {
@@ -88,10 +212,7 @@ type TableSegmentDataProps<T> = {
 
 export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegmentDataProps<T>) => {
 	const {getRowKey, loadNextRows, cache} = dataSource
-	const key = useMemo(() => {
-		const keySeq = hierarchy.map(entry => getRowKey(entry.row, entry.rowIndex))
-		return JSON.stringify(keySeq)
-	}, [getRowKey, hierarchy])
+	const key = useMemo(() => makeCacheKey(getRowKey, hierarchy), [getRowKey, hierarchy])
 
 	const [segmentData, setSegmentData] = useState(() => cache.get(key)?.rows ?? [])
 	const segmentDataRef = useRef(segmentData)
@@ -106,7 +227,7 @@ export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegm
 		const {newRows, isThereMore} = await loadNextRows(hierarchy, segmentDataRef.current)
 		setSegmentData(oldRows => {
 			const newSegmentData = [...oldRows, ...newRows]
-			cache.set(key, {rows: newSegmentData, isThereMore})
+			cache.set(key, {rows: newSegmentData, isThereMore, setRows: setSegmentData})
 			return newSegmentData
 		})
 		return isThereMore

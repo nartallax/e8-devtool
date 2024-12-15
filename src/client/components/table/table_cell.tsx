@@ -7,6 +7,7 @@ import {Icon} from "generated/icons"
 
 type TableCellProps<T> = TreeTableCellProps<T> & {
 	column: TableColumnDefinition<T>
+	isRowCurrentlyDragged: boolean
 }
 
 type TreeTableCellProps<T> = {
@@ -16,22 +17,14 @@ type TreeTableCellProps<T> = {
 }
 
 export const TableCell = reactMemo(<T,>({
-	hierarchy, column, ...props
+	hierarchy, column, isRowCurrentlyDragged, ...props
 }: TableCellProps<T>) => {
-
-	/*
-type SquareName = "vertical" | "split" | "corner" | "empty"
-const squaresBase: SquareName[] | undefined = !squares
-		? undefined
-		: squares
-			.map(square => square === "corner" ? "empty" : square === "split" ? "vertical" : square)
-	const squaresCap: SquareName[] | undefined = !squaresBase ? undefined : [...squaresBase, "corner"]
-	const squaresMiddle: SquareName[] | undefined = !squaresBase ? undefined : [...squaresBase, "split"]
-	*/
-
 	return (
 		<div
-			className={css.tableCell}
+			data-tree-path={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
+			className={cn(css.tableCell, {
+				[css.movedRowCell!]: isRowCurrentlyDragged
+			})}
 			style={{gridColumn: `var(--table-col-${column.id})`}}>
 			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
 			{column.render({
@@ -49,7 +42,7 @@ const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy
 		<div className={cn(css.treeControls, {
 			[css.isExpanded!]: isExpanded
 		})}>{
-				hierarchy.map((entry, index) => {
+				hierarchy.map((_, index) => {
 					const isParentLevel = index === hierarchy.length - 2
 					const isCurrentLevel = index === hierarchy.length - 1
 					const nextEntry = hierarchy[index + 1]

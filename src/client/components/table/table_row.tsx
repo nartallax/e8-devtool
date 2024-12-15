@@ -9,11 +9,15 @@ type Props<T> = {
 	columns: TableColumnDefinition<T>[]
 	hierarchy: TableHierarchy<T>
 	dataSource: TableDataSource<T>
+	draggedRowHierarchyTail: TableHierarchy<T> | null
 }
 
-export const TableRow = reactMemo(<T,>({hierarchy, columns, dataSource}: Props<T>) => {
+export const TableRow = reactMemo(<T,>({
+	hierarchy, columns, dataSource, draggedRowHierarchyTail
+}: Props<T>) => {
 	const [isExpanded, setExpanded] = useState(false)
 	const canHaveChildren = dataSource.isTreeDataSource && dataSource.canHaveChildren(hierarchy[hierarchy.length - 1]!.row)
+	const isRowCurrentlyDragged = draggedRowHierarchyTail?.length === 0
 
 	return (
 		<>
@@ -24,6 +28,7 @@ export const TableRow = reactMemo(<T,>({hierarchy, columns, dataSource}: Props<T
 					key={column.id}
 					isExpanded={isExpanded}
 					setExpanded={!canHaveChildren ? null : setExpanded}
+					isRowCurrentlyDragged={isRowCurrentlyDragged}
 				/>
 			))}
 			{canHaveChildren
@@ -33,6 +38,7 @@ export const TableRow = reactMemo(<T,>({hierarchy, columns, dataSource}: Props<T
 				hierarchy={hierarchy}
 				columns={columns}
 				dataSource={dataSource}
+				draggedRowHierarchyTail={draggedRowHierarchyTail}
 			/>}
 		</>
 	)
