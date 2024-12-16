@@ -1,2 +1,1 @@
-- drag-n-drop of rows
 - column settings - filter, width, sorting, order

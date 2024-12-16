@@ -18,7 +18,7 @@ export const TableExample = () => {
 		},
 		canHaveChildren: row => ((row.length % 2) === 1),
 		onRowMoved: evt => {
-			console.log(evt)
+			console.log("move happened", evt)
 		}
 	}), [])
 

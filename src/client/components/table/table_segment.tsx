@@ -10,10 +10,11 @@ type Props<T> = {
 	columns: TableColumnDefinition<T>[]
 	dataSource: TableDataSource<T>
 	draggedRowHierarchyTail: TableHierarchy<T> | null
+	isRowCurrentlyDragged: boolean
 }
 
 export const TableSegment = reactMemo(<T,>({
-	hierarchy, dataSource, columns, draggedRowHierarchyTail
+	hierarchy, dataSource, columns, draggedRowHierarchyTail, isRowCurrentlyDragged
 }: Props<T>) => {
 	const [segmentData, loadMore] = useCachedTableSegmentData({hierarchy, dataSource})
 
@@ -25,6 +26,7 @@ export const TableSegment = reactMemo(<T,>({
 		<TableInfiniteScroll onBottomHit={loadMore} triggerOffsetPx={50}>
 			{rowsWithHierarchy.map(({row, hierarchy}, index) => (
 				<TableRow
+					isRowCurrentlyDragged={isRowCurrentlyDragged}
 					key={dataSource.getRowKey(row, index)}
 					hierarchy={hierarchy}
 					columns={columns}

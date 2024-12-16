@@ -28,8 +28,11 @@ export type TableDataSourceDefinition<T> = {
 }
 
 export type TableRowMoveEvent<T> = {
-	oldLocation: TableHierarchy<T>
-	newLocation: TableHierarchy<T>
+	/** Location is a sequence of indices of children, from root to the last branch.
+	It's like hierarchy, but without other info.
+	Here hierarchies are not possible to use because sometimes we want to point to a row that doesn't exist yet (last one in sequence) */
+	oldLocation: number[]
+	newLocation: number[]
 	/** Row that is being moved.
 	Can be calculated both from oldLocation and newLocation; is present as separate field for convenience.
 
@@ -75,7 +78,6 @@ export type TableDataSource<T> = {
 	areRowsMovable: boolean
 	onRowMoved: (dragEvent: TableRowMoveEvent<T>) => Promise<void>
 	canMoveRowTo: (dragEvent: TableRowMoveEvent<T>) => boolean
-	treePathToHierarchy: (treePath: number[]) => TableHierarchy<T>
 	cache: TableDataCache<T>
 }
 
@@ -99,7 +101,7 @@ export const useTableDataSource = <T,>({
 	}, [onRowMoved, cache])
 
 	const loadNextRows = useCallback(async(hierarchy: TableHierarchy<T>) => {
-		const knownRows = cache.get(hierarchy).rows
+		const knownRows = cache.getCachedChildren(hierarchy).rows
 		const opts: TableDataLoadOptions<T> = {
 			parent: hierarchy[hierarchy.length - 1]?.row ?? null,
 			hierarchy,
@@ -123,8 +125,6 @@ export const useTableDataSource = <T,>({
 		return {isThereMore, newRows}
 	}, [loadData, cache])
 
-	const _treePathToHierarchy = useCallback((treePath: number[]) => cache.pathToHierarchy(treePath), [cache])
-
 	return useMemo(() => ({
 		getRowKey: getRowKey ?? getSecondParam,
 		canHaveChildren: canHaveChildren ?? getFalse,
@@ -133,9 +133,8 @@ export const useTableDataSource = <T,>({
 		cache,
 		canMoveRowTo: canMoveRowTo ?? getTrue,
 		areRowsMovable: !!onRowMoved,
-		onRowMoved: onRowMovedInternal,
-		treePathToHierarchy: _treePathToHierarchy
-	}), [getRowKey, canHaveChildren, loadNextRows, cache, canMoveRowTo, onRowMoved, onRowMovedInternal, _treePathToHierarchy])
+		onRowMoved: onRowMovedInternal
+	}), [getRowKey, canHaveChildren, loadNextRows, cache, canMoveRowTo, onRowMoved, onRowMovedInternal])
 }
 
 type TableSegmentDataProps<T> = {
@@ -146,7 +145,7 @@ type TableSegmentDataProps<T> = {
 export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegmentDataProps<T>) => {
 	const {loadNextRows, cache} = dataSource
 
-	const [segmentData, setSegmentData] = useState(() => cache.get(hierarchy).rows)
+	const [segmentData, setSegmentData] = useState(() => cache.getCachedChildren(hierarchy).rows)
 
 	// this is useLayoutEffect and not just useEffect because I'm afraid that first page load can happen faster than subscription
 	// this can happen in theory in case of inmemory datasources
@@ -158,14 +157,14 @@ export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegm
 	}, [hierarchy, cache])
 
 	const loadMore = useCallback(async() => {
-		const canLoadMore = cache.get(hierarchy).isThereMore
+		const canLoadMore = cache.getCachedChildren(hierarchy).isThereMore
 		if(!canLoadMore){
 			return false
 		}
 
 		const {newRows, isThereMore} = await loadNextRows(hierarchy)
-		const oldRows = cache.get(hierarchy).rows
-		cache.set(hierarchy, [...oldRows, ...newRows], isThereMore)
+		const oldRows = cache.getCachedChildren(hierarchy).rows
+		cache.setCachedChildren(hierarchy, [...oldRows, ...newRows], isThereMore)
 		return isThereMore
 	}, [loadNextRows, hierarchy, cache])
 

@@ -1,8 +1,10 @@
 import {TableHierarchy} from "client/components/table/table"
-import {TableDataSource} from "client/components/table/table_data_source"
+import {TableDataSource, TableRowMoveEvent} from "client/components/table/table_data_source"
 import {useEffect, useState} from "react"
 import * as css from "./table.module.css"
 import {SetState} from "client/ui_utils/react_types"
+
+type RowDragDisposition = "above" | "below" | "inside"
 
 type XY = {x: number, y: number}
 
@@ -29,19 +31,11 @@ export const TableRowDragndrop = <T,>({
 			return undefined
 		}
 
-		const elToHierarchy = (el: HTMLElement): TableHierarchy<T> | null => {
-			const rowElWithPath = findNearestCell(el, tableId)
-			if(!rowElWithPath){
-				return null
-			}
-			return dataSource.treePathToHierarchy(rowElWithPath.path)
-		}
-
-		const makeMoveEvent = (sourceLocation: TableHierarchy<T>, targetLocation: TableHierarchy<T>) => ({
-			oldLocation: sourceLocation,
+		const makeMoveEvent = (sourceLocation: TableHierarchy<T>, targetLocation: number[]): TableRowMoveEvent<T> => ({
+			oldLocation: sourceLocation.map(x => x.rowIndex),
 			newLocation: targetLocation,
 			oldParent: sourceLocation[sourceLocation.length - 2]?.row ?? null,
-			newParent: targetLocation[targetLocation.length - 2]?.row ?? null,
+			newParent: targetLocation.length < 2 ? null : dataSource.cache.getParentByPath(targetLocation),
 			row: sourceLocation[sourceLocation.length - 1]!.row
 		})
 
@@ -63,8 +57,8 @@ export const TableRowDragndrop = <T,>({
 		}
 
 		let dragStartCoords: XYAndTarget | null = null
-		let lastCheckedTargetLocation: TableHierarchy<T> | null = null
-		let destinationLocation: TableHierarchy<T> | null = null
+		let lastCheckedTargetLocation: number[] | null = null
+		let destinationLocation: number[] | null = null
 		let sourceLocation: TableHierarchy<T> | null = null
 		let isMoving = false
 
@@ -73,18 +67,37 @@ export const TableRowDragndrop = <T,>({
 				return
 			}
 
-			const newTargetLocation = elToHierarchy(coords.target)
-			if(newTargetLocation){
-				if(lastCheckedTargetLocation && areHierarchiesEqual(lastCheckedTargetLocation, newTargetLocation)){
-					// we have already checked that location and either set it to target or refused to
-					return
-				}
-				lastCheckedTargetLocation = newTargetLocation
-				// TODO: check common sense here, like "tree cannot be child of itself"
-				if(dataSource.canMoveRowTo(makeMoveEvent(sourceLocation, newTargetLocation))){
-					destinationLocation = newTargetLocation
-					setDropLocatorY(targetToLocatorY(coords.target))
-				}
+			const newTarget = findNearestCell(coords.target, tableId)
+			if(!newTarget){
+				return
+			}
+			const {path: newTargetLocation} = newTarget
+
+			let disposition: RowDragDisposition
+			const newTargetRow = dataSource.cache.getRowByPath(newTargetLocation)
+			const newTargetRect = newTarget.el.getBoundingClientRect()
+			const ratio = (coords.y - newTargetRect.top) / newTargetRect.height
+			if(dataSource.canHaveChildren(newTargetRow)){
+				disposition = ratio < 0.25 ? "above" : ratio > 0.75 ? "below" : "inside"
+			} else {
+				disposition = ratio < 0.5 ? "above" : "below"
+			}
+
+			if(disposition === "below"){
+				newTargetLocation[newTargetLocation.length - 1]!++
+			} else if(disposition === "inside"){
+				newTargetLocation.push(0)
+			}
+
+			if(lastCheckedTargetLocation && arePathsEqual(lastCheckedTargetLocation, newTargetLocation)){
+				// we have already checked that location and either set it to target or refused to
+				return
+			}
+
+			lastCheckedTargetLocation = newTargetLocation
+			if(isRowMoveLegal(sourceLocation.map(x => x.rowIndex), newTargetLocation) && dataSource.canMoveRowTo(makeMoveEvent(sourceLocation, newTargetLocation))){
+				destinationLocation = newTargetLocation
+				setDropLocatorY(targetToLocatorY(coords.target, disposition))
 			}
 		}
 
@@ -100,7 +113,7 @@ export const TableRowDragndrop = <T,>({
 
 			cleanup()
 			dragStartCoords = coords
-			sourceLocation = dataSource.treePathToHierarchy(rowElWithPath.path)
+			sourceLocation = dataSource.cache.pathToHierarchy(rowElWithPath.path)
 			window.addEventListener("mousemove", onMove, {passive: true})
 			window.addEventListener("touchmove", onMove, {passive: true})
 			window.addEventListener("mouseup", onUp, {passive: true})
@@ -128,7 +141,7 @@ export const TableRowDragndrop = <T,>({
 
 				// move actually starts here
 				isMoving = true
-				destinationLocation = sourceLocation
+				destinationLocation = sourceLocation.map(x => x.rowIndex)
 				setCurrentlyDraggedRow(sourceLocation)
 				window.getSelection()?.removeAllRanges()
 			}
@@ -150,7 +163,7 @@ export const TableRowDragndrop = <T,>({
 			cleanup(false)
 
 			try {
-				if(src && dest && !areHierarchiesEqual(src, dest)){
+				if(src && dest && !arePathsEqual(src.map(x => x.rowIndex), dest)){
 					await dataSource.onRowMoved(makeMoveEvent(src, dest))
 				}
 			} finally {
@@ -206,12 +219,12 @@ const findNearestHtmlElement = (target: unknown): HTMLElement | null => {
 	return null
 }
 
-const areHierarchiesEqual = <T,>(a: TableHierarchy<T>, b: TableHierarchy<T>): boolean => {
+const arePathsEqual = (a: number[], b: number[]): boolean => {
 	if(a.length !== b.length){
 		return false
 	}
 	for(let i = 0; i < a.length; i++){
-		if(a[i]!.rowIndex !== b[i]!.rowIndex){
+		if(a[i] !== b[i]){
 			return false
 		}
 	}
@@ -268,12 +281,18 @@ const eventToCursorOffset = (cell: HTMLElement, event: TouchEvent | MouseEvent):
 	}
 }
 
-const targetToLocatorY = (target: HTMLElement) => {
+const targetToLocatorY = (target: HTMLElement, disposition: RowDragDisposition) => {
 	const table = findParentTable(target)
 	const tableRect = table.getBoundingClientRect()
 	const targetRect = target.getBoundingClientRect()
 
-	return targetRect.top - tableRect.top + table.scrollTop
+	let result = targetRect.top - tableRect.top + table.scrollTop
+	if(disposition === "inside"){
+		result += targetRect.height / 2
+	} else if(disposition === "below"){
+		result += targetRect.height
+	}
+	return result
 }
 
 const isTouchEvent = (evt: TouchEvent | MouseEvent): evt is TouchEvent => "touches" in evt
@@ -301,4 +320,26 @@ const extractCoordsAndTarget = (event: TouchEvent | MouseEvent): XYAndTarget | n
 	}
 
 	return {x, y, target: htmlTarget}
+}
+
+const isRowMoveLegal = (from: number[], to: number[]): boolean => {
+	if(from.length === to.length){
+		// even if it's the same position - who cares
+		return true
+	}
+	const shortest = from.length < to.length ? from : to
+	const longest = shortest === from ? to : from
+	if(isStartsWith(longest, shortest)){
+		return false // cannot move row into itself
+	}
+	return true
+}
+
+const isStartsWith = <T,>(long: T[], short: T[]): boolean => {
+	for(let i = 0; i < short.length; i++){
+		if(long[i] !== short[i]){
+			return false
+		}
+	}
+	return true
 }

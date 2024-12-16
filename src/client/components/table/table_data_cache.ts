@@ -21,10 +21,10 @@ export class TableDataCache<T> implements CacheNode<T> {
 		throw new Error("Root cache node has no value")
 	}
 
-	private findNode(hierarchy: TableHierarchy<T>): CacheNode<T> | null {
+	private findNode(path: number[]): CacheNode<T> | null {
 		let node: CacheNode<T> = this
-		for(let i = 0; i < hierarchy.length; i++){
-			const {rowIndex} = hierarchy[i]!
+		for(let i = 0; i < path.length; i++){
+			const rowIndex = path[i]!
 			const childNode = node.children?.[rowIndex]
 			if(!childNode){
 				return null
@@ -34,30 +34,23 @@ export class TableDataCache<T> implements CacheNode<T> {
 		return node
 	}
 
-	private findNodeOrThrow(hierarchy: TableHierarchy<T>): CacheNode<T> {
-		const node = this.findNode(hierarchy)
-		if(!node){
-			throw new Error(`Cannot find cache node for path ${JSON.stringify(hierarchy.map(x => x.rowIndex))}`)
-		}
-		return node
-	}
-
-	private findParentNodeByPathOrThrow(path: number[]): CacheNode<T> {
-		if(path.length === 0){
-			throw new Error("Cannot get parent of root cache node.")
-		}
-		let node: CacheNode<T> | undefined = this
-		for(let i = 0; i < path.length - 1; i++){
-			node = node?.children?.[path[i]!]
-		}
+	private findNodeOrThrow(path: number[]): CacheNode<T> {
+		const node = this.findNode(path)
 		if(!node){
 			throw new Error(`Cannot find cache node for path ${JSON.stringify(path)}`)
 		}
 		return node
 	}
 
-	set(hierarchy: TableHierarchy<T>, rows: T[], isThereMore: boolean) {
-		const node = this.findNodeOrThrow(hierarchy)
+	private findParentNodeOrThrow(path: number[]): CacheNode<T> {
+		if(path.length === 0){
+			throw new Error("Cannot get parent of root cache node.")
+		}
+		return this.findNodeOrThrow(path.slice(0, path.length - 1))
+	}
+
+	setCachedChildren(hierarchy: TableHierarchy<T>, rows: T[], isThereMore: boolean) {
+		const node = this.findNodeOrThrow(hierarchy.map(x => x.rowIndex))
 		const nodes = node.children ?? []
 
 		const newNodes: CacheNode<T>[] = []
@@ -76,47 +69,58 @@ export class TableDataCache<T> implements CacheNode<T> {
 		node.notifySubscriber?.(rows)
 	}
 
-	get(hierarchy: TableHierarchy<T>): {rows: T[], isThereMore: boolean} {
-		const node = this.findNode(hierarchy)
+	getCachedChildren(hierarchy: TableHierarchy<T>): {rows: T[], isThereMore: boolean} {
+		const node = this.findNode(hierarchy.map(x => x.rowIndex))
 		const rows = (node?.children ?? []).map(node => node.value)
 		const isThereMore = node?.isThereMore ?? true
 		return {rows, isThereMore}
 	}
 
+	getRowByPath(path: number[]): T {
+		return this.findNodeOrThrow(path).value
+	}
+
+	getParentByPath(path: number[]): T {
+		return this.findParentNodeOrThrow(path).value
+	}
+
 	addSubscriber(hierarchy: TableHierarchy<T>, notify: (rows: T[]) => void) {
-		const node = this.findNodeOrThrow(hierarchy)
+		const node = this.findNodeOrThrow(hierarchy.map(x => x.rowIndex))
 		// this looks bad in theory, because we could clobber something
 		// but in fact every node will have one subscriber at most, so it's fint
 		node.notifySubscriber = notify
 	}
 
 	removeSubscriber(hierarchy: TableHierarchy<T>) {
-		const node = this.findNodeOrThrow(hierarchy)
+		const node = this.findNodeOrThrow(hierarchy.map(x => x.rowIndex))
 		node.notifySubscriber = null
 	}
 
-	moveRow(from: TableHierarchy<T>, to: TableHierarchy<T>) {
-		const fromPath = from.map(x => x.rowIndex)
-		let toPath = to.map(x => x.rowIndex)
+	moveRow(fromPath: number[], toPath: number[]) {
 		toPath = updateMovePath(fromPath, toPath)
 		const fromIndex = fromPath[fromPath.length - 1]!
 		const toIndex = toPath[toPath.length - 1]!
 
-		const fromParentNode = this.findParentNodeByPathOrThrow(fromPath)
+		const fromParentNode = this.findParentNodeOrThrow(fromPath)
 
 		let fromSeq = fromParentNode.children ?? []
 		const movedNode = fromSeq[fromIndex]!
 		fromSeq = [...fromSeq.slice(0, fromIndex), ...fromSeq.slice(fromIndex + 1)]
 		fromParentNode.children = fromSeq
 
-		const toParentNode = this.findParentNodeByPathOrThrow(toPath)
-		let toSeq = fromParentNode === toParentNode ? fromSeq : toParentNode.children ?? []
-		toSeq = [...toSeq.slice(0, toIndex), movedNode, ...toSeq.slice(toIndex)]
-		toParentNode.children = toSeq
+		const toParentNode = this.findParentNodeOrThrow(toPath)
+		if(toParentNode.children){
+			// user can make a row be a child of another row which children are not loaded yet
+			// we could just assume that first row will become first child, but that will only work on some datasources
+			// in general it would be safer to not insert this row anywhere, and maybe fetch it again later among others
+			let toSeq = toParentNode.children
+			toSeq = [...toSeq.slice(0, toIndex), movedNode, ...toSeq.slice(toIndex)]
+			toParentNode.children = toSeq
+		}
 
-		fromParentNode.notifySubscriber?.(fromSeq.map(x => x.value))
-		if(toParentNode.notifySubscriber !== fromParentNode.notifySubscriber){
-			toParentNode.notifySubscriber?.(toSeq.map(x => x.value))
+		fromParentNode.notifySubscriber?.(fromParentNode.children.map(x => x.value))
+		if(toParentNode !== fromParentNode && toParentNode.children){
+			toParentNode.notifySubscriber?.(toParentNode.children.map(x => x.value))
 		}
 	}
 
