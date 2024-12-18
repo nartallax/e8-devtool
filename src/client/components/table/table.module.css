@@ -40,7 +40,6 @@
 
 	.tableCell, .tableHeader {
 		outline: var(--border-width) solid var(--border-color);
-		padding: var(--cell-padding);
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
@@ -48,7 +47,55 @@
 		transition: opacity 0.5s;
 	}
 
+	.tableHeader {
+		grid-row: 1 / 2;
+
+		&.isOrderable {
+			cursor: pointer;
+		}
+		
+		.headerContent {
+			padding: var(--cell-padding);
+			flex: 1 1 0;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.headerIcon {
+			height: 100%;
+			padding: 0 var(--cell-padding);
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.orderHeaderIcon {
+			position: relative;
+			
+			.orderHeaderIconText {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: center;
+				font-size: 1rem;
+				text-shadow:
+					1px 1px 0 var(--color-foreground),
+					-1px 1px 0 var(--color-foreground),
+					-1px -1px 0 var(--color-foreground),
+					1px -1px 0 var(--color-foreground);
+			}
+		}
+	}
+
 	.tableCell {
+		padding: var(--cell-padding);
 		background-color: var(--cell-background-color);
 		border-top: 0;
 	}

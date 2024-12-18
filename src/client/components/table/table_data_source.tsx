@@ -1,6 +1,6 @@
-import {TableHierarchy} from "client/components/table/table"
+import {TableColumnDefinition, TableHierarchy} from "client/components/table/table"
 import {TableDataCache} from "client/components/table/table_data_cache"
-import {useCallback, useLayoutEffect, useMemo, useState} from "react"
+import {useCallback, useEffect, useLayoutEffect, useMemo, useState} from "react"
 
 export type TableDataSourceDefinition<T> = {
 	getRowKey: (row: T, index: number) => string | number
@@ -42,6 +42,13 @@ export type TableRowMoveEvent<T> = {
 	newParent: T | null
 }
 
+export type TableOrderDirection = "asc" | "desc"
+
+export type TableOrder<T> = {
+	column: TableColumnDefinition<T>
+	direction: TableOrderDirection
+}
+
 export type TableDataLoadOptions<T> = {
 	/** Previous row in the sequence of row. Null if this call is supposed to load first row. */
 	previousRow: T | null
@@ -52,6 +59,7 @@ export type TableDataLoadOptions<T> = {
 	/** Parent of rows we are trying to load. null in case of root row list.
 	Can be calculated from hierarchy; separate field is just for convenience. */
 	parent: T | null
+	order: TableOrder<T>[]
 }
 
 type PromiseOrNot<T> = T | Promise<T>
@@ -84,11 +92,16 @@ export type TableDataSource<T> = {
 
 export const useTableDataSource = <T,>({
 	loadData, getRowKey, canHaveChildren, onRowMoved, canMoveRowTo
-}: TableDataSourceDefinition<T>): TableDataSource<T> => {
+}: TableDataSourceDefinition<T>, order: TableOrder<T>[]): TableDataSource<T> => {
 
 	const cache = useMemo(() => {
 		return new TableDataCache<T>()
 	}, [])
+
+	useEffect(() => {
+		void order // just to reset every time order changes
+		cache.reset()
+	}, [order, cache])
 
 	const onRowMovedInternal = useMemo(() => {
 		if(!onRowMoved){
@@ -106,7 +119,8 @@ export const useTableDataSource = <T,>({
 			parent: hierarchy[hierarchy.length - 1]?.row ?? null,
 			hierarchy,
 			offset: knownRows.length,
-			previousRow: knownRows[knownRows.length - 1] ?? null
+			previousRow: knownRows[knownRows.length - 1] ?? null,
+			order
 		}
 
 		const nextPage = await Promise.resolve(loadData(opts))
@@ -123,7 +137,7 @@ export const useTableDataSource = <T,>({
 		}
 
 		return {isThereMore, newRows}
-	}, [loadData, cache])
+	}, [loadData, cache, order])
 
 	return useMemo(() => ({
 		getRowKey: getRowKey ?? getSecondParam,
@@ -145,7 +159,7 @@ type TableSegmentDataProps<T> = {
 export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegmentDataProps<T>) => {
 	const {loadNextRows, cache} = dataSource
 
-	const [segmentData, setSegmentData] = useState(() => cache.getCachedChildren(hierarchy).rows)
+	const [segmentData, setSegmentData] = useState(() => cache.getCachedChildren(hierarchy))
 
 	// this is useLayoutEffect and not just useEffect because I'm afraid that first page load can happen faster than subscription
 	// this can happen in theory in case of inmemory datasources
@@ -159,14 +173,13 @@ export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegm
 	const loadMore = useCallback(async() => {
 		const canLoadMore = cache.getCachedChildren(hierarchy).isThereMore
 		if(!canLoadMore){
-			return false
+			return
 		}
 
 		const {newRows, isThereMore} = await loadNextRows(hierarchy)
 		const oldRows = cache.getCachedChildren(hierarchy).rows
 		cache.setCachedChildren(hierarchy, [...oldRows, ...newRows], isThereMore)
-		return isThereMore
 	}, [loadNextRows, hierarchy, cache])
 
-	return [segmentData, loadMore] as const
+	return [segmentData.rows, segmentData.isThereMore, loadMore] as const
 }

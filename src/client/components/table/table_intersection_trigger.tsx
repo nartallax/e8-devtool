@@ -1,4 +1,4 @@
-import {PropsWithChildren, useEffect, useRef, useState} from "react"
+import {PropsWithChildren, useEffect, useRef} from "react"
 import * as css from "./table.module.css"
 import {sleepFrame} from "client/ui_utils/sleep_frame"
 import {reactMemo} from "common/react_memo"
@@ -6,14 +6,12 @@ import {reactMemo} from "common/react_memo"
 type Props = {
 	/** Number of pixels from last row when onBottomHit is triggered */
 	triggerOffsetPx?: number
-	/** Expected to return true if there's more, false if that's it */
-	onBottomHit: () => boolean | Promise<boolean>
+	onBottomHit: () => void | Promise<void>
 }
 
-export const TableInfiniteScroll = reactMemo(({
-	triggerOffsetPx = 0, onBottomHit, children
+export const TableIntersectionTrigger = reactMemo(({
+	triggerOffsetPx = 0, onBottomHit
 }: PropsWithChildren<Props>) => {
-	const [isLoadedEverything, setLoadedEverything] = useState(false)
 	// TODO: instead of this + useEffect, try making this just a function
 	const triggerRef = useRef<HTMLTableCellElement | null>(null)
 
@@ -34,27 +32,21 @@ export const TableInfiniteScroll = reactMemo(({
 		}
 		let isLoading = false
 		let isIntersecting = false
-		let isLoadedEverything = false
+		let hitError = false
 
 		const loadNextPage = async() => {
-			if(isLoading || isLoadedEverything){
+			if(isLoading || hitError){
 				return
 			}
 
 			isLoading = true
 			trigger.textContent = "Loading..."
 			try {
-				const isThereMore = await Promise.resolve(onBottomHitRef.current())
-				if(!isThereMore){
-					setLoadedEverything(true)
-					isLoadedEverything = true
-					observer.disconnect()
-				}
+				await Promise.resolve(onBottomHitRef.current())
 			} catch(e){
 				console.error("Failed to load next page for infinite scroll: ", e)
 				// in case of error just assume that next load will throw the same error and give up
-				setLoadedEverything(true)
-				isLoadedEverything = true
+				hitError = true
 				observer.disconnect()
 			} finally {
 				isLoading = false
@@ -81,11 +73,8 @@ export const TableInfiniteScroll = reactMemo(({
 	}, [])
 
 	return (
-		<>
-			{children}
-			{!isLoadedEverything && <div className={css.tableInfiniteScrollRow}>
-				<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}/>
-			</div>}
-		</>
+		<div className={css.tableInfiniteScrollRow}>
+			<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}/>
+		</div>
 	)
 })

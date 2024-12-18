@@ -1,16 +1,24 @@
 import {TableHierarchy} from "client/components/table/table"
 
+type CacheSubscriber<T> = (cacheEntry: {rows: T[], isThereMore: boolean}) => void
+
 type CacheNode<T> = {
 	value: T
-	notifySubscriber: ((values: T[]) => void) | null
+	notifySubscriber: CacheSubscriber<T> | null
 	children: CacheNode<T>[] | null
 	isThereMore: boolean
 }
 
 export class TableDataCache<T> implements CacheNode<T> {
 	children = []
-	notifySubscriber = null
+	notifySubscriber: CacheSubscriber<T> | null = null
 	isThereMore = true
+
+	reset() {
+		this.children = []
+		this.isThereMore = true
+		this.notifySubscriber?.({isThereMore: true, rows: []})
+	}
 
 	get value(): T {
 		throw new Error("Root cache node has no value")
@@ -66,7 +74,7 @@ export class TableDataCache<T> implements CacheNode<T> {
 
 		node.children = newNodes
 		node.isThereMore = isThereMore
-		node.notifySubscriber?.(rows)
+		node.notifySubscriber?.({rows, isThereMore})
 	}
 
 	getCachedChildren(hierarchy: TableHierarchy<T>): {rows: T[], isThereMore: boolean} {
@@ -84,7 +92,7 @@ export class TableDataCache<T> implements CacheNode<T> {
 		return this.findParentNodeOrThrow(path).value
 	}
 
-	addSubscriber(hierarchy: TableHierarchy<T>, notify: (rows: T[]) => void) {
+	addSubscriber(hierarchy: TableHierarchy<T>, notify: CacheSubscriber<T>) {
 		const node = this.findNodeOrThrow(hierarchy.map(x => x.rowIndex))
 		// this looks bad in theory, because we could clobber something
 		// but in fact every node will have one subscriber at most, so it's fint
@@ -92,7 +100,12 @@ export class TableDataCache<T> implements CacheNode<T> {
 	}
 
 	removeSubscriber(hierarchy: TableHierarchy<T>) {
-		const node = this.findNodeOrThrow(hierarchy.map(x => x.rowIndex))
+		const node = this.findNode(hierarchy.map(x => x.rowIndex))
+		if(!node){
+			// this can happen when several levels of tree are uncollapsed when cache is reset
+			// nothing to do here, we already implicitly removed the subscriber at this point
+			return
+		}
 		node.notifySubscriber = null
 	}
 
@@ -118,9 +131,15 @@ export class TableDataCache<T> implements CacheNode<T> {
 			toParentNode.children = toSeq
 		}
 
-		fromParentNode.notifySubscriber?.(fromParentNode.children.map(x => x.value))
+		fromParentNode.notifySubscriber?.({
+			rows: fromParentNode.children.map(x => x.value),
+			isThereMore: fromParentNode.isThereMore
+		})
 		if(toParentNode !== fromParentNode && toParentNode.children){
-			toParentNode.notifySubscriber?.(toParentNode.children.map(x => x.value))
+			toParentNode.notifySubscriber?.({
+				rows: toParentNode.children.map(x => x.value),
+				isThereMore: toParentNode.isThereMore
+			})
 		}
 	}
 

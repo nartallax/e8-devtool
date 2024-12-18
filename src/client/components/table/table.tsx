@@ -1,9 +1,11 @@
 import * as css from "./table.module.css"
 import {TableSegment} from "client/components/table/table_segment"
-import {TableDataSourceDefinition, useTableDataSource} from "client/components/table/table_data_source"
+import {TableDataSourceDefinition, TableOrderDirection, useTableDataSource} from "client/components/table/table_data_source"
 import {useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
+import {useTableSettings} from "client/components/table/table_settings"
+import {TableHeader} from "client/components/table/table_header"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -24,30 +26,57 @@ const validateColumnId = (id: string) => {
 }
 
 export type TableColumnDefinition<T> = {
-	// TODO: test if uppercase and dashes-underscores work alright here
 	/** ID of the column. Must consist of alphabetic characters and dashes/underscores only. */
 	id: string
 	header?: React.ReactNode
 	render: (renderArgs: {row: T, hierarchy: TableHierarchy<T>}) => React.ReactNode
+
 	/** CSS expression of this column's width. Can use `fr` units and also `auto` keyword. See grid sizing.
-	If not specified, will default to `auto`. */
+	If not specified, will default to `auto`.
+
+	When user resizes the column, width is overriden to px size of whatever user sets it to be. */
 	width?: string
+
 	/** If enabled, cells in this column will have elements to represent tree structure and interact with it */
 	isTreeColumn?: boolean
+
+	/** If enabled, data can be ordered by this column.
+
+	Keep in mind that it's up to datasource to actually supply table with ordered data.
+	All the table does is passes order in loadData options. */
+	isOrderUserChangeable?: boolean
+
+	/** If passed, data will be oredered by this column, unless user overrides that.
+
+	You can pass number and order tuple in case you want to order by multiple columns. (bigger priority = column goes first) */
+	defaultOrder?: TableOrderDirection | [priority: number, TableOrderDirection]
 }
 
-type Props<T> = {
+type Props<T> = Partial<TableUserConfigActionProps> & {
 	dataSource: TableDataSourceDefinition<T>
 	columns: TableColumnDefinition<T>[]
 	/** If false, headers will be hidden. True by default */
 	areHeadersVisible?: boolean
+	/** If passed, table will store user-defined settings in local storage using this key. */
+	localStorageKey?: string
+}
+
+export type TableUserConfigActionProps = {
+	/** Top limit for amount of simultaneously ordered columns.
+	If not passed - will be equal to amount of default-oredered columns, or 1 if there are none. */
+	maxOrderedColumns: number
+	/** If passed, by default user would be able to change order of any column, unless explicitly disabled in column definition */
+	areColumnsOrderable: boolean
 }
 
 
 export const Table = <T,>({
-	columns, dataSource: dataSourceParams, areHeadersVisible = true
+	columns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
 }: Props<T>) => {
-	const dataSource = useTableDataSource(dataSourceParams)
+	const {
+		orderedColumns, order, setOrder, userConfigActions
+	} = useTableSettings({...srcUserConfigActions, columns})
+	const dataSource = useTableDataSource(dataSourceParams, order)
 
 	const tableStyle = useMemo(() => {
 		const tableVars = Object.fromEntries(columns.map((col, i) => {
@@ -85,19 +114,12 @@ export const Table = <T,>({
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
 			{areHeadersVisible
-				&& <>
-					{columns.map(col => (
-						<div
-							className={css.tableHeader}
-							key={col.id}
-							style={{
-								gridColumn: `var(--table-col-${col.id})`,
-								gridRow: "1 / 2"
-							}}>
-							{col.header}
-						</div>
-					))}
-				</>}
+				&& <TableHeader
+					order={order}
+					setOrder={setOrder}
+					userConfigActions={userConfigActions}
+					columns={orderedColumns}
+				/>}
 			<TableRowDragndrop
 				tableId={tableId}
 				setCurrentlyDraggedRow={setCurrentlyDraggedRow}
