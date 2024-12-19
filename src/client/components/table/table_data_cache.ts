@@ -16,10 +16,10 @@ export class TableDataCache<T> implements CacheNode<T> {
 	revision = 0
 
 	reset() {
+		this.revision++
 		this.children = []
 		this.isThereMore = true
 		this.notifySubscriber?.({isThereMore: true, rows: []})
-		this.revision++
 	}
 
 	get value(): T {

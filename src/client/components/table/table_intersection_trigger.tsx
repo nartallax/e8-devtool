@@ -68,6 +68,7 @@ export const TableIntersectionTrigger = reactMemo(({
 
 		return () => {
 			observer.disconnect()
+			isIntersecting = false
 		}
 	}, [])
 
