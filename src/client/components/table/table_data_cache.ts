@@ -13,11 +13,13 @@ export class TableDataCache<T> implements CacheNode<T> {
 	children = []
 	notifySubscriber: CacheSubscriber<T> | null = null
 	isThereMore = true
+	revision = 0
 
 	reset() {
 		this.children = []
 		this.isThereMore = true
 		this.notifySubscriber?.({isThereMore: true, rows: []})
+		this.revision++
 	}
 
 	get value(): T {

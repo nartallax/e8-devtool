@@ -176,7 +176,12 @@ export const useCachedTableSegmentData = <T,>({hierarchy, dataSource}: TableSegm
 			return
 		}
 
+		const revision = cache.revision
 		const {newRows, isThereMore} = await loadNextRows(hierarchy)
+		if(cache.revision !== revision){
+			// reset happened during row loading. we must not add outdated data to cache
+			return
+		}
 		const oldRows = cache.getCachedChildren(hierarchy).rows
 		cache.setCachedChildren(hierarchy, [...oldRows, ...newRows], isThereMore)
 	}, [loadNextRows, hierarchy, cache])

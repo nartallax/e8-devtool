@@ -8,9 +8,9 @@ export const TableExample = () => {
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
 		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
-			console.log(opts.offset)
-			await new Promise(ok => setTimeout(ok, 1000))
+			await new Promise(ok => setTimeout(ok, 100))
 			const data = ["one", "two", "three", "four", "five", "six"]
+			// const data = ["one"]
 			const nextPageIndex = opts.offset / data.length
 			if(nextPageIndex >= pagesTotal){
 				return []
