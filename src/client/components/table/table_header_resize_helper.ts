@@ -5,10 +5,10 @@ import {arrayLikeToArray} from "common/array_like_to_array"
 import * as css from "./table.module.css"
 
 type HeaderDescription = {
-	initialWidth: number
+	readonly initialWidth: number
 	width: number
-	canBeChanged: boolean
-	colId: string
+	readonly canBeChanged: boolean
+	readonly colId: string
 }
 
 export class TableHeaderResizeHelper {
@@ -23,11 +23,10 @@ export class TableHeaderResizeHelper {
 		const colId = findNearestTableHeader(target)!.getAttribute("data-column-id")
 		const allHeaders: HTMLElement[] = arrayLikeToArray(this.table.querySelectorAll("[data-column-id]"))
 		this.descriptions = allHeaders.map(header => {
-			const width = header.getBoundingClientRect().width
+			const width = Math.round(header.getBoundingClientRect().width)
 			return {
 				width,
 				initialWidth: width,
-				isChanged: false,
 				canBeChanged: header.getAttribute("data-is-resizeable") === "true",
 				colId: header.getAttribute("data-column-id")!
 			}
@@ -41,7 +40,7 @@ export class TableHeaderResizeHelper {
 	onMove(x: number) {
 		const dScroll = this.table.scrollLeft - this.startScroll
 		const dX = x - this.startX
-		let offset = dX + dScroll
+		let offset = Math.round(dX + dScroll)
 
 		// each time we resize columns, one side will shrink and other will grow
 		// shrinking can propagate through several columns, because minWidth exists
@@ -59,9 +58,9 @@ export class TableHeaderResizeHelper {
 			shrinkingCol.width = Math.max(this.minWidth, shrinkingCol.initialWidth - remOffset)
 			const offsetConsumed = shrinkingCol.initialWidth - shrinkingCol.width
 			remOffset -= offsetConsumed
-			if(remOffset === 0){
-				break
-			}
+			// break-ing here if remOffset is zero would be wrong
+			// because when offset is reducing, some columns that were shrunk before may not be shrunk now
+			// and we need to update their widths to restore them back to initial
 		}
 
 
@@ -77,7 +76,7 @@ export class TableHeaderResizeHelper {
 		this.setOverrides(overrides => {
 			const map = new Map(overrides)
 			for(const col of this.descriptions){
-				if(col.width !== col.initialWidth){
+				if(col.width !== col.initialWidth || map.get(col.colId) !== col.width){
 					map.set(col.colId, col.width)
 				}
 			}
