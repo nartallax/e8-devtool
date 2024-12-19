@@ -5,7 +5,7 @@ import {useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
 import {useTableSettings} from "client/components/table/table_settings"
-import {TableHeader} from "client/components/table/table_header"
+import {TableHeaders} from "client/components/table/table_headers"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -50,6 +50,10 @@ export type TableColumnDefinition<T> = {
 
 	You can pass number and order tuple in case you want to order by multiple columns. (bigger priority = column goes first) */
 	defaultOrder?: TableOrderDirection | [priority: number, TableOrderDirection]
+
+	/** If enabled, user will be able to swap position of this column with another columns (by dragging column header).
+	For swap to happen, both of the columns need to be swappable. */
+	isSwappable?: boolean
 }
 
 type Props<T> = Partial<TableUserConfigActionProps> & {
@@ -65,8 +69,10 @@ export type TableUserConfigActionProps = {
 	/** Top limit for amount of simultaneously ordered columns.
 	If not passed - will be equal to amount of default-oredered columns, or 1 if there are none. */
 	maxOrderedColumns: number
-	/** If passed, by default user would be able to change order of any column, unless explicitly disabled in column definition */
+	/** If passed, by default user will be able to change order of any column */
 	areColumnsOrderable: boolean
+	/** If passed, by default user will be able to swap columns' position */
+	areColumnsSwappable: boolean
 }
 
 
@@ -74,7 +80,7 @@ export const Table = <T,>({
 	columns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
 }: Props<T>) => {
 	const {
-		orderedColumns, order, setOrder, userConfigActions
+		orderedColumns, order, setOrder, userConfigActions, swapColumn
 	} = useTableSettings({...srcUserConfigActions, columns})
 	const dataSource = useTableDataSource(dataSourceParams, order)
 
@@ -114,11 +120,12 @@ export const Table = <T,>({
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
 			{areHeadersVisible
-				&& <TableHeader
+				&& <TableHeaders
 					order={order}
 					setOrder={setOrder}
 					userConfigActions={userConfigActions}
 					columns={orderedColumns}
+					swapColumn={swapColumn}
 				/>}
 			<TableRowDragndrop
 				tableId={tableId}

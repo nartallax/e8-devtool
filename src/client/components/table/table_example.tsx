@@ -4,13 +4,12 @@ import {TableDataLoadOptions, TableDataSourceDefinition} from "client/components
 import {useMemo} from "react"
 
 export const TableExample = () => {
-	const pagesTotal = 2
+	const pagesTotal = 4
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
 		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
-			await new Promise(ok => setTimeout(ok, 1000))
-			// const data = ["one", "two", "three", "four", "five", "six"]
-			const data = ["one"]
+			await new Promise(ok => setTimeout(ok, 100))
+			const data = ["one", "two", "three", "four", "five", "six"]
 			const nextPageIndex = opts.offset / data.length
 			if(nextPageIndex >= pagesTotal){
 				return []

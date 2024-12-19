@@ -12,7 +12,6 @@ type Props = {
 export const TableIntersectionTrigger = reactMemo(({
 	triggerOffsetPx = 0, onBottomHit
 }: PropsWithChildren<Props>) => {
-	// TODO: instead of this + useEffect, try making this just a function
 	const triggerRef = useRef<HTMLTableCellElement | null>(null)
 
 	const triggerStyle = {

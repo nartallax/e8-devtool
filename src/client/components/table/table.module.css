@@ -50,7 +50,7 @@
 	.tableHeader {
 		grid-row: 1 / 2;
 
-		&.isOrderable {
+		&.isInteractive {
 			cursor: pointer;
 		}
 		
