@@ -31,6 +31,7 @@ export const makeTableDrag = (opts: Options) => {
 		window.removeEventListener("touchmove", onMove)
 		window.removeEventListener("mouseup", onUp)
 		window.removeEventListener("touchend", onUp)
+		dragStartCoords?.target.removeEventListener("click", preventClick)
 		dragStartCoords = null
 		lastKnownCoords = null
 		isMoving = false
@@ -52,8 +53,14 @@ export const makeTableDrag = (opts: Options) => {
 		lastKnownCoords = dragStartCoords = coords
 		window.addEventListener("mousemove", onMove, {passive: true})
 		window.addEventListener("touchmove", onMove, {passive: true})
-		window.addEventListener("mouseup", onUp, {passive: true})
-		window.addEventListener("touchend", onUp, {passive: true})
+		window.addEventListener("mouseup", onUp)
+		window.addEventListener("touchend", onUp)
+		coords.target.addEventListener("click", preventClick, {capture: true, once: true})
+	}
+
+	const preventClick = (e: MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
 	}
 
 	const onMove = (e: TouchEvent | MouseEvent) => {

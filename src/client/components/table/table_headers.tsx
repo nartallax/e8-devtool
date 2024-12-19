@@ -101,28 +101,28 @@ const TableHeader = reactMemo(<T,>({
 
 	const handlerProps = useMemo(() => {
 
-		let onClick: (() => void) | null = null
+		let onClick: (() => void) | undefined = undefined
 		if(isOrderUserChangeable){
 			onClick = () => {
 				onOrderChange(column)
 			}
 		}
 
-		let onDownSwap: ((e: React.TouchEvent | React.MouseEvent) => void) | null = null
+		let onDownSwap: ((e: React.TouchEvent | React.MouseEvent) => void) | undefined = undefined
 		if(isSwappable){
 			onDownSwap = makeDragHandler({
 				column, swapColumn, setDragOffset, setIsDragged, onClick
 			})
 		}
 
-		let onDownResize: ((e: React.TouchEvent | React.MouseEvent) => void) | null = null
+		let onDownResize: ((e: React.TouchEvent | React.MouseEvent) => void) | undefined = undefined
 		if(isLeftResizeable || isRightResizeable){
 			onDownResize = makeResizeHandler({
 				setOverrides: setColumnWidthOverrides, minWidth, onClick
 			})
 		}
 
-		let onDown: ((e: React.TouchEvent | React.MouseEvent) => void) | null = null
+		let onDown: ((e: React.TouchEvent | React.MouseEvent) => void) | undefined = undefined
 		if(onDownSwap && onDownResize){
 			onDown = e => {
 				onDownSwap(e)
@@ -132,7 +132,11 @@ const TableHeader = reactMemo(<T,>({
 			onDown = onDownSwap ?? onDownResize
 		}
 
-		return onDown ? {onMouseDown: onDown, onTouchStart: onDown} : onClick ? {onClick} : {}
+		return {
+			onMouseDown: onDown,
+			onTouchStart: onDown,
+			...(onDownSwap ? {} : {onClick})
+		}
 	}, [isOrderUserChangeable, isSwappable, column, onOrderChange, swapColumn, isLeftResizeable, isRightResizeable, minWidth, setColumnWidthOverrides])
 
 	const style = {
@@ -169,11 +173,11 @@ const TableHeader = reactMemo(<T,>({
 
 const isColumnResizer = (el: HTMLElement) => el.classList.contains(css.columnResizer!)
 
-const makeResizeHandler = (opts: {onClick: (() => void) | null, setOverrides: SetState<ReadonlyMap<string, number>>, minWidth: number}) => {
+const makeResizeHandler = (opts: {onClick?: () => void, setOverrides: SetState<ReadonlyMap<string, number>>, minWidth: number}) => {
 	let helper: TableHeaderResizeHelper | null = null
 	const drag = makeTableDrag({
 		direction: "horisontal",
-		onClick: !opts.onClick ? undefined : opts.onClick,
+		onClick: opts.onClick,
 		thresholdPx: 5,
 		canStartAt: coords => isColumnResizer(coords.target),
 		reset: () => {
@@ -191,11 +195,11 @@ const makeResizeHandler = (opts: {onClick: (() => void) | null, setOverrides: Se
 	}
 }
 
-const makeDragHandler = <T,>(opts: {onClick: (() => void) | null, swapColumn: (id: string, direction: -1 | 1) => void, setIsDragged: SetState<boolean>, setDragOffset: SetState<number>, column: TableColumnDefinition<T>}) => {
+const makeDragHandler = <T,>(opts: {onClick?: () => void, swapColumn: (id: string, direction: -1 | 1) => void, setIsDragged: SetState<boolean>, setDragOffset: SetState<number>, column: TableColumnDefinition<T>}) => {
 	let sizeCounter: TableHeaderColumnDragHelper | null = null
 	const drag = makeTableDrag({
 		direction: "horisontal",
-		onClick: !opts.onClick ? undefined : opts.onClick,
+		onClick: opts.onClick,
 		thresholdPx: 5,
 		canStartAt: coords => !isColumnResizer(coords.target),
 		reset: () => {
