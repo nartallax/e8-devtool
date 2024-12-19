@@ -29,6 +29,7 @@ export const TableExample = () => {
 			<Table
 				areColumnsOrderable
 				areColumnsSwappable
+				areColumnsResizeable
 				maxOrderedColumns={2}
 				dataSource={dataSource}
 				columns={useMemo<TableColumnDefinition<string>[]>(() => [

@@ -14,14 +14,23 @@ type TableSettings<T> = {
 	order: TableOrder<T>[]
 	userConfigActions: TableUserConfigActionProps
 	setOrder: SetState<TableOrder<T>[]>
+	columnWidthOverrides: ReadonlyMap<string, number>
+	setColumnWidthOverrides: SetState<TableSettings<T>["columnWidthOverrides"]>
 }
 
-export const getTableTemplateColumns = <T>(columns: TableColumnDefinition<T>[]): string => {
-	return columns.map(col => col.width ?? "auto").join(" ")
+export const getTableTemplateColumns = <T>(columns: TableColumnDefinition<T>[], overrides: ReadonlyMap<string, number>): string => {
+	return columns.map(col => {
+		const override = overrides.get(col.id)
+		if(override !== undefined){
+			return override + "px"
+		} else {
+			return col.width ?? "auto"
+		}
+	}).join(" ")
 }
 
 export const useTableSettings = <T>({
-	columns, maxOrderedColumns, areColumnsOrderable, areColumnsSwappable
+	columns, maxOrderedColumns, areColumnsOrderable, areColumnsSwappable, areColumnsResizeable, defaultMinColumnWidth
 }: Props<T>): TableSettings<T> => {
 
 	const userConfigActions: TableUserConfigActionProps = useMemo(() => {
@@ -29,9 +38,11 @@ export const useTableSettings = <T>({
 		return {
 			maxOrderedColumns: maxOrderedColumns ?? Math.max(defaultOrderedColumns, 1),
 			areColumnsOrderable: areColumnsOrderable ?? false,
-			areColumnsSwappable: areColumnsSwappable ?? false
+			areColumnsSwappable: areColumnsSwappable ?? false,
+			areColumnsResizeable: areColumnsResizeable ?? false,
+			defaultMinColumnWidth: defaultMinColumnWidth ?? 50
 		}
-	}, [maxOrderedColumns, areColumnsOrderable, areColumnsSwappable, columns])
+	}, [maxOrderedColumns, areColumnsOrderable, areColumnsSwappable, areColumnsResizeable, columns, defaultMinColumnWidth])
 
 	const [ordering, setOrdering] = useState<TableOrder<T>[]>(() => {
 		const defaultOrderedColumns = columns
@@ -63,12 +74,18 @@ export const useTableSettings = <T>({
 		})
 	}, [])
 
+	const [columnWidthOverrides, setColumnWidthOverrides] = useState<ReadonlyMap<string, number>>(() => {
+		return new Map()
+	})
+
 
 	return {
 		orderedColumns: orderedColumns,
 		order: ordering,
 		setOrder: setOrdering,
 		userConfigActions,
-		swapColumn
+		swapColumn,
+		columnWidthOverrides,
+		setColumnWidthOverrides
 	}
 }

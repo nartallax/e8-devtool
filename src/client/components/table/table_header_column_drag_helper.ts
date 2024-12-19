@@ -1,7 +1,8 @@
 import {findParentTable} from "client/components/table/table_generic_drag"
+import {arrayLikeToArray} from "common/array_like_to_array"
 
-/** A class that helps with drag-n-drop of column headers by performing some calculations on column sizes */
-export class TableHeaderColumnSizeCounter {
+/** A class that helps with drag-n-drop of column headers by performing some calculations */
+export class TableHeaderColumnDragHelper {
 	private currentIndex: number
 	private readonly widths: number[]
 	readonly header: HTMLElement
@@ -12,7 +13,7 @@ export class TableHeaderColumnSizeCounter {
 	maxOffset: number | null = null
 
 	constructor(target: HTMLElement, private startX: number) {
-		const header = this.header = findNearestHeader(target)!
+		const header = this.header = findNearestTableHeader(target)!
 		const table = this.table = findParentTable(target)
 		this.startScroll = table.scrollLeft
 
@@ -77,15 +78,7 @@ export class TableHeaderColumnSizeCounter {
 }
 
 
-const arrayLikeToArray = <T>(arr: {[index: number]: T, length: number}): T[] => {
-	const result = new Array(arr.length)
-	for(let i = 0; i < arr.length; i++){
-		result[i] = arr[i]
-	}
-	return result
-}
-
-const findNearestHeader = (el: HTMLElement): HTMLElement | null => {
+export const findNearestTableHeader = (el: HTMLElement): HTMLElement | null => {
 	while(el !== document.body){
 		const attr = el.getAttribute("data-column-id")
 		if(attr){

@@ -54,6 +54,13 @@ export type TableColumnDefinition<T> = {
 	/** If enabled, user will be able to swap position of this column with another columns (by dragging column header).
 	For swap to happen, both of the columns need to be swappable. */
 	isSwappable?: boolean
+
+	/** If enabled, user will be able to change width of this column (by dragging column header's border).
+	For resize to happen, both of the columns that share the border need to be resizeable. */
+	isResizeable?: boolean
+
+	/** Pixel size of min column width. Active during resizing. */
+	minWidth?: number
 }
 
 type Props<T> = Partial<TableUserConfigActionProps> & {
@@ -69,10 +76,14 @@ export type TableUserConfigActionProps = {
 	/** Top limit for amount of simultaneously ordered columns.
 	If not passed - will be equal to amount of default-oredered columns, or 1 if there are none. */
 	maxOrderedColumns: number
-	/** If passed, by default user will be able to change order of any column */
+	/** If true, by default user will be able to change order of any column */
 	areColumnsOrderable: boolean
-	/** If passed, by default user will be able to swap columns' position */
+	/** If true, by default user will be able to swap columns' position */
 	areColumnsSwappable: boolean
+	/** If true, by default user will be able to resize columns */
+	areColumnsResizeable: boolean
+	/** Pixel size of min column width. Active during resizing. */
+	defaultMinColumnWidth: number
 }
 
 
@@ -80,7 +91,7 @@ export const Table = <T,>({
 	columns: srcColumns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
 }: Props<T>) => {
 	const {
-		orderedColumns: columns, order, setOrder, userConfigActions, swapColumn
+		orderedColumns: columns, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
 	} = useTableSettings({...srcUserConfigActions, columns: srcColumns})
 	const dataSource = useTableDataSource(dataSourceParams, order)
 
@@ -91,10 +102,10 @@ export const Table = <T,>({
 		}))
 
 		return {
-			gridTemplateColumns: getTableTemplateColumns(columns),
+			gridTemplateColumns: getTableTemplateColumns(columns, columnWidthOverrides),
 			...tableVars
 		}
-	}, [columns])
+	}, [columns, columnWidthOverrides])
 
 	const [currentlyDraggedRow, setCurrentlyDraggedRow] = useState<TableHierarchy<T> | null>(null)
 
@@ -126,6 +137,8 @@ export const Table = <T,>({
 					userConfigActions={userConfigActions}
 					columns={columns}
 					swapColumn={swapColumn}
+					columnWidthOverrides={columnWidthOverrides}
+					setColumnWidthOverrides={setColumnWidthOverrides}
 				/>}
 			<TableRowDragndrop
 				tableId={tableId}

@@ -61,6 +61,7 @@
 
 	.tableHeader {
 		background-color: #333;
+		position: relative;
 
 		&.isInteractive {
 			cursor: pointer;
@@ -69,7 +70,6 @@
 		&.isDragged {
 			z-index: 1;
 			left: var(--drag-offset);
-			position: relative;
 		}
 		
 		.headerContent {
@@ -109,6 +109,22 @@
 					-1px -1px 0 var(--color-foreground),
 					1px -1px 0 var(--color-foreground);
 			}
+		}
+
+		.columnResizer {
+			position: absolute;
+			width: 1rem;
+			top: 0;
+			bottom: 0;
+			cursor: ew-resize;
+		}
+
+		.columnLeftResizer {
+			left: calc(var(--border-width) * -1);
+		}
+
+		.columnRightResizer {
+			right: calc(var(--border-width) * -1);
 		}
 	}
 

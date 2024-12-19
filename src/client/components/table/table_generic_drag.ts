@@ -43,9 +43,9 @@ export const makeTableDrag = (opts: Options) => {
 			return
 		}
 
-		const startResult = opts.canStartAt?.(coords)
-		if(startResult === false){
-			return // clicked on something that is not row
+		const canStart = opts.canStartAt?.(coords)
+		if(!canStart){
+			return
 		}
 
 		cleanup("down")
