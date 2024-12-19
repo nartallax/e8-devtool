@@ -8,7 +8,8 @@ export const TableExample = () => {
 	const dataSource: TableDataSourceDefinition<string> = useMemo(() => ({
 		getRowKey: row => row,
 		loadData: async(opts: TableDataLoadOptions<string>) => {
-			await new Promise(ok => setTimeout(ok, 100))
+			console.log(opts.offset)
+			await new Promise(ok => setTimeout(ok, 1000))
 			const data = ["one", "two", "three", "four", "five", "six"]
 			const nextPageIndex = opts.offset / data.length
 			if(nextPageIndex >= pagesTotal){
@@ -27,11 +28,12 @@ export const TableExample = () => {
 		<Col margin grow>
 			<Table
 				areColumnsOrderable
+				areColumnsSwappable
 				maxOrderedColumns={2}
 				dataSource={dataSource}
 				columns={useMemo<TableColumnDefinition<string>[]>(() => [
 					{
-						id: "length", header: "length", width: "75px", render: x => x.row.length
+						id: "length", header: "length", width: "75px", render: x => x.row.length, isSwappable: false
 					},
 					{
 						id: "name", header: "name", width: "1fr", render: x => x.row, isTreeColumn: true

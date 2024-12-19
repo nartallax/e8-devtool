@@ -65,7 +65,7 @@ export const makeTableDrag = (opts: Options) => {
 		if(!isMoving){
 			const dx = Math.abs(coords.x - dragStartCoords.x)
 			const dy = Math.abs(coords.y - dragStartCoords.y)
-			const distance2 = dx * dy
+			const distance2 = (dx ** 2) + (dy ** 2)
 			if(distance2 < opts.thresholdPx ** 2){
 				return
 			}
@@ -139,4 +139,19 @@ const findNearestHtmlElement = (target: unknown): HTMLElement | null => {
 		return null
 	}
 	return null
+}
+
+export const findParentTable = (child: HTMLElement): HTMLElement => {
+	let el: Element = child
+	while(el !== document.body){
+		const attrValue = el.getAttribute("data-table-id")
+		if(attrValue){
+			return el as HTMLElement
+		}
+		if(!el.parentElement){
+			break
+		}
+		el = el.parentElement
+	}
+	throw new Error("Table element not found.")
 }

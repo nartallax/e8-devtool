@@ -3,9 +3,12 @@ import {TableOrder, TableOrderDirection} from "client/components/table/table_dat
 import {SetState} from "client/ui_utils/react_types"
 import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
-import {useCallback, useMemo} from "react"
+import {useCallback, useMemo, useState} from "react"
 import {Icon} from "generated/icons"
 import {reactMemo} from "common/react_memo"
+import {makeTableDrag} from "client/components/table/table_generic_drag"
+import {getTableTemplateColumns} from "client/components/table/table_settings"
+import {TableHeaderColumnSizeCounter} from "client/components/table/table_header_column_size_counter"
 
 type Props<T> = {
 	columns: TableColumnDefinition<T>[]
@@ -37,21 +40,29 @@ export const TableHeaders = reactMemo(<T,>({
 		})
 	}, [userConfigActions, setOrder])
 
-	return columns.map(col => {
-		const colOrder = order.find(order => order.column.id === col.id)
-		const orderIndex = !colOrder || userConfigActions.maxOrderedColumns < 2 ? null : order.indexOf(colOrder)
-		return (
-			<TableHeader
-				key={col.id}
-				column={col}
-				userConfigActions={userConfigActions}
-				orderDirection={colOrder?.direction ?? null}
-				orderIndex={orderIndex}
-				onOrderChange={changeColumnOrder}
-				swapColumn={swapColumn}
-			/>
-		)
-	})
+	return (
+		<div
+			className={css.tableHeaders}
+			style={{
+				gridTemplateColumns: getTableTemplateColumns(columns)
+			}}>
+			{columns.map(col => {
+				const colOrder = order.find(order => order.column.id === col.id)
+				const orderIndex = !colOrder || userConfigActions.maxOrderedColumns < 2 ? null : order.indexOf(colOrder)
+				return (
+					<TableHeader
+						key={col.id}
+						column={col}
+						userConfigActions={userConfigActions}
+						orderDirection={colOrder?.direction ?? null}
+						orderIndex={orderIndex}
+						onOrderChange={changeColumnOrder}
+						swapColumn={swapColumn}
+					/>
+				)
+			})}
+		</div>
+	)
 })
 
 
@@ -67,13 +78,13 @@ type SingleHeaderProps<T> = {
 const TableHeader = reactMemo(<T,>({
 	column, orderDirection, orderIndex, onOrderChange, swapColumn, userConfigActions
 }: SingleHeaderProps<T>) => {
+	const [dragOffset, setDragOffset] = useState(0)
+	const [isDragged, setIsDragged] = useState(false)
+
+	const isOrderUserChangeable = column.isOrderUserChangeable ?? userConfigActions.areColumnsOrderable
+	const isSwappable = column.isSwappable ?? userConfigActions.areColumnsSwappable
 
 	const handlerProps = useMemo(() => {
-		const isOrderUserChangeable = column.isOrderUserChangeable ?? userConfigActions.areColumnsOrderable
-		const isSwappable = column.isSwappable ?? userConfigActions.areColumnsSwappable
-		const className = cn(css.tableHeader, {
-			[css.isInteractive!]: isOrderUserChangeable || isSwappable
-		})
 
 		let onClick: (() => void) | null = null
 		if(isOrderUserChangeable){
@@ -82,23 +93,57 @@ const TableHeader = reactMemo(<T,>({
 			}
 		}
 
-		const onDown: (() => void) | null = null
+		let onDown: ((e: React.TouchEvent | React.MouseEvent) => void) | null = null
 		if(isSwappable){
-			void swapColumn // TBD
+			let sizeCounter: TableHeaderColumnSizeCounter | null = null
+			const drag = makeTableDrag({
+				direction: "horisontal",
+				onClick: !onClick ? undefined : onClick,
+				thresholdPx: 5,
+				reset: () => {
+					sizeCounter = null
+					setDragOffset(0)
+					setIsDragged(false)
+				},
+				onStart: coords => {
+					sizeCounter = new TableHeaderColumnSizeCounter(coords.target, coords.x)
+					setIsDragged(true)
+				},
+				onMove: ({current}) => {
+					const offset = sizeCounter!.getOffset(current.x)
+					const swapDirection = sizeCounter!.getSwapDirection(offset)
+
+					if(swapDirection !== null){
+						swapColumn(column.id, swapDirection)
+						sizeCounter!.swap(swapDirection)
+						setDragOffset(sizeCounter!.getOffset(current.x))
+					} else {
+						setDragOffset(offset)
+					}
+				}
+			})
+			onDown = e => {
+				drag.onDown(e.nativeEvent)
+			}
 		}
 
-		return {
-			className,
-			...(onDown ? {onDown} : onClick ? {onClick} : {})
-		}
-	}, [column, onOrderChange, swapColumn, userConfigActions])
+		return onDown ? {onMouseDown: onDown, onTouchStart: onDown} : onClick ? {onClick} : {}
+	}, [isOrderUserChangeable, isSwappable, column, onOrderChange, swapColumn])
+
+	const style = {
+		gridColumn: `var(--table-col-${column.id})`,
+		["--drag-offset"]: dragOffset + "px"
+	}
 
 	return (
 		<div
 			data-column-id={column.id}
-			style={{
-				gridColumn: `var(--table-col-${column.id})`
-			}}
+			data-is-swappable={isSwappable}
+			className={cn(css.tableHeader, {
+				[css.isInteractive!]: isOrderUserChangeable || isSwappable,
+				[css.isDragged!]: isDragged
+			})}
+			style={style}
 			{...handlerProps}>
 			<div className={css.headerContent}>
 				{column.header}

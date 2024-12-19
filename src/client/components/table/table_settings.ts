@@ -16,6 +16,10 @@ type TableSettings<T> = {
 	setOrder: SetState<TableOrder<T>[]>
 }
 
+export const getTableTemplateColumns = <T>(columns: TableColumnDefinition<T>[]): string => {
+	return columns.map(col => col.width ?? "auto").join(" ")
+}
+
 export const useTableSettings = <T>({
 	columns, maxOrderedColumns, areColumnsOrderable, areColumnsSwappable
 }: Props<T>): TableSettings<T> => {

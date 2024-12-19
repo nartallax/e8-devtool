@@ -4,7 +4,7 @@ import {TableDataSourceDefinition, TableOrderDirection, useTableDataSource} from
 import {useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
-import {useTableSettings} from "client/components/table/table_settings"
+import {getTableTemplateColumns, useTableSettings} from "client/components/table/table_settings"
 import {TableHeaders} from "client/components/table/table_headers"
 
 /** A description of a single row in a tree structure */
@@ -77,11 +77,11 @@ export type TableUserConfigActionProps = {
 
 
 export const Table = <T,>({
-	columns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
+	columns: srcColumns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
 }: Props<T>) => {
 	const {
-		orderedColumns, order, setOrder, userConfigActions, swapColumn
-	} = useTableSettings({...srcUserConfigActions, columns})
+		orderedColumns: columns, order, setOrder, userConfigActions, swapColumn
+	} = useTableSettings({...srcUserConfigActions, columns: srcColumns})
 	const dataSource = useTableDataSource(dataSourceParams, order)
 
 	const tableStyle = useMemo(() => {
@@ -91,7 +91,7 @@ export const Table = <T,>({
 		}))
 
 		return {
-			gridTemplateColumns: columns.map(col => col.width ?? "auto").join(" "),
+			gridTemplateColumns: getTableTemplateColumns(columns),
 			...tableVars
 		}
 	}, [columns])
@@ -112,7 +112,7 @@ export const Table = <T,>({
 			data-table-id={tableId}>
 			<TableSegment
 				hierarchy={emptyArray}
-				columns={columns}
+				columns={srcColumns}
 				dataSource={dataSource}
 				draggedRowHierarchyTail={currentlyDraggedRow}
 				isRowCurrentlyDragged={false}
@@ -124,7 +124,7 @@ export const Table = <T,>({
 					order={order}
 					setOrder={setOrder}
 					userConfigActions={userConfigActions}
-					columns={orderedColumns}
+					columns={columns}
 					swapColumn={swapColumn}
 				/>}
 			<TableRowDragndrop

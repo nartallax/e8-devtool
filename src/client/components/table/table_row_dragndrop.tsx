@@ -3,7 +3,7 @@ import {TableDataSource, TableRowMoveEvent} from "client/components/table/table_
 import {useEffect, useState} from "react"
 import * as css from "./table.module.css"
 import {SetState} from "client/ui_utils/react_types"
-import {makeTableDrag} from "client/components/table/table_generic_drag"
+import {findParentTable, makeTableDrag} from "client/components/table/table_generic_drag"
 
 type RowDragDisposition = "above" | "below" | "inside"
 type XY = {x: number, y: number}
@@ -175,21 +175,6 @@ const findNearestCell = (el: HTMLElement, tableId: string): {el: HTMLElement, pa
 		el = el.parentElement
 	}
 	return null
-}
-
-const findParentTable = (child: HTMLElement): HTMLElement => {
-	let el: Element = child
-	while(el !== document.body){
-		const attrValue = el.getAttribute("data-table-id")
-		if(attrValue){
-			return el as HTMLElement
-		}
-		if(!el.parentElement){
-			break
-		}
-		el = el.parentElement
-	}
-	throw new Error("Table element not found.")
 }
 
 const isCellBelongsToTable = (cell: HTMLElement, tableId: string): boolean => {

@@ -1,3 +1,10 @@
+.table, .tableHeaders {
+	display: grid;
+	grid-auto-flow: row dense;
+	grid-auto-rows: fit-content(2rem);
+	gap: var(--border-width);
+}
+
 .table {
 	--border-width: 1px;
 	--cell-padding: 0.5rem;
@@ -9,10 +16,6 @@
 	--tree-element-width: 2rem;
 	--cell-background-color: #222;
 
-	display: grid;
-	grid-auto-flow: row dense;
-  grid-auto-rows: fit-content(2rem);
-	gap: var(--border-width);
 	flex: 1 1 0;
 	align-self: stretch;
 	overflow: auto;
@@ -47,11 +50,26 @@
 		transition: opacity 0.5s;
 	}
 
-	.tableHeader {
+	.tableHeaders {
 		grid-row: 1 / 2;
+		grid-column: 1 / -1;
+		position: sticky;
+		top: 0; /* that's for position:sticky to work */
+		background-color: #333;
+		outline: var(--border-width) solid var(--border-color);
+	}
+
+	.tableHeader {
+		background-color: #333;
 
 		&.isInteractive {
 			cursor: pointer;
+		}
+		
+		&.isDragged {
+			z-index: 1;
+			left: var(--drag-offset);
+			position: relative;
 		}
 		
 		.headerContent {
@@ -98,12 +116,6 @@
 		padding: var(--cell-padding);
 		background-color: var(--cell-background-color);
 		border-top: 0;
-	}
-
-	.tableHeader {
-		position: sticky;
-		background-color: #333;
-		top: 0; /* that's for position:sticky to work */
 	}
 
 }
