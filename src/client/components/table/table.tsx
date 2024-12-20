@@ -68,8 +68,6 @@ type Props<T> = Partial<TableUserConfigActionProps> & {
 	columns: TableColumnDefinition<T>[]
 	/** If false, headers will be hidden. True by default */
 	areHeadersVisible?: boolean
-	/** If passed, table will store user-defined settings in local storage using this key. */
-	localStorageKey?: string
 }
 
 export type TableUserConfigActionProps = {
@@ -84,6 +82,8 @@ export type TableUserConfigActionProps = {
 	areColumnsResizeable: boolean
 	/** Pixel size of min column width. Active during resizing. */
 	defaultMinColumnWidth: number
+	/** Part of local storage key. If passed, all configurable settings (width, position...) will be stored there. */
+	localStorageId: string | null
 }
 
 

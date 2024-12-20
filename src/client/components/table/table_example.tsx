@@ -31,6 +31,7 @@ export const TableExample = () => {
 				areColumnsSwappable
 				areColumnsResizeable
 				maxOrderedColumns={2}
+				localStorageId='test'
 				dataSource={dataSource}
 				columns={useMemo<TableColumnDefinition<string>[]>(() => [
 					{
