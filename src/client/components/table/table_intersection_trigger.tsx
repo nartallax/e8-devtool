@@ -14,22 +14,16 @@ export const TableIntersectionTrigger = reactMemo(({
 	const triggerRef = useRef<HTMLDivElement | null>(null)
 
 	const [isIntersecting, setIsIntersecting] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
+	const [didTrigger, setDidTrigger] = useState(false)
 
 	useEffect(() => {
-		if(!isIntersecting || isLoading){
+		if(!isIntersecting || didTrigger){
 			return
 		}
 
-		void(async() => {
-			setIsLoading(true)
-			try {
-				await onBottomHit()
-			} finally {
-				setIsLoading(false)
-			}
-		})()
-	}, [isIntersecting, onBottomHit, isLoading])
+		setDidTrigger(true)
+		void onBottomHit()
+	}, [isIntersecting, onBottomHit, didTrigger])
 
 	const triggerStyle = {
 		display: "flex", // for typing
