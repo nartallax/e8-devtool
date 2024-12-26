@@ -1,18 +1,36 @@
-import {PropsWithChildren, useEffect, useRef} from "react"
+import {PropsWithChildren, useEffect, useRef, useState} from "react"
 import * as css from "./table.module.css"
-import {sleepFrame} from "client/ui_utils/sleep_frame"
 import {reactMemo} from "common/react_memo"
 
 type Props = {
 	/** Number of pixels from last row when onBottomHit is triggered */
 	triggerOffsetPx?: number
 	onBottomHit: () => void | Promise<void>
+	canTrigger: boolean
 }
 
 export const TableIntersectionTrigger = reactMemo(({
-	triggerOffsetPx = 0, onBottomHit
+	triggerOffsetPx = 0, onBottomHit, canTrigger
 }: PropsWithChildren<Props>) => {
-	const triggerRef = useRef<HTMLTableCellElement | null>(null)
+	const triggerRef = useRef<HTMLDivElement | null>(null)
+
+	const [isIntersecting, setIsIntersecting] = useState(false)
+	const [isLoading, setIsLoading] = useState(false)
+
+	useEffect(() => {
+		if(isLoading || !isIntersecting || !canTrigger){
+			return
+		}
+
+		void(async() => {
+			setIsLoading(true)
+			try {
+				await Promise.resolve(onBottomHit())
+			} finally {
+				setIsLoading(false)
+			}
+		})()
+	}, [isIntersecting, isLoading, onBottomHit, canTrigger])
 
 	const triggerStyle = {
 		display: "flex", // for typing
@@ -29,52 +47,23 @@ export const TableIntersectionTrigger = reactMemo(({
 		if(!trigger){
 			return
 		}
-		let isLoading = false
-		let isIntersecting = false
-		let hitError = false
 
-		const loadNextPage = async() => {
-			if(isLoading || hitError){
-				return
-			}
-
-			isLoading = true
-			trigger.textContent = "Loading..."
-			try {
-				await Promise.resolve(onBottomHitRef.current())
-			} catch(e){
-				console.error("Failed to load next page for infinite scroll: ", e)
-				// in case of error just assume that next load will throw the same error and give up
-				hitError = true
-				observer.disconnect()
-			} finally {
-				isLoading = false
-				trigger.textContent = ""
-			}
-
-			await sleepFrame()
-			if(isIntersecting){
-				// after page is loaded, trigger is still in sight
-				// we should try and load next page then
-				await loadNextPage()
-			}
-		}
-
-		const observer = new IntersectionObserver(async entries => {
-			isIntersecting = entries.some(entry => entry.isIntersecting)
-			await loadNextPage()
+		const observer = new IntersectionObserver(entries => {
+			setIsIntersecting(entries.some(entry => entry.isIntersecting))
 		})
 		observer.observe(trigger)
 
 		return () => {
 			observer.disconnect()
-			isIntersecting = false
+			setIsIntersecting(false)
 		}
 	}, [])
 
 	return (
 		<div className={css.tableInfiniteScrollRow}>
-			<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}/>
+			<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}>
+				{isLoading ? "Loading..." : ""}
+			</div>
 		</div>
 	)
 })

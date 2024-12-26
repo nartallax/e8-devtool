@@ -183,6 +183,8 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
+		background-color: transparent;
+		border: 0;
 	}
 
 	.empty,

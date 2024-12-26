@@ -1,6 +1,5 @@
 import * as css from "./table.module.css"
-import {TableSegment} from "client/components/table/table_segment"
-import {TableDataSourceDefinition, TableOrderDirection, useTableDataSource} from "client/components/table/table_data_source"
+import {TableRowSequence} from "client/components/table/table_row_sequence"
 import {useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
@@ -15,7 +14,7 @@ export type TableHierarchyEntry<T> = {
 }
 
 /** Hierarchy is a sequence of rows in tree structure, each one is level further, starting at the root */
-export type TableHierarchy<T> = TableHierarchyEntry<T>[]
+export type TableHierarchy<T> = readonly TableHierarchyEntry<T>[]
 
 const emptyArray: any[] = []
 
@@ -63,11 +62,47 @@ export type TableColumnDefinition<T> = {
 	minWidth?: number
 }
 
-type Props<T> = Partial<TableUserConfigActionProps> & {
-	dataSource: TableDataSourceDefinition<T>
-	columns: TableColumnDefinition<T>[]
+export type TableProps<T> = Partial<TableUserConfigActionProps> & {
+	data: readonly T[]
+	getRowKey: (row: T, index: number) => string | number
+
+	/** Check if this row can theoretically have children.
+	If true - user will be able to expand the row, at which point children will be loaded */
+	canHaveChildren?: (row: T) => boolean
+	getChildren?: (row: T) => readonly T[]
+
+	/** Checks if the row can be moved to a new location. Defaults to true.
+	Makes no sense to use without onRowDrag. */
+	canMoveRowTo?: (dragEvent: TableRowMoveEvent<T>) => boolean
+
+	/** Called when user completes drag-n-drop move of a row.
+	Table expects that this handler will perform some operation on source data to move row from old position to new.
+	Table data won't be re-fetched after operation is complete; instead, table will move the rows internally.
+	(it doesn't matter if you're keeping source data in memory and not on server, as you'll have to update datasource anyway in this case)
+
+	This handler can throw to indicate that operation is not successful; table will handle that.
+
+	Keep in mind that moving rows around can cause weirdness when combined with other things, like sorting and pagination.
+	It doesn't make much sense to drag-n-drop sorted rows, because order probably won't be saved (unless you update data in some smart way).
+	It also can cause pagination-by-constraints to load wrong rows if a row is dragged to the last place.
+	Table won't explicitly forbid those use cases, but you should be careful about them. */
+	onRowMoved?: (dragEvent: TableRowMoveEvent<T>) => void | Promise<void>
+
+	/** Called when scroll hits the bottom of some sequence.
+	Can be used to lazy-load new rows.
+	@returns true if there's more to load (and this function should be called again, if user scrolls further);
+	false in case all the rows in the sequence are loaded and there's no point in calling this function again until refresh */
+	// TODO: move isLastRow into row structure
+	onBottomHit?: (evt: TableBottomHitEvent<T>) => boolean | Promise<boolean>
+	columns: readonly TableColumnDefinition<T>[]
 	/** If false, headers will be hidden. True by default */
 	areHeadersVisible?: boolean
+}
+
+export type TableBottomHitEvent<T> = {
+	knownRows: readonly T[]
+	parentRow: T | null
+	hierarchy: TableHierarchy<T>
 }
 
 export type TableUserConfigActionProps = {
@@ -86,14 +121,35 @@ export type TableUserConfigActionProps = {
 	localStorageId: string | null
 }
 
+export type TableRowMoveEvent<T> = {
+	/** Location is a sequence of indices of children, from root to the last branch.
+	It's like hierarchy, but without other info.
+	Here hierarchies are not possible to use because sometimes we want to point to a row that doesn't exist yet (last one in sequence) */
+	oldLocation: number[]
+	newLocation: number[]
+	/** Row that is being moved.
+	Can be calculated both from oldLocation and newLocation; is present as separate field for convenience.
+
+	(same goes for parent rows) */
+	row: T
+	oldParent: T | null
+	newParent: T | null
+}
+
+export type TableOrderDirection = "asc" | "desc"
+
+export type TableOrder<T> = {
+	column: TableColumnDefinition<T>
+	direction: TableOrderDirection
+}
+
 
 export const Table = <T,>({
-	columns: srcColumns, dataSource: dataSourceParams, areHeadersVisible = true, ...srcUserConfigActions
-}: Props<T>) => {
+	columns: srcColumns, areHeadersVisible = true, canHaveChildren, data, getRowKey, canMoveRowTo, getChildren, onRowMoved, onBottomHit, ...srcUserConfigActions
+}: TableProps<T>) => {
 	const {
 		orderedColumns: columns, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
 	} = useTableSettings({...srcUserConfigActions, columns: srcColumns})
-	const dataSource = useTableDataSource(dataSourceParams, order)
 
 	const tableStyle = useMemo(() => {
 		const tableVars = Object.fromEntries(columns.map((col, i) => {
@@ -121,12 +177,16 @@ export const Table = <T,>({
 			})}
 			style={tableStyle}
 			data-table-id={tableId}>
-			<TableSegment
+			<TableRowSequence
 				hierarchy={emptyArray}
 				columns={srcColumns}
-				dataSource={dataSource}
 				draggedRowHierarchyTail={currentlyDraggedRow}
 				isRowCurrentlyDragged={false}
+				canHaveChildren={canHaveChildren}
+				getRowKey={getRowKey}
+				getChildren={getChildren}
+				segmentData={data}
+				onBottomHit={onBottomHit}
 			/>
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
@@ -143,7 +203,11 @@ export const Table = <T,>({
 			<TableRowDragndrop
 				tableId={tableId}
 				setCurrentlyDraggedRow={setCurrentlyDraggedRow}
-				dataSource={dataSource}
+				data={data}
+				canHaveChildren={canHaveChildren}
+				getChildren={getChildren}
+				canMoveRowTo={canMoveRowTo}
+				onRowMoved={onRowMoved}
 			/>
 		</div>
 	)

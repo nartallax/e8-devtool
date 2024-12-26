@@ -50,19 +50,26 @@ const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy
 					const isRoot = hierarchy.length === 1
 					const canHaveChildren = !!setExpanded
 					const isExpander = isCurrentLevel && canHaveChildren
-					const variant
-						= isExpander ? "expander" as const
-							: isCurrentLevel && !isRoot && !canHaveChildren ? "horisontal" as const
+					if(isExpander){
+						return (
+							<button
+								key={index}
+								type="button"
+								className={cn(css.expander, Icon.triangleRight)}
+								onClick={() => {
+									setExpanded(expanded => !expanded)
+								}}
+							/>
+						)
+					} else {
+						const variant
+							= isCurrentLevel && !isRoot && !canHaveChildren ? "horisontal" as const
 								: isParentLevel && !isRowLastInSequence ? "split" as const
 									: isParentLevel && isRowLastInSequence ? "corner" as const
 										: !isParentLevel && !isCurrentLevel && !isNextEntryLastInSequence ? "vertical" as const
 											: "empty" as const
-					const onClick = !isExpander ? undefined : (() => {
-						setExpanded(expanded => !expanded)
-					})
-					return (
-						<div key={index} onClick={onClick} className={cn(css[variant], isExpander ? Icon.triangleRight : undefined)}/>
-					)
+						return <div key={index} className={css[variant]}/>
+					}
 				})
 			}</div>
 	)

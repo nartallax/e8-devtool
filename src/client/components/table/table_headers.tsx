@@ -1,4 +1,4 @@
-import {TableColumnDefinition, TableUserConfigActionProps} from "client/components/table/table"
+import {TableColumnDefinition, TableProps, TableUserConfigActionProps} from "client/components/table/table"
 import {TableOrder, TableOrderDirection} from "client/components/table/table_data_source"
 import {SetState} from "client/ui_utils/react_types"
 import * as css from "./table.module.css"
@@ -12,14 +12,13 @@ import {TableHeaderColumnDragHelper} from "client/components/table/table_header_
 import {TableHeaderResizeHelper} from "client/components/table/table_header_resize_helper"
 
 type Props<T> = {
-	columns: TableColumnDefinition<T>[]
-	order: TableOrder<T>[]
-	setOrder: SetState<TableOrder<T>[]>
+	order: readonly TableOrder<T>[]
+	setOrder: SetState<readonly TableOrder<T>[]>
 	userConfigActions: TableUserConfigActionProps
 	swapColumn: (id: string, direction: -1 | 1) => void
 	columnWidthOverrides: ReadonlyMap<string, number>
 	setColumnWidthOverrides: SetState<ReadonlyMap<string, number>>
-}
+} & Pick<TableProps<T>, "columns">
 
 export const TableHeaders = reactMemo(<T,>({
 	columns, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides

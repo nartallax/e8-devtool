@@ -55,7 +55,9 @@ export const makeTableDrag = (opts: Options) => {
 		window.addEventListener("touchmove", onMove, {passive: true})
 		window.addEventListener("mouseup", onUp)
 		window.addEventListener("touchend", onUp)
-		coords.target.addEventListener("click", preventClick, {capture: true, once: true})
+		// I don't remember why it was there. probably to prevent something.
+		// but it breaks legit use cases like clicking buttons inside table cells
+		// coords.target.addEventListener("click", preventClick, {capture: true, once: true})
 	}
 
 	const preventClick = (e: MouseEvent) => {

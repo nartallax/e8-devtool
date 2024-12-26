@@ -5,21 +5,21 @@ import {useTransformedSetState, useWrappedSetState} from "client/ui_utils/use_wr
 import {useCallback, useMemo, useState} from "react"
 
 type Props<T> = Partial<TableUserConfigActionProps> & {
-	columns: TableColumnDefinition<T>[]
+	columns: readonly TableColumnDefinition<T>[]
 }
 
 type TableSettings<T> = {
 	/** Column definitions ordered in a way user ordered them */
-	orderedColumns: TableColumnDefinition<T>[]
+	orderedColumns: readonly TableColumnDefinition<T>[]
 	swapColumn: (id: string, direction: -1 | 1) => void
-	order: TableOrder<T>[]
+	order: readonly TableOrder<T>[]
 	userConfigActions: TableUserConfigActionProps
-	setOrder: SetState<TableOrder<T>[]>
+	setOrder: SetState<readonly TableOrder<T>[]>
 	columnWidthOverrides: ReadonlyMap<string, number>
 	setColumnWidthOverrides: SetState<TableSettings<T>["columnWidthOverrides"]>
 }
 
-export const getTableTemplateColumns = <T>(columns: TableColumnDefinition<T>[], overrides: ReadonlyMap<string, number>): string => {
+export const getTableTemplateColumns = <T>(columns: readonly TableColumnDefinition<T>[], overrides: ReadonlyMap<string, number>): string => {
 	return columns.map(col => {
 		const override = overrides.get(col.id)
 		if(override !== undefined){
@@ -38,7 +38,7 @@ type LocalStorageState = {
 
 const getLocalStorageKey = (id: string) => `table_settings[${id}]`
 
-const loadStateFromLocalStorage = <T>(id: string | null, columns: TableColumnDefinition<T>[]): LocalStorageState => {
+const loadStateFromLocalStorage = <T>(id: string | null, columns: readonly TableColumnDefinition<T>[]): LocalStorageState => {
 	const emptyState: LocalStorageState = {
 		order: tableOrderToStorageOrder(getDefaultOrder(columns)),
 		columnOrder: columns.map(x => ({columnId: x.id})),
@@ -81,7 +81,7 @@ const saveStateToLocalStorage = (id: string | null, state: LocalStorageState) =>
 	localStorage.setItem(getLocalStorageKey(id), JSON.stringify(state))
 }
 
-const getDefaultOrder = <T>(columns: TableColumnDefinition<T>[]) => {
+const getDefaultOrder = <T>(columns: readonly TableColumnDefinition<T>[]) => {
 	const defaultOrderedColumns = columns
 		.filter(col => !!col.defaultOrder)
 		.sort((a, b) => {
@@ -95,12 +95,12 @@ const getDefaultOrder = <T>(columns: TableColumnDefinition<T>[]) => {
 	}))
 }
 
-const storageOrderToTableOrder = <T>(ord: LocalStorageState["order"], columns: TableColumnDefinition<T>[]): TableOrder<T>[] => {
+const storageOrderToTableOrder = <T>(ord: LocalStorageState["order"], columns: readonly TableColumnDefinition<T>[]): TableOrder<T>[] => {
 	const map = new Map(columns.map(col => [col.id, col]))
 	return ord.map(ord => ({direction: ord.direction, column: map.get(ord.columnId)!}))
 }
 
-const tableOrderToStorageOrder = <T>(ord: TableOrder<T>[]): LocalStorageState["order"] => {
+const tableOrderToStorageOrder = <T>(ord: readonly TableOrder<T>[]): LocalStorageState["order"] => {
 	return ord.map(ord => ({columnId: ord.column.id, direction: ord.direction}))
 }
 
@@ -128,7 +128,7 @@ export const useTableSettings = <T>({
 	)
 
 	const setOrder = useTransformedSetState(setLocalStorageState,
-		(order: TableOrder<T>[], state) => ({
+		(order: readonly TableOrder<T>[], state) => ({
 			...state,
 			order: tableOrderToStorageOrder(order)
 		}),

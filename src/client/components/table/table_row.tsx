@@ -1,23 +1,20 @@
-import {TableColumnDefinition, TableHierarchy} from "client/components/table/table"
+import {TableHierarchy, TableProps} from "client/components/table/table"
 import {reactMemo} from "common/react_memo"
 import {TableCell} from "client/components/table/table_cell"
-import {TableDataSource} from "client/components/table/table_data_source"
 import {useState} from "react"
-import {TableSegment} from "client/components/table/table_segment"
+import {TableRowSequence} from "client/components/table/table_row_sequence"
 
 type Props<T> = {
-	columns: TableColumnDefinition<T>[]
 	hierarchy: TableHierarchy<T>
-	dataSource: TableDataSource<T>
 	draggedRowHierarchyTail: TableHierarchy<T> | null
 	isRowCurrentlyDragged: boolean
-}
+} & Pick<TableProps<T>, "columns" | "getRowKey" | "onBottomHit" | "canHaveChildren" | "getChildren">
 
 export const TableRow = reactMemo(<T,>({
-	hierarchy, columns, dataSource, draggedRowHierarchyTail, isRowCurrentlyDragged
+	hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, canHaveChildren, getRowKey, onBottomHit, getChildren
 }: Props<T>) => {
 	const [isExpanded, setExpanded] = useState(false)
-	const canHaveChildren = dataSource.isTreeDataSource && dataSource.canHaveChildren(hierarchy[hierarchy.length - 1]!.row)
+	const isExpandable = !!canHaveChildren?.(hierarchy[hierarchy.length - 1]!.row)
 	const _isRowCurrentlyDragged = isRowCurrentlyDragged || draggedRowHierarchyTail?.length === 0
 
 	return (
@@ -28,17 +25,20 @@ export const TableRow = reactMemo(<T,>({
 					column={column}
 					key={column.id}
 					isExpanded={isExpanded}
-					setExpanded={!canHaveChildren ? null : setExpanded}
+					setExpanded={!isExpandable ? null : setExpanded}
 					isRowCurrentlyDragged={_isRowCurrentlyDragged}
 				/>
 			))}
-			{canHaveChildren
-			&& isExpanded
-			&& <TableSegment
+			{isExpanded && getChildren
+			&& <TableRowSequence
 				key="row-children"
 				hierarchy={hierarchy}
+				getRowKey={getRowKey}
+				onBottomHit={onBottomHit}
+				canHaveChildren={canHaveChildren}
+				getChildren={getChildren}
 				columns={columns}
-				dataSource={dataSource}
+				segmentData={getChildren(hierarchy[hierarchy.length - 1]!.row)}
 				draggedRowHierarchyTail={draggedRowHierarchyTail}
 				isRowCurrentlyDragged={_isRowCurrentlyDragged}
 			/>}

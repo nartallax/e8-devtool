@@ -1,27 +1,26 @@
-import {TableHierarchy} from "client/components/table/table"
-import {TableDataSource, TableRowMoveEvent} from "client/components/table/table_data_source"
+import {TableHierarchy, TableProps, TableRowMoveEvent} from "client/components/table/table"
 import {useEffect, useState} from "react"
 import * as css from "./table.module.css"
 import {SetState} from "client/ui_utils/react_types"
 import {findParentTable, makeTableDrag} from "client/components/table/table_generic_drag"
+import {TableUtils} from "client/components/table/table_utils"
 
 type RowDragDisposition = "above" | "below" | "inside"
 type XY = {x: number, y: number}
 
 type Props<T> = {
 	tableId: string
-	dataSource: TableDataSource<T>
 	setCurrentlyDraggedRow: SetState<TableHierarchy<T> | null>
-}
+} & Pick<TableProps<T>, "data" | "canHaveChildren" | "getChildren" | "canMoveRowTo" | "onRowMoved">
 
 export const TableRowDragndrop = <T,>({
-	setCurrentlyDraggedRow, dataSource, tableId
+	data, setCurrentlyDraggedRow, tableId, canHaveChildren, getChildren, canMoveRowTo, onRowMoved
 }: Props<T>) => {
 	const [cursorOffset, setCursorOffset] = useState<XY | null>(null)
 	const [dropLocatorY, setDropLocatorY] = useState<number | null>(null)
 
 	useEffect(() => {
-		if(!dataSource.areRowsMovable){
+		if(!onRowMoved){
 			return undefined
 		}
 
@@ -33,7 +32,7 @@ export const TableRowDragndrop = <T,>({
 			oldLocation: sourceLocation.map(x => x.rowIndex),
 			newLocation: targetLocation,
 			oldParent: sourceLocation[sourceLocation.length - 2]?.row ?? null,
-			newParent: targetLocation.length < 2 ? null : dataSource.cache.getParentByPath(targetLocation),
+			newParent: targetLocation.length < 2 ? null : TableUtils.findParentRowOrThrow(data, getChildren, targetLocation),
 			row: sourceLocation[sourceLocation.length - 1]!.row
 		})
 
@@ -49,10 +48,10 @@ export const TableRowDragndrop = <T,>({
 			const {path: newTargetLocation} = newTarget
 
 			let disposition: RowDragDisposition
-			const newTargetRow = dataSource.cache.getRowByPath(newTargetLocation)
+			const newTargetRow = TableUtils.findRowOrThrow(data, getChildren, newTargetLocation)
 			const newTargetRect = newTarget.el.getBoundingClientRect()
 			const ratio = (coords.y - newTargetRect.top) / newTargetRect.height
-			if(dataSource.canHaveChildren(newTargetRow)){
+			if(canHaveChildren?.(newTargetRow)){
 				disposition = ratio < 0.25 ? "above" : ratio > 0.75 ? "below" : "inside"
 			} else {
 				disposition = ratio < 0.5 ? "above" : "below"
@@ -70,7 +69,7 @@ export const TableRowDragndrop = <T,>({
 			}
 
 			lastCheckedTargetLocation = newTargetLocation
-			if(isRowMoveLegal(sourceLocation.map(x => x.rowIndex), newTargetLocation) && dataSource.canMoveRowTo(makeMoveEvent(sourceLocation, newTargetLocation))){
+			if(isRowMoveLegal(sourceLocation.map(x => x.rowIndex), newTargetLocation) && (canMoveRowTo?.(makeMoveEvent(sourceLocation, newTargetLocation)) ?? true)){
 				destinationLocation = newTargetLocation
 				setDropLocatorY(targetToLocatorY(target, disposition))
 			}
@@ -92,7 +91,7 @@ export const TableRowDragndrop = <T,>({
 			},
 			onStart: coords => {
 				const rowElWithPath = findNearestCell(coords.target, tableId)!
-				sourceLocation = dataSource.cache.pathToHierarchy(rowElWithPath.path)
+				sourceLocation = TableUtils.pathToHierarchy(data, getChildren, rowElWithPath.path)
 				destinationLocation = sourceLocation.map(x => x.rowIndex)
 				setCurrentlyDraggedRow(sourceLocation)
 			},
@@ -107,7 +106,7 @@ export const TableRowDragndrop = <T,>({
 				const dest = destinationLocation
 				try {
 					if(src && dest && !arePathsEqual(src.map(x => x.rowIndex), dest)){
-						await dataSource.onRowMoved(makeMoveEvent(src, dest))
+						await onRowMoved(makeMoveEvent(src, dest))
 					}
 				} finally {
 					setCurrentlyDraggedRow(null)
@@ -127,7 +126,7 @@ export const TableRowDragndrop = <T,>({
 			window.removeEventListener("touchstart", onDown)
 			cleanup("shutdown")
 		}
-	}, [dataSource, tableId, setCurrentlyDraggedRow])
+	}, [tableId, data, setCurrentlyDraggedRow, onRowMoved, canHaveChildren, canMoveRowTo, getChildren])
 
 	return (
 		<>
@@ -209,9 +208,7 @@ const isRowMoveLegal = (from: number[], to: number[]): boolean => {
 		// even if it's the same position - who cares
 		return true
 	}
-	const shortest = from.length < to.length ? from : to
-	const longest = shortest === from ? to : from
-	if(isStartsWith(longest, shortest)){
+	if(isStartsWith(to, from)){
 		return false // cannot move row into itself
 	}
 	return true
