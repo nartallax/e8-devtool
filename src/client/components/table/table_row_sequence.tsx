@@ -1,19 +1,19 @@
-import {TableBottomHitEvent, TableHierarchy, TableProps} from "client/components/table/table"
+import {TableBottomHitEvent, TableHierarchy, TableProps, TableRow} from "client/components/table/table"
 import {TableIntersectionTrigger} from "client/components/table/table_intersection_trigger"
-import {TableRow} from "client/components/table/table_row"
+import {TableRowCells} from "client/components/table/table_row"
 import {reactMemo} from "common/react_memo"
 import {useMemo, useState} from "react"
 
-type Props<T> = {
-	segmentData: readonly T[]
-	hierarchy: TableHierarchy<T>
-	draggedRowHierarchyTail: TableHierarchy<T> | null
+type Props<K extends string> = {
+	segmentData: readonly TableRow<K>[]
+	hierarchy: TableHierarchy<K>
+	draggedRowHierarchyTail: TableHierarchy<K> | null
 	isRowCurrentlyDragged: boolean
-} & Pick<TableProps<T>, "columns" | "getRowKey" | "onBottomHit" | "canHaveChildren" | "getChildren">
+} & Pick<TableProps<K>, "columns" | "onBottomHit">
 
-export const TableRowSequence = reactMemo(<T,>({
-	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, getRowKey, onBottomHit, canHaveChildren, getChildren
-}: Props<T>) => {
+export const TableRowSequence = reactMemo(<K extends string>({
+	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit
+}: Props<K>) => {
 	const [isExpectingMoreRows, setExpectingMoreRows] = useState(!!onBottomHit)
 
 	// we need to compare current bottom row with row that was bottom when we started loading rows
@@ -22,21 +22,19 @@ export const TableRowSequence = reactMemo(<T,>({
 	// if we don't do that - sometimes intersection trigger calls for new page before react propagates changes to state
 	// which causes onBottomHit to be invoked with old list of currently known rows, which can cause request for the same page again
 	const [lastBottomRowKey, setLastBottomRowKey] = useState<string | number | null>(null)
-	const currentBottomRowIndex = segmentData.length - 1
-	const currentBottomRow = segmentData[segmentData.length - 1]
-	const currentBottomRowKey = !currentBottomRow ? undefined : getRowKey(currentBottomRow, currentBottomRowIndex)
+	const currentBottomRowKey = segmentData[segmentData.length - 1]?.key
 
 	const loadMoreRows = useMemo(() => !onBottomHit ? undefined : async() => {
-		const evt: TableBottomHitEvent<T> = {
+		const evt: TableBottomHitEvent<K> = {
 			hierarchy,
 			knownRows: segmentData,
 			parentRow: hierarchy.length === 0 ? null : hierarchy[hierarchy.length - 1]!.row
 		}
 		const bottomRowIndex = evt.knownRows.length - 1
 		const bottomRow = evt.knownRows[bottomRowIndex]
-		setLastBottomRowKey(!bottomRow ? null : getRowKey(bottomRow, bottomRowIndex))
+		setLastBottomRowKey(bottomRow?.key ?? null)
 		setExpectingMoreRows(await Promise.resolve(onBottomHit(evt)))
-	}, [onBottomHit, hierarchy, segmentData, getRowKey])
+	}, [onBottomHit, hierarchy, segmentData])
 
 	const rowsWithHierarchy = useMemo(() =>
 		segmentData.map((row, index) => ({
@@ -50,15 +48,12 @@ export const TableRowSequence = reactMemo(<T,>({
 	return (
 		<>
 			{rowsWithHierarchy.map(({row, hierarchy}, index) => (
-				<TableRow
+				<TableRowCells
 					isRowCurrentlyDragged={isRowCurrentlyDragged}
-					key={getRowKey(row, index)}
+					key={row.key}
 					hierarchy={hierarchy}
 					columns={columns}
 					draggedRowHierarchyTail={draggedRowHierarchyTail?.[0]?.rowIndex !== index ? null : draggedRowHierarchyTail.slice(1)}
-					getRowKey={getRowKey}
-					canHaveChildren={canHaveChildren}
-					getChildren={getChildren}
 					onBottomHit={onBottomHit}
 				/>
 			))}

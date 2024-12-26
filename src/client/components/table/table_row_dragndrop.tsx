@@ -8,14 +8,14 @@ import {TableUtils} from "client/components/table/table_utils"
 type RowDragDisposition = "above" | "below" | "inside"
 type XY = {x: number, y: number}
 
-type Props<T> = {
+type Props<K extends string> = {
 	tableId: string
-	setCurrentlyDraggedRow: SetState<TableHierarchy<T> | null>
-} & Pick<TableProps<T>, "data" | "canHaveChildren" | "getChildren" | "canMoveRowTo" | "onRowMoved">
+	setCurrentlyDraggedRow: SetState<TableHierarchy<K> | null>
+} & Pick<TableProps<K>, "rows" | "canMoveRowTo" | "onRowMoved">
 
-export const TableRowDragndrop = <T,>({
-	data, setCurrentlyDraggedRow, tableId, canHaveChildren, getChildren, canMoveRowTo, onRowMoved
-}: Props<T>) => {
+export const TableRowDragndrop = <K extends string>({
+	rows: data, setCurrentlyDraggedRow, tableId, canMoveRowTo, onRowMoved
+}: Props<K>) => {
 	const [cursorOffset, setCursorOffset] = useState<XY | null>(null)
 	const [dropLocatorY, setDropLocatorY] = useState<number | null>(null)
 
@@ -26,13 +26,13 @@ export const TableRowDragndrop = <T,>({
 
 		let lastCheckedTargetLocation: number[] | null = null
 		let destinationLocation: number[] | null = null
-		let sourceLocation: TableHierarchy<T> | null = null
+		let sourceLocation: TableHierarchy<K> | null = null
 
-		const makeMoveEvent = (sourceLocation: TableHierarchy<T>, targetLocation: number[]): TableRowMoveEvent<T> => ({
+		const makeMoveEvent = (sourceLocation: TableHierarchy<K>, targetLocation: number[]): TableRowMoveEvent<K> => ({
 			oldLocation: sourceLocation.map(x => x.rowIndex),
 			newLocation: targetLocation,
 			oldParent: sourceLocation[sourceLocation.length - 2]?.row ?? null,
-			newParent: targetLocation.length < 2 ? null : TableUtils.findParentRowOrThrow(data, getChildren, targetLocation),
+			newParent: targetLocation.length < 2 ? null : TableUtils.findParentRowOrThrow(data, targetLocation),
 			row: sourceLocation[sourceLocation.length - 1]!.row
 		})
 
@@ -48,10 +48,10 @@ export const TableRowDragndrop = <T,>({
 			const {path: newTargetLocation} = newTarget
 
 			let disposition: RowDragDisposition
-			const newTargetRow = TableUtils.findRowOrThrow(data, getChildren, newTargetLocation)
+			const newTargetRow = TableUtils.findRowOrThrow(data, newTargetLocation)
 			const newTargetRect = newTarget.el.getBoundingClientRect()
 			const ratio = (coords.y - newTargetRect.top) / newTargetRect.height
-			if(canHaveChildren?.(newTargetRow)){
+			if(newTargetRow.children){
 				disposition = ratio < 0.25 ? "above" : ratio > 0.75 ? "below" : "inside"
 			} else {
 				disposition = ratio < 0.5 ? "above" : "below"
@@ -91,7 +91,7 @@ export const TableRowDragndrop = <T,>({
 			},
 			onStart: coords => {
 				const rowElWithPath = findNearestCell(coords.target, tableId)!
-				sourceLocation = TableUtils.pathToHierarchy(data, getChildren, rowElWithPath.path)
+				sourceLocation = TableUtils.pathToHierarchy(data, rowElWithPath.path)
 				destinationLocation = sourceLocation.map(x => x.rowIndex)
 				setCurrentlyDraggedRow(sourceLocation)
 			},
@@ -126,7 +126,7 @@ export const TableRowDragndrop = <T,>({
 			window.removeEventListener("touchstart", onDown)
 			cleanup("shutdown")
 		}
-	}, [tableId, data, setCurrentlyDraggedRow, onRowMoved, canHaveChildren, canMoveRowTo, getChildren])
+	}, [tableId, data, setCurrentlyDraggedRow, onRowMoved, canMoveRowTo])
 
 	return (
 		<>

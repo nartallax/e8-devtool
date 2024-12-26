@@ -4,20 +4,20 @@ import {SetState} from "client/ui_utils/react_types"
 import {arrayLikeToArray} from "common/array_like_to_array"
 import * as css from "./table.module.css"
 
-type HeaderDescription = {
+type HeaderDescription<K extends string> = {
 	readonly initialWidth: number
 	width: number
 	readonly canBeChanged: boolean
-	readonly colId: string
+	readonly colId: K
 }
 
-export class TableHeaderResizeHelper {
+export class TableHeaderResizeHelper<K extends string> {
 	private readonly startScroll: number
-	private readonly descriptions: HeaderDescription[]
+	private readonly descriptions: HeaderDescription<K>[]
 	private readonly table: HTMLElement
 	private readonly targetIndex: number
 
-	constructor(readonly minWidth: number, readonly setOverrides: SetState<ReadonlyMap<string, number>>, target: HTMLElement, readonly startX: number) {
+	constructor(readonly minWidth: number, readonly setOverrides: SetState<ReadonlyMap<K, number>>, target: HTMLElement, readonly startX: number) {
 		this.table = findParentTable(target)
 		this.startScroll = this.table.scrollLeft
 		const colId = findNearestTableHeader(target)!.getAttribute("data-column-id")
@@ -28,7 +28,7 @@ export class TableHeaderResizeHelper {
 				width,
 				initialWidth: width,
 				canBeChanged: header.getAttribute("data-is-resizeable") === "true",
-				colId: header.getAttribute("data-column-id")!
+				colId: header.getAttribute("data-column-id") as K
 			}
 		})
 		this.targetIndex = this.descriptions.findIndex(desc => desc.colId === colId)

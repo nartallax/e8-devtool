@@ -5,37 +5,35 @@ import {cn} from "client/ui_utils/classname"
 import {SetState} from "client/ui_utils/react_types"
 import {Icon} from "generated/icons"
 
-type TableCellProps<T> = TreeTableCellProps<T> & {
-	column: TableColumnDefinition<T>
+type TableCellProps<K extends string> = TreeTableCellProps<K> & {
+	column: TableColumnDefinition
+	columnId: K
 	isRowCurrentlyDragged: boolean
 }
 
-type TreeTableCellProps<T> = {
-	hierarchy: TableHierarchy<T>
+type TreeTableCellProps<K extends string> = {
+	hierarchy: TableHierarchy<K>
 	isExpanded: boolean
 	setExpanded: SetState<boolean> | null
 }
 
-export const TableCell = reactMemo(<T,>({
-	hierarchy, column, isRowCurrentlyDragged, ...props
-}: TableCellProps<T>) => {
+export const TableCell = reactMemo(<K extends string>({
+	hierarchy, columnId, column, isRowCurrentlyDragged, ...props
+}: TableCellProps<K>) => {
 	return (
 		<div
 			data-tree-path={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
 			className={cn(css.tableCell, {
 				[css.movedRowCell!]: isRowCurrentlyDragged
 			})}
-			style={{gridColumn: `var(--table-col-${column.id})`}}>
+			style={{gridColumn: `var(--table-col-${columnId})`}}>
 			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
-			{column.render({
-				row: hierarchy[hierarchy.length - 1]!.row,
-				hierarchy
-			})}
+			{hierarchy[hierarchy.length - 1]!.row[columnId]}
 		</div>
 	)
 })
 
-const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<T>) => {
+const TableCellTreeControls = reactMemo(<K extends string>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<K>) => {
 	const lastHierarchyEntry = hierarchy[hierarchy.length - 1]!
 	const isRowLastInSequence = lastHierarchyEntry.rowIndex === lastHierarchyEntry.parentLoadedRowsCount - 1
 	return (

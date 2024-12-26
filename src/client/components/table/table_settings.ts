@@ -1,47 +1,47 @@
-import {TableColumnDefinition, TableUserConfigActionProps} from "client/components/table/table"
-import {TableOrder, TableOrderDirection} from "client/components/table/table_data_source"
+import {TableColumnDefinitions, TableOrder, TableOrderDirection, TableUserConfigActionProps} from "client/components/table/table"
+import {TableUtils} from "client/components/table/table_utils"
 import {SetState} from "client/ui_utils/react_types"
 import {useTransformedSetState, useWrappedSetState} from "client/ui_utils/use_wrapped_setstate"
 import {useCallback, useMemo, useState} from "react"
 
-type Props<T> = Partial<TableUserConfigActionProps> & {
-	columns: readonly TableColumnDefinition<T>[]
+type Props<K extends string> = Partial<TableUserConfigActionProps> & {
+	columns: TableColumnDefinitions<K>
 }
 
-type TableSettings<T> = {
+type TableSettings<K extends string> = {
 	/** Column definitions ordered in a way user ordered them */
-	orderedColumns: readonly TableColumnDefinition<T>[]
-	swapColumn: (id: string, direction: -1 | 1) => void
-	order: readonly TableOrder<T>[]
-	userConfigActions: TableUserConfigActionProps
-	setOrder: SetState<readonly TableOrder<T>[]>
-	columnWidthOverrides: ReadonlyMap<string, number>
-	setColumnWidthOverrides: SetState<TableSettings<T>["columnWidthOverrides"]>
+	readonly orderedColumnIds: readonly K[]
+	readonly swapColumn: (id: string, direction: -1 | 1) => void
+	readonly order: readonly TableOrder<K>[]
+	readonly userConfigActions: TableUserConfigActionProps
+	readonly setOrder: SetState<readonly TableOrder<K>[]>
+	readonly columnWidthOverrides: ReadonlyMap<K, number>
+	readonly setColumnWidthOverrides: SetState<TableSettings<K>["columnWidthOverrides"]>
 }
 
-export const getTableTemplateColumns = <T>(columns: readonly TableColumnDefinition<T>[], overrides: ReadonlyMap<string, number>): string => {
-	return columns.map(col => {
-		const override = overrides.get(col.id)
+export const getTableTemplateColumns = <K extends string>(order: readonly K[], columns: TableColumnDefinitions<K>, overrides: ReadonlyMap<string, number>): string => {
+	return order.map(id => {
+		const override = overrides.get(id)
 		if(override !== undefined){
 			return override + "px"
 		} else {
-			return col.width ?? "auto"
+			return columns[id].width ?? "auto"
 		}
 	}).join(" ")
 }
 
-type LocalStorageState = {
-	order: {columnId: string, direction: TableOrderDirection}[]
-	columnOrder: {columnId: string}[]
-	columnWidthOverrides: {columnId: string, width: number}[]
+type LocalStorageState<K extends string> = {
+	readonly order: readonly {columnId: K, direction: TableOrderDirection}[]
+	readonly columnOrder: readonly {columnId: K}[]
+	readonly columnWidthOverrides: readonly {columnId: K, width: number}[]
 }
 
 const getLocalStorageKey = (id: string) => `table_settings[${id}]`
 
-const loadStateFromLocalStorage = <T>(id: string | null, columns: readonly TableColumnDefinition<T>[]): LocalStorageState => {
-	const emptyState: LocalStorageState = {
-		order: tableOrderToStorageOrder(getDefaultOrder(columns)),
-		columnOrder: columns.map(x => ({columnId: x.id})),
+const loadStateFromLocalStorage = <K extends string>(id: string | null, columns: TableColumnDefinitions<K>): LocalStorageState<K> => {
+	const emptyState: LocalStorageState<K> = {
+		order: getDefaultOrder(columns),
+		columnOrder: TableUtils.colIds(columns).map(columnId => ({columnId})),
 		columnWidthOverrides: []
 	}
 	if(!id){
@@ -49,31 +49,35 @@ const loadStateFromLocalStorage = <T>(id: string | null, columns: readonly Table
 	}
 
 	const str = localStorage.getItem(getLocalStorageKey(id))
-	let state: LocalStorageState = {
+	let state: LocalStorageState<K> = {
 		...emptyState,
 		...JSON.parse(str ?? "{}")
 	}
-	const knownColIds = new Set(columns.map(col => col.id))
+	const knownColIds = new Set(TableUtils.colIds(columns))
 	state = Object.fromEntries(Object.entries(state).map(([k, arr]) => {
 		return [k, arr.filter(x => knownColIds.has(x.columnId))]
-	})) as LocalStorageState
+	})) as unknown as LocalStorageState<K>
 
 	const columnsInOrder = new Set(state.columnOrder.map(col => col.columnId))
-	for(let i = 0; i < columns.length; i++){
-		const col = columns[i]!
-		if(!columnsInOrder.has(col.id)){
-			state.columnOrder = [
-				...state.columnOrder.slice(0, i),
-				{columnId: col.id},
-				...state.columnOrder.slice(i)
-			]
+	const colIds = TableUtils.colIds(columns)
+	for(let i = 0; i < colIds.length; i++){
+		const colId = colIds[i]!
+		if(!columnsInOrder.has(colId)){
+			state = {
+				...state,
+				columnOrder: [
+					...state.columnOrder.slice(0, i),
+					{columnId: colId},
+					...state.columnOrder.slice(i)
+				]
+			}
 		}
 	}
 
 	return state
 }
 
-const saveStateToLocalStorage = (id: string | null, state: LocalStorageState) => {
+const saveStateToLocalStorage = <K extends string>(id: string | null, state: LocalStorageState<K>) => {
 	if(!id){
 		return
 	}
@@ -81,35 +85,26 @@ const saveStateToLocalStorage = (id: string | null, state: LocalStorageState) =>
 	localStorage.setItem(getLocalStorageKey(id), JSON.stringify(state))
 }
 
-const getDefaultOrder = <T>(columns: readonly TableColumnDefinition<T>[]) => {
-	const defaultOrderedColumns = columns
-		.filter(col => !!col.defaultOrder)
-		.sort((a, b) => {
+const getDefaultOrder = <K extends string>(columns: TableColumnDefinitions<K>): TableOrder<K>[] => {
+	const defaultOrderedColumns = TableUtils.colEntries(columns)
+		.filter(([,col]) => !!col.defaultOrder)
+		.sort(([aId, a], [bId, b]) => {
 			const aPriority = Array.isArray(a.defaultOrder) ? a.defaultOrder[0] : 0
 			const bPriority = Array.isArray(b.defaultOrder) ? b.defaultOrder[0] : 0
-			return aPriority > bPriority ? -1 : aPriority < bPriority ? 1 : a.id < b.id ? -1 : 1
+			return aPriority > bPriority ? -1 : aPriority < bPriority ? 1 : aId < bId ? -1 : 1
 		})
-	return defaultOrderedColumns.map(column => ({
-		column,
+	return defaultOrderedColumns.map(([id, column]) => ({
+		columnId: id,
 		direction: Array.isArray(column.defaultOrder) ? column.defaultOrder[1] : column.defaultOrder!
 	}))
 }
 
-const storageOrderToTableOrder = <T>(ord: LocalStorageState["order"], columns: readonly TableColumnDefinition<T>[]): TableOrder<T>[] => {
-	const map = new Map(columns.map(col => [col.id, col]))
-	return ord.map(ord => ({direction: ord.direction, column: map.get(ord.columnId)!}))
-}
-
-const tableOrderToStorageOrder = <T>(ord: readonly TableOrder<T>[]): LocalStorageState["order"] => {
-	return ord.map(ord => ({columnId: ord.column.id, direction: ord.direction}))
-}
-
-export const useTableSettings = <T>({
+export const useTableSettings = <K extends string>({
 	columns, maxOrderedColumns, areColumnsOrderable, areColumnsSwappable, areColumnsResizeable, defaultMinColumnWidth, localStorageId
-}: Props<T>): TableSettings<T> => {
+}: Props<K>): TableSettings<K> => {
 
 	const userConfigActions: TableUserConfigActionProps = useMemo(() => {
-		const defaultOrderedColumns = columns.filter(col => !!col.defaultOrder).length
+		const defaultOrderedColumns = TableUtils.colDefs(columns).filter(col => !!col.defaultOrder).length
 		return {
 			maxOrderedColumns: maxOrderedColumns ?? Math.max(defaultOrderedColumns, 1),
 			areColumnsOrderable: areColumnsOrderable ?? false,
@@ -122,18 +117,17 @@ export const useTableSettings = <T>({
 
 	const [localStorageState, _setLocalStorageState] = useState(() => loadStateFromLocalStorage(localStorageId ?? null, columns))
 	const setLocalStorageState = useWrappedSetState(_setLocalStorageState,
-		(value: LocalStorageState) => {
+		(value: LocalStorageState<K>) => {
 			saveStateToLocalStorage(localStorageId ?? null, value)
 		}
 	)
 
 	const setOrder = useTransformedSetState(setLocalStorageState,
-		(order: readonly TableOrder<T>[], state) => ({
+		(order: readonly TableOrder<K>[], state) => ({
 			...state,
-			order: tableOrderToStorageOrder(order)
+			order
 		}),
-		state => storageOrderToTableOrder(state.order, columns)
-	)
+		state => state.order)
 
 	const swapColumn = useCallback((id: string, direction: -1 | 1) => {
 		setLocalStorageState(state => {
@@ -153,13 +147,12 @@ export const useTableSettings = <T>({
 		})
 	}, [setLocalStorageState])
 
-	const orderedColumns = useMemo(() => {
-		const colById = new Map(columns.map(col => [col.id, col]))
-		return localStorageState.columnOrder.map(({columnId}) => colById.get(columnId)!)
-	}, [columns, localStorageState.columnOrder])
+	const orderedColumnIds = useMemo(() => {
+		return localStorageState.columnOrder.map(({columnId}) => columnId)
+	}, [localStorageState.columnOrder])
 
 	const setColumnWidthOverrides = useTransformedSetState(setLocalStorageState,
-		(map: ReadonlyMap<string, number>, state) => ({
+		(map: ReadonlyMap<K, number>, state) => ({
 			...state,
 			columnWidthOverrides: [...map.entries()].map(([columnId, width]) => ({columnId, width}))
 		}),
@@ -167,11 +160,8 @@ export const useTableSettings = <T>({
 	)
 
 	return {
-		orderedColumns,
-		order: useMemo(
-			() => storageOrderToTableOrder(localStorageState.order, columns),
-			[localStorageState.order, columns]
-		),
+		orderedColumnIds,
+		order: localStorageState.order,
 		setOrder,
 		userConfigActions,
 		swapColumn,

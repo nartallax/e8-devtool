@@ -1,13 +1,29 @@
 import {Forest, isTreeBranch, Tree} from "@nartallax/forest"
 import {Col} from "client/components/row_col/row_col"
-import {Table, TableBottomHitEvent, TableColumnDefinition, TableRowMoveEvent} from "client/components/table/table"
+import {Table, TableBottomHitEvent, TableRow, TableRowMoveEvent} from "client/components/table/table"
+import {anyToString} from "common/any_to_string"
 import {useCallback, useMemo, useState} from "react"
+
+const columns = {
+	length: {header: "length", width: "75px", isSwappable: false},
+	name: {header: "name", width: "1fr", isTreeColumn: true},
+	lengthAndName: {header: "length + name", width: "2fr"}
+}
+type ColKey = keyof typeof columns
+
+const treesToTableRows = (trees: readonly Tree<string, string>[]): TableRow<ColKey>[] => trees.map(tree => ({
+	length: tree.value.length,
+	name: tree.value,
+	lengthAndName: tree.value.length + " " + tree.value,
+	key: tree.value,
+	children: !isTreeBranch(tree) ? undefined : treesToTableRows(tree.children)
+}))
 
 export const TableExample = () => {
 	const [tableData, setTableData] = useState(() => new Forest<string, string>([]))
 	const pagesTotal = 4
 
-	const onBottomHit = useCallback(async(evt: TableBottomHitEvent<Tree<string, string>>) => {
+	const onBottomHit = useCallback(async(evt: TableBottomHitEvent<ColKey>) => {
 		const nums = ["one", "two", "three", "four", "five", "six"]
 		const nextPageIndex = evt.knownRows.length / nums.length
 		if(nextPageIndex >= pagesTotal){
@@ -19,7 +35,7 @@ export const TableExample = () => {
 		const treeNodes: Tree<string, string>[] = nums.map(x => {
 			x = nextPageIndex + " " + x
 			if(evt.parentRow){
-				x = evt.parentRow.value + " " + x
+				x = anyToString(evt.parentRow.name) + " " + x
 			}
 			if(x.length % 2){
 				return {value: x, children: []}
@@ -31,36 +47,25 @@ export const TableExample = () => {
 		return true
 	}, [])
 
-	const onRowMoved = useCallback((evt: TableRowMoveEvent<Tree<string, string>>) => {
+	const onRowMoved = useCallback((evt: TableRowMoveEvent<ColKey>) => {
 		setTableData(forest => forest.move(evt.oldLocation, evt.newLocation))
 	}, [])
+
+	const rows = useMemo(() => treesToTableRows(tableData.trees), [tableData])
 
 
 	return (
 		<Col margin grow>
-			<Table<Tree<string, string>>
+			<Table
 				areColumnsOrderable
 				areColumnsSwappable
 				areColumnsResizeable
 				maxOrderedColumns={2}
 				localStorageId='test'
-				getRowKey={useCallback(tree => tree.value, [])}
-				canHaveChildren={isTreeBranch}
 				onRowMoved={onRowMoved}
-				getChildren={useCallback((tree: Tree<string, string>) => isTreeBranch(tree) ? tree.children : [], [])}
-				data={tableData.trees}
+				rows={rows}
 				onBottomHit={onBottomHit}
-				columns={useMemo<TableColumnDefinition<Tree<string, string>>[]>(() => [
-					{
-						id: "length", header: "length", width: "75px", render: x => x.row.value.length, isSwappable: false
-					},
-					{
-						id: "name", header: "name", width: "1fr", render: x => x.row.value, isTreeColumn: true
-					},
-					{
-						id: "length_and_Name", header: "length + name", width: "2fr", render: x => x.row.value.length + " " + x.row.value
-					}
-				], [])}
+				columns={columns}
 			/>
 		</Col>
 	)
