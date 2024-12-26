@@ -136,11 +136,20 @@
 
 }
 
+.tableLoadingRow {
+	grid-column: 1 / -1;
+	padding: 0.25rem;
+	text-align: center;
+
+	&:before {
+		content: "Loading...";
+	}
+}
+
 .tableInfiniteScrollRow {
 	position: relative;
-	--trigger-height: 2rem;
-	height: var(--trigger-height);
 	grid-column: 1 / -1;
+	height: 0;
 
 	.tableInfiniteScrollTrigger {
 		position: absolute;
@@ -151,7 +160,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: flex-end;
-		height: calc(var(--trigger-height) + var(--trigger-offset));
+		height: var(--trigger-offset);
 
 		/* this element will overlay over other rows, and it shouldn't prevent interactions */
 		background-color: transparent;

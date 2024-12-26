@@ -6,11 +6,10 @@ type Props = {
 	/** Number of pixels from last row when onBottomHit is triggered */
 	triggerOffsetPx?: number
 	onBottomHit: () => void | Promise<void>
-	canTrigger: boolean
 }
 
 export const TableIntersectionTrigger = reactMemo(({
-	triggerOffsetPx = 0, onBottomHit, canTrigger
+	triggerOffsetPx = 0, onBottomHit
 }: PropsWithChildren<Props>) => {
 	const triggerRef = useRef<HTMLDivElement | null>(null)
 
@@ -18,19 +17,19 @@ export const TableIntersectionTrigger = reactMemo(({
 	const [isLoading, setIsLoading] = useState(false)
 
 	useEffect(() => {
-		if(isLoading || !isIntersecting || !canTrigger){
+		if(!isIntersecting || isLoading){
 			return
 		}
 
 		void(async() => {
 			setIsLoading(true)
 			try {
-				await Promise.resolve(onBottomHit())
+				await onBottomHit()
 			} finally {
 				setIsLoading(false)
 			}
 		})()
-	}, [isIntersecting, isLoading, onBottomHit, canTrigger])
+	}, [isIntersecting, onBottomHit, isLoading])
 
 	const triggerStyle = {
 		display: "flex", // for typing
@@ -61,9 +60,11 @@ export const TableIntersectionTrigger = reactMemo(({
 
 	return (
 		<div className={css.tableInfiniteScrollRow}>
-			<div className={css.tableInfiniteScrollTrigger} ref={triggerRef} style={triggerStyle}>
-				{isLoading ? "Loading..." : ""}
-			</div>
+			<div
+				className={css.tableInfiniteScrollTrigger}
+				ref={triggerRef}
+				style={triggerStyle}
+			/>
 		</div>
 	)
 })

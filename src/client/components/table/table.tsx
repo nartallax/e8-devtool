@@ -61,11 +61,12 @@ export type TableColumnDefinition = {
 }
 
 export type TableColumnDefinitions<K extends string> = {
-	/** ID of the column. Must consist of alphabetic characters and dashes/underscores only. */
+	/** ID of the column must consist of alphabetic characters and dashes/underscores only. */
 	readonly [columnId in K]: TableColumnDefinition
 }
 
 export type TableProps<K extends string> = Partial<TableUserConfigActionProps> & {
+	columns: TableColumnDefinitions<K>
 	rows: readonly TableRow<K>[]
 
 	/** Checks if the row can be moved to a new location. Defaults to true.
@@ -87,11 +88,9 @@ export type TableProps<K extends string> = Partial<TableUserConfigActionProps> &
 
 	/** Called when scroll hits the bottom of some sequence.
 	Can be used to lazy-load new rows.
-	@returns true if there's more to load (and this function should be called again, if user scrolls further);
-	false in case all the rows in the sequence are loaded and there's no point in calling this function again until refresh */
-	// TODO: move isLastRow into row structure
-	onBottomHit?: (evt: TableBottomHitEvent<K>) => boolean | Promise<boolean>
-	columns: TableColumnDefinitions<K>
+
+	If there's nothing more to load, this callback should do nothing. */
+	onBottomHit?: (evt: TableBottomHitEvent<K>) => void | Promise<void>
 	/** If false, headers will be hidden. True by default */
 	areHeadersVisible?: boolean
 }
@@ -148,6 +147,8 @@ export type TableRow<K extends string> = {
 	If nothing (undefined) is passed - it is assumed that this row cannot have children.
 	Empty array can be passed in case of loading child rows on demand. */
 	readonly children?: TableRow<K>[]
+	/** If there are more rows to be loaded, this property should be true */
+	readonly canLoadMoreChildren?: boolean
 }
 
 

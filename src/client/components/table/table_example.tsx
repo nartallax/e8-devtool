@@ -27,7 +27,7 @@ export const TableExample = () => {
 		const nums = ["one", "two", "three", "four", "five", "six"]
 		const nextPageIndex = evt.knownRows.length / nums.length
 		if(nextPageIndex >= pagesTotal){
-			return false
+			return
 		}
 		await new Promise(ok => setTimeout(ok, 100))
 		const treePath = evt.hierarchy.map(x => x.rowIndex)
@@ -44,7 +44,6 @@ export const TableExample = () => {
 			}
 		})
 		setTableData(forest => forest.insertTreesAt(treePath, treeNodes))
-		return true
 	}, [])
 
 	const onRowMoved = useCallback((evt: TableRowMoveEvent<ColKey>) => {
