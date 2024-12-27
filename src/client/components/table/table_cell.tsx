@@ -4,6 +4,13 @@ import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
 import {SetState} from "client/ui_utils/react_types"
 import {Icon} from "generated/icons"
+import {PropsWithChildren} from "react"
+
+type TableCellBareProps<K extends string> = {
+	columnId: K
+	treePath?: string
+	isRowCurrentlyDragged?: boolean
+}
 
 type TableCellProps<K extends string> = TreeTableCellProps<K> & {
 	column: TableColumnDefinition
@@ -21,14 +28,27 @@ export const TableCell = reactMemo(<K extends string>({
 	hierarchy, columnId, column, isRowCurrentlyDragged, ...props
 }: TableCellProps<K>) => {
 	return (
+		<TableCellBare
+			treePath={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
+			columnId={columnId}
+			isRowCurrentlyDragged={isRowCurrentlyDragged}>
+			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
+			{hierarchy[hierarchy.length - 1]!.row[columnId]}
+		</TableCellBare>
+	)
+})
+
+export const TableCellBare = reactMemo(<K extends string>({
+	columnId, children, treePath, isRowCurrentlyDragged
+}: PropsWithChildren<TableCellBareProps<K>>) => {
+	return (
 		<div
-			data-tree-path={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
+			data-tree-path={treePath}
 			className={cn(css.tableCell, {
 				[css.movedRowCell!]: isRowCurrentlyDragged
 			})}
 			style={{gridColumn: `var(--table-col-${columnId})`}}>
-			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
-			{hierarchy[hierarchy.length - 1]!.row[columnId]}
+			{children}
 		</div>
 	)
 })

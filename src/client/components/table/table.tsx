@@ -91,9 +91,39 @@ export type TableProps<K extends string> = Partial<TableUserConfigActionProps> &
 
 	If there's nothing more to load, this callback should do nothing. */
 	onBottomHit?: (evt: TableBottomHitEvent<K>) => void | Promise<void>
+
 	/** If false, headers will be hidden. True by default */
 	areHeadersVisible?: boolean
+
+	/** Inline editor for rows. Used when editedRow or newRow are passed.
+	Returning single node implies that editor will be stretched for the full row.
+	Returning node map implies that absent columns will be empty.
+
+	This function is called like a function, not rendered like a react component. */
+	getRowEditor?: (props: TableRowEditorProps<K>) => ReactNode | ({readonly [colName in K]?: ReactNode})
+
+	/** If present, replaces row at location with editors, see getRowEditor. */
+	editedRow?: readonly number[] | null
+	onEditCompleted?: (evt: TableEditCompletedEvent<K>) => void | Promise<void>
+
+	/** If present, makes a fake empty row at the location.
+	New row is always edited; if editedRow is passed, its value is ignored. */
+	createdRow?: readonly number[] | null
+	onCreateCompleted?: (evt: TableEditCompletedEvent<K>) => void | Promise<void>
 }
+
+export type TableRowEditorProps<K extends string> = {
+	readonly location: readonly number[]
+	readonly row: TableRow<K> | null
+	readonly onDone: (newRow: TableRow<K> | null) => Promise<void>
+}
+
+export type TableEditCompletedEvent<K extends string> = {
+	/** Null implies that editing was cancelled */
+	readonly row: TableRow<K> | null
+	readonly location: readonly number[]
+}
+
 
 export type TableBottomHitEvent<K extends string> = {
 	knownRows: readonly TableRow<K>[]
@@ -153,7 +183,7 @@ export type TableRow<K extends string> = {
 
 
 export const Table = <const K extends string>({
-	columns: srcColumns, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, ...srcUserConfigActions
+	columns: srcColumns, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, ...srcUserConfigActions
 }: TableProps<K>) => {
 	const {
 		orderedColumnIds, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
@@ -173,9 +203,13 @@ export const Table = <const K extends string>({
 
 	const [currentlyDraggedRow, setCurrentlyDraggedRow] = useState<TableHierarchy<K> | null>(null)
 
-	// this exists to check if a DOM node belongs to this table or different one
+	// this exists to check if a DOM node belongs to this table or to different one
 	// helps with drag-n-drop
 	const tableId = useMemo(() => (Math.random() * 0xffffffff).toString(16), [])
+
+	const isRowCreated = !!createdRow
+	const editedRowLocation = createdRow ?? editedRow
+	const completeEdit = editedRowLocation === createdRow ? onCreateCompleted : onEditCompleted
 
 	return (
 		<div
@@ -192,6 +226,10 @@ export const Table = <const K extends string>({
 				isRowCurrentlyDragged={false}
 				segmentData={rows}
 				onBottomHit={onBottomHit}
+				editedRow={editedRowLocation}
+				isRowCreated={isRowCreated}
+				completeEdit={completeEdit}
+				getRowEditor={getRowEditor}
 			/>
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}

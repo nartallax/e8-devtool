@@ -2,19 +2,24 @@ import {TableBottomHitEvent, TableHierarchy, TableProps, TableRow} from "client/
 import {TableIntersectionTrigger} from "client/components/table/table_intersection_trigger"
 import {TableRowCells} from "client/components/table/table_row"
 import {reactMemo} from "common/react_memo"
-import {useMemo, useState} from "react"
+import {Fragment, ReactNode, useMemo, useState} from "react"
 import * as css from "./table.module.css"
 import {sleepFrame} from "client/ui_utils/sleep_frame"
+import {TableUtils} from "client/components/table/table_utils"
+import {TableEditedRow} from "client/components/table/table_edited_row"
 
 type Props<K extends string> = {
 	segmentData: readonly TableRow<K>[]
 	hierarchy: TableHierarchy<K>
 	draggedRowHierarchyTail: TableHierarchy<K> | null
 	isRowCurrentlyDragged: boolean
-} & Pick<TableProps<K>, "columns" | "onBottomHit">
+	editedRow?: readonly number[] | null
+	completeEdit?: TableProps<K>["onEditCompleted"]
+	isRowCreated: boolean
+} & Pick<TableProps<K>, "columns" | "onBottomHit" | "getRowEditor">
 
 export const TableRowSequence = reactMemo(<K extends string>({
-	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit
+	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated
 }: Props<K>) => {
 	// we need to compare current bottom row with row that was bottom when we started loading rows
 	// this way we are absolutely sure that we will start loading new rows strictly after old rows are loaded
@@ -45,26 +50,58 @@ export const TableRowSequence = reactMemo(<K extends string>({
 		}
 	}, [onBottomHit, hierarchy, segmentData])
 
-	const rowsWithHierarchy = useMemo(() =>
-		segmentData.map((row, index) => ({
+	const rowsWithHierarchy = useMemo(() => {
+		let result: {row?: TableRow<K>, editor?: ReactNode, hierarchy?: TableHierarchy<K>}[] = segmentData.map((row, index) => ({
 			row,
 			hierarchy: [
 				...hierarchy, {row, rowIndex: index, parentLoadedRowsCount: segmentData.length}
 			]
 		}))
-	, [segmentData, hierarchy])
+
+		const isCreatedRowInThisSequence = isRowCreated
+			&& !!editedRow
+			&& editedRow?.length === hierarchy.length + 1
+			&& TableUtils.locationMatchesHierarchy(editedRow.slice(0, editedRow.length - 1), hierarchy)
+		console.log({isRowCreated, editedRow, hierarchy})
+		const createdRowIndex = !isCreatedRowInThisSequence ? null : editedRow[editedRow.length - 1]!
+		if(createdRowIndex !== null){
+			const editor = (
+				<TableEditedRow
+					columns={columns}
+					row={null}
+					completeEdit={completeEdit}
+					getRowEditor={getRowEditor}
+					key="__new_row_editor"
+					location={editedRow!}
+				/>
+			)
+			result = [
+				...result.slice(0, createdRowIndex),
+				{editor},
+				...result.slice(createdRowIndex)
+			]
+		}
+
+		return result
+	}, [segmentData, hierarchy, isRowCreated, editedRow, columns, completeEdit, getRowEditor])
 
 	return (
 		<>
-			{rowsWithHierarchy.map(({row, hierarchy}, index) => (
-				<TableRowCells
-					isRowCurrentlyDragged={isRowCurrentlyDragged}
-					key={row.key}
-					hierarchy={hierarchy}
-					columns={columns}
-					draggedRowHierarchyTail={draggedRowHierarchyTail?.[0]?.rowIndex !== index ? null : draggedRowHierarchyTail.slice(1)}
-					onBottomHit={onBottomHit}
-				/>
+			{rowsWithHierarchy.map(({row, editor, hierarchy}, index) => (
+				<Fragment key={!row ? "__new_row_editor" : row.key}>
+					{editor}
+					{row && hierarchy && <TableRowCells
+						isRowCurrentlyDragged={isRowCurrentlyDragged}
+						hierarchy={hierarchy}
+						columns={columns}
+						draggedRowHierarchyTail={draggedRowHierarchyTail?.[0]?.rowIndex !== index ? null : draggedRowHierarchyTail.slice(1)}
+						onBottomHit={onBottomHit}
+						editedRow={editedRow}
+						completeEdit={completeEdit}
+						getRowEditor={getRowEditor}
+						isRowCreated={isRowCreated}
+					/>}
+				</Fragment>
 			))}
 			{isLoading && <div className={css.tableLoadingRow}/>}
 			{loadMoreRows && !isLoading && canLoadNextPage && <TableIntersectionTrigger

@@ -51,4 +51,33 @@ export namespace TableUtils {
 	export const colDefs = <K extends string>(columns: TableColumnDefinitions<K>): TableColumnDefinition[] => Object.values(columns)
 	export const colIds = <K extends string>(columns: TableColumnDefinitions<K>) => Object.keys(columns) as K[]
 
+	export const locationMatchesHierarchy = <K extends string>(location: readonly number[], hierarchy: TableHierarchy<K>): boolean => {
+		if(location.length !== hierarchy.length){
+			return false
+		}
+
+		// we go in reverse here because statistically we will find first discrepancy faster this way
+		for(let i = location.length - 1; i >= 0; i--){
+			if(location[i] !== hierarchy[i]!.rowIndex){
+				return false
+			}
+		}
+
+		return true
+	}
+
+	export const hierarchyStartsWithLocation = <K extends string>(location: readonly number[], hierarchy: TableHierarchy<K>): boolean => {
+		if(location.length < hierarchy.length){
+			return false
+		}
+
+		for(let i = 0; i < hierarchy.length; i++){
+			if(location[i] !== hierarchy[i]!.rowIndex){
+				return false
+			}
+		}
+
+		return true
+	}
+
 }
