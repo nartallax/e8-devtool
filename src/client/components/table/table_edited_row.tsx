@@ -1,21 +1,20 @@
-import {TableProps, TableRow} from "client/components/table/table"
+import {TableProps} from "client/components/table/table"
 import {reactMemo} from "common/react_memo"
-import {isValidElement, ReactNode, useCallback} from "react"
+import {useCallback} from "react"
 import * as css from "./table.module.css"
-import {TableUtils} from "client/components/table/table_utils"
 import {TableCellBare} from "client/components/table/table_cell"
 
-type Props<K extends string> = {
-	row: TableRow<K> | null
+type Props<T> = {
+	row: T | null
 	location: readonly number[]
-	completeEdit?: TableProps<K>["onEditCompleted"]
-} & Pick<TableProps<K>, "columns" | "getRowEditor">
+	completeEdit?: TableProps<T>["onEditCompleted"]
+} & Pick<TableProps<T>, "columns" | "getRowEditor">
 
-export const TableEditedRow = reactMemo(<K extends string>({
+export const TableEditedRow = reactMemo(<T,>({
 	row, location, completeEdit, columns, getRowEditor
-}: Props<K>) => {
+}: Props<T>) => {
 
-	const onDone = useCallback(async(row: TableRow<K> | null) => {
+	const onDone = useCallback(async(row: T | null) => {
 		if(completeEdit){
 			await completeEdit({location, row})
 		}
@@ -25,21 +24,17 @@ export const TableEditedRow = reactMemo(<K extends string>({
 		location, row, onDone
 	})
 
-	if(isValidElement(rawEditor)){
-		return <div className={css.fullWidthEditorRow}>{rawEditor}</div>
-	} else if(!!rawEditor && typeof(rawEditor) === "object"){
-		const colMap = rawEditor as {readonly [colId in K]?: ReactNode}
+	if(Array.isArray(rawEditor)){
 		return (
 			<>
-				{TableUtils.colIds(columns).map(columnId => (
-					<TableCellBare
-						key={columnId}
-						columnId={columnId}>
-						{colMap[columnId] ?? null}
+				{columns.map((column, i) => (
+					<TableCellBare column={column} key={column.id}>
+						{rawEditor[i] ?? null}
 					</TableCellBare>
-				))}</>
+				))}
+			</>
 		)
 	} else {
-		return null
+		return <div className={css.fullWidthEditorRow}>{rawEditor}</div>
 	}
 })

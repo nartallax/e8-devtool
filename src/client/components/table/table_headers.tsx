@@ -10,28 +10,28 @@ import {getTableTemplateColumns} from "client/components/table/table_settings"
 import {TableHeaderColumnDragHelper} from "client/components/table/table_header_column_drag_helper"
 import {TableHeaderResizeHelper} from "client/components/table/table_header_resize_helper"
 
-type Props<K extends string> = {
-	order: readonly TableOrder<K>[]
-	setOrder: SetState<readonly TableOrder<K>[]>
+type Props<T> = {
+	order: readonly TableOrder<T>[]
+	setOrder: SetState<readonly TableOrder<T>[]>
 	userConfigActions: TableUserConfigActionProps
 	swapColumn: (id: string, direction: -1 | 1) => void
 	columnWidthOverrides: ReadonlyMap<string, number>
-	setColumnWidthOverrides: SetState<ReadonlyMap<K, number>>
-	orderedColumnIds: readonly K[]
-} & Pick<TableProps<K>, "columns">
+	setColumnWidthOverrides: SetState<ReadonlyMap<string, number>>
+	orderedColumns: readonly TableColumnDefinition<T>[]
+} & Pick<TableProps<T>, "columns">
 
-export const TableHeaders = reactMemo(<K extends string>({
-	columns, orderedColumnIds, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
-}: Props<K>) => {
+export const TableHeaders = reactMemo(<T,>({
+	orderedColumns, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
+}: Props<T>) => {
 
-	const changeColumnOrder = useCallback((columnId: K) => {
+	const changeColumnOrder = useCallback((column: TableColumnDefinition<T>) => {
 		setOrder(orders => {
-			const oldDirection = orders.find(order => order.columnId === columnId)?.direction
+			const oldDirection = orders.find(order => order.column.id === column.id)?.direction
 			const newDirection = !oldDirection ? "asc" : oldDirection === "asc" ? "desc" : null
-			let newOrders = orders.filter(order => order.columnId !== columnId)
+			let newOrders = orders.filter(order => order.column.id !== column.id)
 			if(newDirection){
 				newOrders = [
-					{columnId, direction: newDirection},
+					{column, direction: newDirection},
 					...newOrders
 				]
 			}
@@ -46,21 +46,19 @@ export const TableHeaders = reactMemo(<K extends string>({
 		<div
 			className={css.tableHeaders}
 			style={{
-				gridTemplateColumns: getTableTemplateColumns(orderedColumnIds, columns, columnWidthOverrides)
+				gridTemplateColumns: getTableTemplateColumns(orderedColumns, columnWidthOverrides)
 			}}>
-			{orderedColumnIds.map((colId, i) => {
-				const col = columns[colId]
-				const colOrder = order.find(order => order.columnId === colId)
+			{orderedColumns.map((col, i) => {
+				const colOrder = order.find(order => order.column.id === col.id)
 				const orderIndex = !colOrder || userConfigActions.maxOrderedColumns < 2 ? null : order.indexOf(colOrder)
 				const isOrderUserChangeable = col.isOrderUserChangeable ?? userConfigActions.areColumnsOrderable
 				const isSwappable = col.isSwappable ?? userConfigActions.areColumnsSwappable
-				const isPrevColResizeable = i > 0 && (columns[orderedColumnIds[i - 1]!].isResizeable ?? userConfigActions.areColumnsResizeable)
-				const isNextColResizeable = i < orderedColumnIds.length - 1 && (columns[orderedColumnIds[i + 1]!].isResizeable ?? userConfigActions.areColumnsResizeable)
+				const isPrevColResizeable = i > 0 && (orderedColumns[i - 1]!.isResizeable ?? userConfigActions.areColumnsResizeable)
+				const isNextColResizeable = i < orderedColumns.length - 1 && (orderedColumns[i + 1]!.isResizeable ?? userConfigActions.areColumnsResizeable)
 				const isThisColResizeable = col.isResizeable ?? userConfigActions.areColumnsResizeable
 				return (
 					<TableHeader
-						key={colId}
-						columnId={colId}
+						key={col.id}
 						column={col}
 						minWidth={col.minWidth ?? userConfigActions.defaultMinColumnWidth}
 						isSwappable={isSwappable}
@@ -80,24 +78,23 @@ export const TableHeaders = reactMemo(<K extends string>({
 })
 
 
-type SingleHeaderProps<K extends string> = {
-	columnId: K
-	column: TableColumnDefinition
+type SingleHeaderProps<T> = {
+	column: TableColumnDefinition<T>
 	orderDirection: TableOrderDirection | null
 	orderIndex: number | null
-	onOrderChange: (columnId: K) => void
+	onOrderChange: (column: TableColumnDefinition<T>) => void
 	swapColumn: (id: string, direction: -1 | 1) => void
 	isOrderUserChangeable: boolean
 	isSwappable: boolean
 	isLeftResizeable: boolean
 	isRightResizeable: boolean
-	setColumnWidthOverrides: SetState<ReadonlyMap<K, number>>
+	setColumnWidthOverrides: SetState<ReadonlyMap<string, number>>
 	minWidth: number
 }
 
-const TableHeader = reactMemo(<K extends string>({
-	column, columnId, orderDirection, orderIndex, onOrderChange, swapColumn, isOrderUserChangeable, isSwappable, isLeftResizeable, isRightResizeable, setColumnWidthOverrides, minWidth
-}: SingleHeaderProps<K>) => {
+const TableHeader = reactMemo(<T,>({
+	column, orderDirection, orderIndex, onOrderChange, swapColumn, isOrderUserChangeable, isSwappable, isLeftResizeable, isRightResizeable, setColumnWidthOverrides, minWidth
+}: SingleHeaderProps<T>) => {
 	const [dragOffset, setDragOffset] = useState(0)
 	const [isDragged, setIsDragged] = useState(false)
 
@@ -106,14 +103,14 @@ const TableHeader = reactMemo(<K extends string>({
 		let onClick: (() => void) | undefined = undefined
 		if(isOrderUserChangeable){
 			onClick = () => {
-				onOrderChange(columnId)
+				onOrderChange(column)
 			}
 		}
 
 		let onDownSwap: ((e: React.TouchEvent | React.MouseEvent) => void) | undefined = undefined
 		if(isSwappable){
 			onDownSwap = makeDragHandler({
-				columnId, swapColumn, setDragOffset, setIsDragged, onClick
+				columnId: column.id, swapColumn, setDragOffset, setIsDragged, onClick
 			})
 		}
 
@@ -139,16 +136,16 @@ const TableHeader = reactMemo(<K extends string>({
 			onTouchStart: onDown,
 			...(onDownSwap ? {} : {onClick})
 		}
-	}, [isOrderUserChangeable, isSwappable, columnId, onOrderChange, swapColumn, isLeftResizeable, isRightResizeable, minWidth, setColumnWidthOverrides])
+	}, [isOrderUserChangeable, isSwappable, column, onOrderChange, swapColumn, isLeftResizeable, isRightResizeable, minWidth, setColumnWidthOverrides])
 
 	const style = {
-		gridColumn: `var(--table-col-${columnId})`,
+		gridColumn: `var(--table-col-${column.id})`,
 		["--drag-offset"]: dragOffset + "px"
 	}
 
 	return (
 		<div
-			data-column-id={columnId}
+			data-column-id={column.id}
 			data-is-swappable={isSwappable}
 			data-is-resizeable={isLeftResizeable || isRightResizeable}
 			className={cn(css.tableHeader, {
@@ -175,8 +172,8 @@ const TableHeader = reactMemo(<K extends string>({
 
 const isColumnResizer = (el: HTMLElement) => el.classList.contains(css.columnResizer!)
 
-const makeResizeHandler = <K extends string>(opts: {onClick?: () => void, setOverrides: SetState<ReadonlyMap<K, number>>, minWidth: number}) => {
-	let helper: TableHeaderResizeHelper<K> | null = null
+const makeResizeHandler = (opts: {onClick?: () => void, setOverrides: SetState<ReadonlyMap<string, number>>, minWidth: number}) => {
+	let helper: TableHeaderResizeHelper | null = null
 	const drag = makeTableDrag({
 		direction: "horisontal",
 		onClick: opts.onClick,
@@ -197,7 +194,7 @@ const makeResizeHandler = <K extends string>(opts: {onClick?: () => void, setOve
 	}
 }
 
-const makeDragHandler = <K extends string>(opts: {onClick?: () => void, swapColumn: (id: string, direction: -1 | 1) => void, setIsDragged: SetState<boolean>, setDragOffset: SetState<number>, columnId: K}) => {
+const makeDragHandler = (opts: {onClick?: () => void, swapColumn: (id: string, direction: -1 | 1) => void, setIsDragged: SetState<boolean>, setDragOffset: SetState<number>, columnId: string}) => {
 	let sizeCounter: TableHeaderColumnDragHelper | null = null
 	const drag = makeTableDrag({
 		direction: "horisontal",

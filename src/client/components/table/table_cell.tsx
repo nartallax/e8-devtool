@@ -6,54 +6,53 @@ import {SetState} from "client/ui_utils/react_types"
 import {Icon} from "generated/icons"
 import {PropsWithChildren} from "react"
 
-type TableCellBareProps<K extends string> = {
-	columnId: K
+type TableCellBareProps<T> = {
+	column: TableColumnDefinition<T>
 	treePath?: string
 	isRowCurrentlyDragged?: boolean
 }
 
-type TableCellProps<K extends string> = TreeTableCellProps<K> & {
-	column: TableColumnDefinition
-	columnId: K
+type TableCellProps<T> = TreeTableCellProps<T> & {
+	column: TableColumnDefinition<T>
 	isRowCurrentlyDragged: boolean
 }
 
-type TreeTableCellProps<K extends string> = {
-	hierarchy: TableHierarchy<K>
+type TreeTableCellProps<T> = {
+	hierarchy: TableHierarchy<T>
 	isExpanded: boolean
 	setExpanded: SetState<boolean> | null
 }
 
-export const TableCell = reactMemo(<K extends string>({
-	hierarchy, columnId, column, isRowCurrentlyDragged, ...props
-}: TableCellProps<K>) => {
+export const TableCell = reactMemo(<T,>({
+	hierarchy, column, isRowCurrentlyDragged, ...props
+}: TableCellProps<T>) => {
 	return (
 		<TableCellBare
 			treePath={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
-			columnId={columnId}
+			column={column}
 			isRowCurrentlyDragged={isRowCurrentlyDragged}>
 			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
-			{hierarchy[hierarchy.length - 1]!.row[columnId]}
+			{column.render({row: hierarchy[hierarchy.length - 1]!.row, hierarchy})}
 		</TableCellBare>
 	)
 })
 
-export const TableCellBare = reactMemo(<K extends string>({
-	columnId, children, treePath, isRowCurrentlyDragged
-}: PropsWithChildren<TableCellBareProps<K>>) => {
+export const TableCellBare = reactMemo(<T,>({
+	column, children, treePath, isRowCurrentlyDragged
+}: PropsWithChildren<TableCellBareProps<T>>) => {
 	return (
 		<div
 			data-tree-path={treePath}
 			className={cn(css.tableCell, {
 				[css.movedRowCell!]: isRowCurrentlyDragged
 			})}
-			style={{gridColumn: `var(--table-col-${columnId})`}}>
+			style={{gridColumn: `var(--table-col-${column.id})`}}>
 			{children}
 		</div>
 	)
 })
 
-const TableCellTreeControls = reactMemo(<K extends string>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<K>) => {
+const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<T>) => {
 	const lastHierarchyEntry = hierarchy[hierarchy.length - 1]!
 	const isRowLastInSequence = lastHierarchyEntry.rowIndex === lastHierarchyEntry.parentLoadedRowsCount - 1
 	return (

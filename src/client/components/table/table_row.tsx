@@ -6,22 +6,23 @@ import {TableRowSequence} from "client/components/table/table_row_sequence"
 import {TableUtils} from "client/components/table/table_utils"
 import {TableEditedRow} from "client/components/table/table_edited_row"
 
-type Props<K extends string> = {
-	hierarchy: TableHierarchy<K>
-	draggedRowHierarchyTail: TableHierarchy<K> | null
+type Props<T> = {
+	hierarchy: TableHierarchy<T>
+	draggedRowHierarchyTail: TableHierarchy<T> | null
 	isRowCurrentlyDragged: boolean
 	editedRow?: readonly number[] | null
-	completeEdit?: TableProps<K>["onEditCompleted"]
+	completeEdit?: TableProps<T>["onEditCompleted"]
 	isRowCreated: boolean
-} & Pick<TableProps<K>, "columns" | "onBottomHit" | "getRowEditor">
+} & Pick<TableProps<T>, "columns" | "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey">
 
 // it's called this way because TableRow is a type already, and is more important than internal table component
-export const TableRowCells = reactMemo(<K extends string>({
-	hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated
-}: Props<K>) => {
+export const TableRowCells = reactMemo(<T,>({
+	hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated, getChildren, getRowKey
+}: Props<T>) => {
 	const row = hierarchy[hierarchy.length - 1]!.row
 	const [isExpanded, setExpanded] = useState(false)
-	const isExpandable = !!row.children
+	const children = getChildren?.(row)
+	const isExpandable = !!children
 	const _isRowCurrentlyDragged = isRowCurrentlyDragged || draggedRowHierarchyTail?.length === 0
 
 	const isThisRowEdited = !!editedRow && !isRowCreated && TableUtils.locationMatchesHierarchy(editedRow, hierarchy)
@@ -43,30 +44,31 @@ export const TableRowCells = reactMemo(<K extends string>({
 				row={row}
 				completeEdit={completeEdit}
 				getRowEditor={getRowEditor}
-			/> : TableUtils.colEntries(columns).map(([columnId, column]) => (
+			/> : columns.map(column => (
 				<TableCell
 					hierarchy={hierarchy}
 					column={column}
-					key={columnId}
-					columnId={columnId}
+					key={column.id}
 					isExpanded={isExpanded}
 					setExpanded={!isExpandable ? null : setExpanded}
 					isRowCurrentlyDragged={_isRowCurrentlyDragged}
 				/>
 			))}
-			{isExpanded && row.children
+			{isExpanded && children
 			&& <TableRowSequence
 				key="row-children"
 				hierarchy={hierarchy}
 				onBottomHit={onBottomHit}
 				columns={columns}
-				segmentData={row.children}
+				segmentData={children}
 				draggedRowHierarchyTail={draggedRowHierarchyTail}
 				isRowCurrentlyDragged={_isRowCurrentlyDragged}
 				editedRow={editedRow}
 				completeEdit={completeEdit}
 				getRowEditor={getRowEditor}
 				isRowCreated={isRowCreated}
+				getChildren={getChildren}
+				getRowKey={getRowKey}
 			/>}
 		</>
 	)
