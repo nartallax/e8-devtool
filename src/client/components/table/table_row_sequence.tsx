@@ -1,6 +1,6 @@
 import {TableBottomHitEvent, TableHierarchy, TableProps} from "client/components/table/table"
 import {TableIntersectionTrigger} from "client/components/table/table_intersection_trigger"
-import {TableRowCells} from "client/components/table/table_row"
+import {TableRow} from "client/components/table/table_row"
 import {reactMemo} from "common/react_memo"
 import {Fragment, ReactNode, useMemo, useState} from "react"
 import * as css from "./table.module.css"
@@ -28,12 +28,14 @@ export const TableRowSequence = reactMemo(<T,>({
 	// which causes onBottomHit to be invoked with old list of currently known rows, which can cause request for the same page again
 	const [lastBottomRowKey, setLastBottomRowKey] = useState<string | number | null>(null)
 	const [isLoading, setIsLoading] = useState(false)
+	const [hasCalledLoadOnce, setHasCalledLoadOnce] = useState(false)
 	const currentBottomIndex = segmentData.length - 1
-	const currentBottomRowKey = segmentData.length === 0 ? undefined : getRowKey(segmentData[currentBottomIndex]!, currentBottomIndex)
+	const currentBottomRowKey = segmentData.length === 0 ? null : getRowKey(segmentData[currentBottomIndex]!, currentBottomIndex)
 	// after everything is loaded this boolean is expected to be true indefinitely
-	const canLoadNextPage = currentBottomRowKey !== lastBottomRowKey
+	const canLoadNextPage = currentBottomRowKey !== lastBottomRowKey || !hasCalledLoadOnce
 
 	const loadMoreRows = useMemo(() => !onBottomHit ? undefined : async() => {
+		setHasCalledLoadOnce(true)
 		const evt: TableBottomHitEvent<T> = {
 			hierarchy,
 			knownRows: segmentData,
@@ -44,8 +46,10 @@ export const TableRowSequence = reactMemo(<T,>({
 		try {
 			const resultPromise = onBottomHit(evt)
 			// we set loading only after one frame to avoid flickering of "Loading..." row in case everything is loaded already
-			await sleepFrame()
-			setIsLoading(true)
+			const res = await Promise.race([sleepFrame("frame_passed_first"), resultPromise])
+			if(res === "frame_passed_first"){
+				setIsLoading(true)
+			}
 			await resultPromise
 		} finally {
 			setIsLoading(false)
@@ -92,7 +96,7 @@ export const TableRowSequence = reactMemo(<T,>({
 			{rowsWithHierarchy.map(({row, editor, hierarchy}, index) => (
 				<Fragment key={!row ? "__new_row_editor" : getRowKey(row, index)}>
 					{editor}
-					{row && hierarchy && <TableRowCells
+					{row && hierarchy && <TableRow
 						isRowCurrentlyDragged={isRowCurrentlyDragged}
 						hierarchy={hierarchy}
 						columns={columns}

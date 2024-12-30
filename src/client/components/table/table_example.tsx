@@ -48,6 +48,9 @@ export const TableExample = () => {
 			return
 		}
 		await new Promise(ok => setTimeout(ok, 100))
+		if(evt.parentRow?.value.includes("one")){
+			return
+		}
 		const treePath = evt.hierarchy.map(x => x.rowIndex)
 		treePath.push(evt.knownRows.length)
 		const treeNodes: Tree<string, string>[] = nums.map(x => {
