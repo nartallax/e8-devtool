@@ -15,7 +15,6 @@ type Props<T> = {
 	isRowCreated: boolean
 } & Pick<TableProps<T>, "columns" | "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey">
 
-// it's called this way because TableRow is a type already, and is more important than internal table component
 export const TableRow = reactMemo(<T,>({
 	hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated, getChildren, getRowKey
 }: Props<T>) => {
