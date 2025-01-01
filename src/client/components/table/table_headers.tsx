@@ -3,7 +3,6 @@ import {SetState} from "client/ui_utils/react_types"
 import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
 import {useMemo, useState} from "react"
-import {Icon} from "generated/icons"
 import {reactMemo} from "common/react_memo"
 import {makeTableDrag} from "client/components/table/table_generic_drag"
 import {getTableTemplateColumns, MutableTableSettings, TableSettings} from "client/components/table/table_settings"
@@ -156,9 +155,9 @@ const TableHeader = reactMemo(<T,>({
 				{column.header}
 			</div>
 			{orderDirection && <div
-				className={cn(css.headerIcon, css.orderHeaderIcon, {
-					[Icon.chevronUp]: orderDirection === "asc",
-					[Icon.chevronDown]: orderDirection === "desc"
+				className={cn(css.headerIcon, css.orderHeaderIcon, css[orderDirection], {
+					// [Icon.chevronUp]: orderDirection === "asc",
+					// [Icon.chevronDown]: orderDirection === "desc"
 				})}>
 				{orderIndex !== null && <div className={css.orderHeaderIconText}>{orderIndex + 1}</div>}
 			</div>}

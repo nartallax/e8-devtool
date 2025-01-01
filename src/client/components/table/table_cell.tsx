@@ -3,7 +3,6 @@ import {reactMemo} from "common/react_memo"
 import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
 import {SetState} from "client/ui_utils/react_types"
-import {Icon} from "generated/icons"
 import {PropsWithChildren} from "react"
 
 type TableCellBareProps<T> = {
@@ -72,7 +71,7 @@ const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy
 							<button
 								key={index}
 								type="button"
-								className={cn(css.expander, Icon.triangleRight)}
+								className={css.expander}
 								onClick={() => {
 									setExpanded(expanded => !expanded)
 								}}
