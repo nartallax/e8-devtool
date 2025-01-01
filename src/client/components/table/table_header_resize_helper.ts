@@ -1,8 +1,6 @@
-import {findParentTable} from "client/components/table/table_generic_drag"
-import {findNearestTableHeader} from "client/components/table/table_header_column_drag_helper"
 import {SetState} from "client/ui_utils/react_types"
-import {arrayLikeToArray} from "common/array_like_to_array"
 import * as css from "./table.module.css"
+import {TableUtils} from "client/components/table/table_utils"
 
 type HeaderDescription = {
 	readonly initialWidth: number
@@ -18,17 +16,17 @@ export class TableHeaderResizeHelper {
 	private readonly targetIndex: number
 
 	constructor(readonly minWidth: number, readonly setOverrides: SetState<ReadonlyMap<string, number>>, target: HTMLElement, readonly startX: number) {
-		this.table = findParentTable(target)
+		this.table = TableUtils.findParentTable(target)
 		this.startScroll = this.table.scrollLeft
-		const colId = findNearestTableHeader(target)!.getAttribute("data-column-id")
-		const allHeaders: HTMLElement[] = arrayLikeToArray(this.table.querySelectorAll("[data-column-id]"))
-		this.descriptions = allHeaders.map(header => {
+		const [colId] = TableUtils.findNearestColumnHeader(target)
+		const allHeaders = TableUtils.getColumnHeadersByEventTarget(target)
+		this.descriptions = allHeaders.map(([id, header]) => {
 			const width = Math.round(header.getBoundingClientRect().width)
 			return {
 				width,
 				initialWidth: width,
 				canBeChanged: header.getAttribute("data-is-resizeable") === "true",
-				colId: header.getAttribute("data-column-id")!
+				colId: id
 			}
 		})
 		this.targetIndex = this.descriptions.findIndex(desc => desc.colId === colId)

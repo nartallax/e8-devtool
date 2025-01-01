@@ -1,4 +1,4 @@
-import {TableBottomHitEvent, TableHierarchy, TableProps} from "client/components/table/table"
+import {TableBottomHitEvent, TableColumnDefinition, TableHierarchy, TableProps} from "client/components/table/table"
 import {TableIntersectionTrigger} from "client/components/table/table_intersection_trigger"
 import {TableRow} from "client/components/table/table_row"
 import {reactMemo} from "common/react_memo"
@@ -16,7 +16,8 @@ type Props<T> = {
 	editedRow?: readonly number[] | null
 	completeEdit?: TableProps<T>["onEditCompleted"]
 	isRowCreated: boolean
-} & Pick<TableProps<T>, "columns" | "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey">
+	columns: readonly TableColumnDefinition<T>[]
+} & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey">
 
 export const TableRowSequence = reactMemo(<T,>({
 	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated
@@ -68,7 +69,6 @@ export const TableRowSequence = reactMemo(<T,>({
 			&& !!editedRow
 			&& editedRow?.length === hierarchy.length + 1
 			&& TableUtils.locationMatchesHierarchy(editedRow.slice(0, editedRow.length - 1), hierarchy)
-		console.log({isRowCreated, editedRow, hierarchy})
 		const createdRowIndex = !isCreatedRowInThisSequence ? null : editedRow[editedRow.length - 1]!
 		if(createdRowIndex !== null){
 			const editor = (

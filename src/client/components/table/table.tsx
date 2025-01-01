@@ -3,8 +3,10 @@ import {TableRowSequence} from "client/components/table/table_row_sequence"
 import {ReactNode, useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
-import {getTableTemplateColumns, useTableSettings} from "client/components/table/table_settings"
+import {getTableTemplateColumns, MutableTableSettings, TableSettings} from "client/components/table/table_settings"
 import {TableHeaders} from "client/components/table/table_headers"
+import {SetState} from "client/ui_utils/react_types"
+import {noop} from "client/ui_utils/noop"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -71,8 +73,9 @@ export type TableRowRenderArgs<T> = {
 	hierarchy: TableHierarchy<T>
 }
 
-export type TableProps<T> = Partial<TableUserConfigActionProps> & {
-	columns: TableColumnDefinition<T>[]
+export type TableProps<T> = {
+	settings: TableSettings<T>
+	setSettings?: SetState<MutableTableSettings<T>>
 	rows: readonly T[]
 
 	getRowKey: (row: T, indexInSequence: number) => string | number
@@ -144,22 +147,6 @@ export type TableBottomHitEvent<T> = {
 	hierarchy: TableHierarchy<T>
 }
 
-export type TableUserConfigActionProps = {
-	/** Top limit for amount of simultaneously ordered columns.
-	If not passed - will be equal to amount of default-oredered columns, or 1 if there are none. */
-	maxOrderedColumns: number
-	/** If true, by default user will be able to change order of any column */
-	areColumnsOrderable: boolean
-	/** If true, by default user will be able to swap columns' position */
-	areColumnsSwappable: boolean
-	/** If true, by default user will be able to resize columns */
-	areColumnsResizeable: boolean
-	/** Pixel size of min column width. Active during resizing. */
-	defaultMinColumnWidth: number
-	/** Part of local storage key. If passed, all configurable settings (width, position...) will be stored there. */
-	localStorageId: string | null
-}
-
 export type TableRowMoveEvent<T> = {
 	/** Location is a sequence of indices of children, from root to the last branch.
 	It's like hierarchy, but without other info.
@@ -183,11 +170,10 @@ export type TableOrder<T> = {
 }
 
 export const Table = <T,>({
-	columns: srcColumns, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren, ...srcUserConfigActions
+	settings, setSettings = noop, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren
 }: TableProps<T>) => {
-	const {
-		orderedColumns, order, setOrder, userConfigActions, swapColumn, columnWidthOverrides, setColumnWidthOverrides
-	} = useTableSettings({...srcUserConfigActions, columns: srcColumns})
+
+	const {orderedColumns, columnWidthOverrides} = settings
 
 	const tableStyle = useMemo(() => {
 		const tableVars = Object.fromEntries(orderedColumns.map((column, i) => {
@@ -221,7 +207,7 @@ export const Table = <T,>({
 			data-table-id={tableId}>
 			<TableRowSequence
 				hierarchy={emptyArray}
-				columns={srcColumns}
+				columns={settings.columns}
 				draggedRowHierarchyTail={currentlyDraggedRow}
 				isRowCurrentlyDragged={false}
 				segmentData={rows}
@@ -237,14 +223,8 @@ export const Table = <T,>({
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
 			{areHeadersVisible
 				&& <TableHeaders
-					order={order}
-					setOrder={setOrder}
-					userConfigActions={userConfigActions}
-					orderedColumns={orderedColumns}
-					columns={srcColumns}
-					swapColumn={swapColumn}
-					columnWidthOverrides={columnWidthOverrides}
-					setColumnWidthOverrides={setColumnWidthOverrides}
+					settings={settings}
+					setSettings={setSettings}
 				/>}
 			<TableRowDragndrop
 				tableId={tableId}

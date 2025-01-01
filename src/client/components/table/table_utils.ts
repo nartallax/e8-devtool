@@ -76,4 +76,43 @@ export namespace TableUtils {
 		return true
 	}
 
+	export const findParentTable = (child: HTMLElement): HTMLElement => {
+		let el: Element = child
+		while(el !== document.body){
+			const attrValue = el.getAttribute("data-table-id")
+			if(attrValue){
+				return el as HTMLElement
+			}
+			if(!el.parentElement){
+				break
+			}
+			el = el.parentElement
+		}
+		throw new Error("Table element not found.")
+	}
+
+	export const findNearestColumnHeader = (el: HTMLElement): [id: string, el: HTMLElement] => {
+		while(el !== document.body){
+			const id = el.getAttribute("data-column-id")
+			if(id){
+				return [id, el]
+			}
+			if(!el.parentElement){
+				break
+			}
+			el = el.parentElement
+		}
+		throw new Error("No column element found.")
+	}
+
+	export const getColumnHeadersByEventTarget = (target: HTMLElement): [id: string, el: HTMLElement][] => {
+		const query = findParentTable(target).querySelectorAll("[data-column-id]")
+		const result = new Array(query.length)
+		for(let i = 0; i < result.length; i++){
+			const el = query[i]!
+			result[i] = [el.getAttribute("data-column-id"), el]
+		}
+		return result
+	}
+
 }

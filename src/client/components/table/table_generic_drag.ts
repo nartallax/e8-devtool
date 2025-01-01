@@ -149,18 +149,3 @@ const findNearestHtmlElement = (target: unknown): HTMLElement | null => {
 	}
 	return null
 }
-
-export const findParentTable = (child: HTMLElement): HTMLElement => {
-	let el: Element = child
-	while(el !== document.body){
-		const attrValue = el.getAttribute("data-table-id")
-		if(attrValue){
-			return el as HTMLElement
-		}
-		if(!el.parentElement){
-			break
-		}
-		el = el.parentElement
-	}
-	throw new Error("Table element not found.")
-}

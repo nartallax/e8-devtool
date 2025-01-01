@@ -131,7 +131,6 @@
 	.tableCell {
 		padding: var(--cell-padding);
 		background-color: var(--cell-background-color);
-		border-top: 0;
 	}
 
 }
@@ -193,7 +192,6 @@
 		align-items: center;
 		justify-content: center;
 		background-color: transparent;
-		border: 0;
 	}
 
 	.empty,

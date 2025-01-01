@@ -1,5 +1,4 @@
-import {findParentTable} from "client/components/table/table_generic_drag"
-import {arrayLikeToArray} from "common/array_like_to_array"
+import {TableUtils} from "client/components/table/table_utils"
 
 /** A class that helps with drag-n-drop of column headers by performing some calculations */
 export class TableHeaderColumnDragHelper {
@@ -13,17 +12,17 @@ export class TableHeaderColumnDragHelper {
 	maxOffset: number | null = null
 
 	constructor(target: HTMLElement, private startX: number) {
-		const header = this.header = findNearestTableHeader(target)!
-		const table = this.table = findParentTable(target)
+		const [colId, header] = TableUtils.findNearestColumnHeader(target)
+		this.header = header
+		const table = this.table = TableUtils.findParentTable(target)
 		this.startScroll = table.scrollLeft
 
-		const allHeaders: HTMLElement[] = arrayLikeToArray(table.querySelectorAll("[data-column-id]"))
-		const colId = header.getAttribute("data-column-id")
-		const targetIndex = allHeaders.findIndex(el => el.getAttribute("data-column-id") === colId)
+		const allHeaders = TableUtils.getColumnHeadersByEventTarget(target)
+		const targetIndex = allHeaders.findIndex(([id]) => id === colId)
 
 		let widths: number[] = []
 		for(let prevIndex = targetIndex - 1; prevIndex >= 0; prevIndex--){
-			const prevHeader = allHeaders[prevIndex]!
+			const [,prevHeader] = allHeaders[prevIndex]!
 			if(prevHeader.getAttribute("data-is-swappable") !== "true"){
 				break
 			}
@@ -32,7 +31,7 @@ export class TableHeaderColumnDragHelper {
 		widths = widths.reverse()
 		this.currentIndex = widths.length
 		for(let nextIndex = targetIndex + 1; nextIndex < allHeaders.length; nextIndex++){
-			const nextHeader = allHeaders[nextIndex]!
+			const [,nextHeader] = allHeaders[nextIndex]!
 			if(nextHeader.getAttribute("data-is-swappable") !== "true"){
 				break
 			}
@@ -75,19 +74,4 @@ export class TableHeaderColumnDragHelper {
 		this.minOffset = this.currentIndex <= 0 ? null : -(this.widths[this.currentIndex - 1]! / 2)
 		this.maxOffset = this.currentIndex >= this.widths.length ? null : (this.widths[this.currentIndex]! / 2)
 	}
-}
-
-
-export const findNearestTableHeader = (el: HTMLElement): HTMLElement | null => {
-	while(el !== document.body){
-		const attr = el.getAttribute("data-column-id")
-		if(attr){
-			return el
-		}
-		if(!el.parentElement){
-			return null
-		}
-		el = el.parentElement
-	}
-	return null
 }

@@ -2,7 +2,7 @@ import {TableHierarchy, TableProps, TableRowMoveEvent} from "client/components/t
 import {useEffect, useState} from "react"
 import * as css from "./table.module.css"
 import {SetState} from "client/ui_utils/react_types"
-import {findParentTable, makeTableDrag} from "client/components/table/table_generic_drag"
+import {makeTableDrag} from "client/components/table/table_generic_drag"
 import {TableUtils} from "client/components/table/table_utils"
 import {reactMemo} from "common/react_memo"
 
@@ -178,11 +178,11 @@ const findNearestCell = (el: HTMLElement, tableId: string): {el: HTMLElement, pa
 }
 
 const isCellBelongsToTable = (cell: HTMLElement, tableId: string): boolean => {
-	return findParentTable(cell).getAttribute("data-table-id") === tableId
+	return TableUtils.findParentTable(cell).getAttribute("data-table-id") === tableId
 }
 
 const getCursorOffset = (cell: HTMLElement, coords: XY): XY | null => {
-	const table = findParentTable(cell)
+	const table = TableUtils.findParentTable(cell)
 	const tableRect = table.getBoundingClientRect()
 	return {
 		x: (coords.x - tableRect.left) + table.scrollLeft,
@@ -191,7 +191,7 @@ const getCursorOffset = (cell: HTMLElement, coords: XY): XY | null => {
 }
 
 const targetToLocatorY = (target: HTMLElement, disposition: RowDragDisposition) => {
-	const table = findParentTable(target)
+	const table = TableUtils.findParentTable(target)
 	const tableRect = table.getBoundingClientRect()
 	const targetRect = target.getBoundingClientRect()
 

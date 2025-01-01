@@ -1,7 +1,9 @@
-import {Forest, isTreeBranch, Tree} from "@nartallax/forest"
+import {isTreeBranch, Tree} from "@nartallax/forest"
 import {Button} from "client/components/button/button"
 import {Col} from "client/components/row_col/row_col"
-import {Table, TableBottomHitEvent, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowMoveEvent} from "client/components/table/table"
+import {Table, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowMoveEvent} from "client/components/table/table"
+import {useTreeTableDataLoader} from "client/components/table/table_data_loader"
+import {useTableSettings} from "client/components/table/table_settings"
 import {TextInput} from "client/components/text_input/text_input"
 import {anyToString} from "common/any_to_string"
 import {useCallback, useMemo, useRef, useState} from "react"
@@ -33,7 +35,6 @@ const getColumns = (onAdd: (path: number[]) => void, onEdit: (path: number[]) =>
 type Row = Tree<string, string>
 
 export const TableExample = () => {
-	const [tableData, setTableData] = useState(() => new Forest<string, string>([]))
 	const pagesTotal = 4
 
 	const [newRowPath, setNewRowPath] = useState<number[] | null>(null)
@@ -41,50 +42,55 @@ export const TableExample = () => {
 
 	const columns = useMemo(() => getColumns(setNewRowPath, setEditedRowPath), [setNewRowPath, setEditedRowPath])
 
-	const onBottomHit = useCallback(async(evt: TableBottomHitEvent<Row>) => {
-		const nums = ["one", "two", "three", "four", "five", "six"]
-		const nextPageIndex = evt.knownRows.length / nums.length
-		if(nextPageIndex >= pagesTotal){
-			return
-		}
-		await new Promise(ok => setTimeout(ok, 100))
-		if(evt.parentRow?.value.includes("one")){
-			return
-		}
-		const treePath = evt.hierarchy.map(x => x.rowIndex)
-		treePath.push(evt.knownRows.length)
-		const treeNodes: Tree<string, string>[] = nums.map(x => {
-			x = nextPageIndex + " " + x
-			if(evt.parentRow){
-				x = anyToString(evt.parentRow.value) + " " + x
+	const [settings, setSettings] = useTableSettings({
+		columns,
+		areColumnsOrderable: true,
+		areColumnsResizeable: true,
+		areColumnsSwappable: true,
+		maxOrderedColumns: 2,
+		localStorageId: "test"
+	})
+
+	const {onBottomHit, setTableData, rows} = useTreeTableDataLoader({
+		settings,
+		loadPage: async evt => {
+			const nums = ["one", "two", "three", "four", "five", "six"]
+			const nextPageIndex = evt.knownRows.length / nums.length
+			if(nextPageIndex >= pagesTotal){
+				return
 			}
-			if(x.length % 2){
-				return {value: x, children: []}
-			} else {
-				return {value: x}
+			await new Promise(ok => setTimeout(ok, 100))
+			if(evt.parentRow?.value.includes("one")){
+				return
 			}
-		})
-		setTableData(forest => forest.insertTreesAt(treePath, treeNodes))
-	}, [])
+			return nums.map(x => {
+				x = nextPageIndex + " " + x
+				if(evt.parentRow){
+					x = anyToString(evt.parentRow.value) + " " + x
+				}
+				if(x.length % 2){
+					return {value: x, children: []}
+				} else {
+					return {value: x}
+				}
+			})
+		}
+	})
 
 	const onRowMoved = useCallback((evt: TableRowMoveEvent<Row>) => {
 		setTableData(forest => forest.move(evt.oldLocation, evt.newLocation))
-	}, [])
+	}, [setTableData])
 
 	return (
 		<Col margin grow gap>
 			<Table<Row>
+				settings={settings}
+				setSettings={setSettings}
 				getRowKey={useCallback((row: Row) => row.value, [])}
 				getChildren={useCallback((row: Row) => isTreeBranch(row) ? row.children : null, [])}
-				areColumnsOrderable
-				areColumnsSwappable
-				areColumnsResizeable
-				maxOrderedColumns={2}
-				localStorageId='test'
 				onRowMoved={onRowMoved}
-				rows={tableData.trees}
+				rows={rows}
 				onBottomHit={onBottomHit}
-				columns={columns}
 				createdRow={newRowPath}
 				editedRow={editedRowPath}
 				getRowEditor={useCallback((props: TableRowEditorProps<Row>) => {
@@ -98,7 +104,7 @@ export const TableExample = () => {
 					}
 
 					setTableData(tableData => tableData.updateLeafAt(e.location, () => row.value))
-				}, [])}
+				}, [setTableData])}
 				onCreateCompleted={useCallback((e: TableEditCompletedEvent<Row>) => {
 					setNewRowPath(null)
 					const row = e.row
@@ -107,7 +113,7 @@ export const TableExample = () => {
 					}
 
 					setTableData(tableData => tableData.insertLeafAt(e.location, row.value))
-				}, [])}
+				}, [setTableData])}
 			/>
 		</Col>
 	)

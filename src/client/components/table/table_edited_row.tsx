@@ -1,4 +1,4 @@
-import {TableProps} from "client/components/table/table"
+import {TableColumnDefinition, TableProps} from "client/components/table/table"
 import {reactMemo} from "common/react_memo"
 import {useCallback} from "react"
 import * as css from "./table.module.css"
@@ -8,7 +8,8 @@ type Props<T> = {
 	row: T | null
 	location: readonly number[]
 	completeEdit?: TableProps<T>["onEditCompleted"]
-} & Pick<TableProps<T>, "columns" | "getRowEditor">
+	columns: readonly TableColumnDefinition<T>[]
+} & Pick<TableProps<T>, "getRowEditor">
 
 export const TableEditedRow = reactMemo(<T,>({
 	row, location, completeEdit, columns, getRowEditor
