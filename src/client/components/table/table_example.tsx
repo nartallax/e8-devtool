@@ -78,7 +78,7 @@ export const TableExample = () => {
 	})
 
 	const onRowMoved = useCallback((evt: TableRowMoveEvent<Row>) => {
-		setTableData(forest => forest.move(evt.oldLocation, evt.newLocation))
+		setTableData(forest => forest.moveSeveral(evt.oldLocation.firstRow, evt.newLocation.firstRow, evt.newLocation.count))
 	}, [setTableData])
 
 	const [cursor, setCursor] = useState<readonly number[] | null>(null)

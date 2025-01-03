@@ -165,16 +165,13 @@ export type TableBottomHitEvent<T> = {
 }
 
 export type TableRowMoveEvent<T> = {
-	/** Location is a sequence of indices of children, from root to the last branch.
-	It's like hierarchy, but without other info.
-	Here hierarchies are not possible to use because sometimes we want to point to a row that doesn't exist yet (last one in sequence) */
-	oldLocation: number[]
-	newLocation: number[]
+	oldLocation: TableRowSequenceDesignator
+	newLocation: TableRowSequenceDesignator
 	/** Row that is being moved.
 	Can be calculated both from oldLocation and newLocation; is present as separate field for convenience.
 
 	(same goes for parent rows) */
-	row: T
+	rows: T[]
 	oldParent: T | null
 	newParent: T | null
 }
@@ -204,7 +201,7 @@ export const Table = <T,>({
 		}
 	}, [orderedColumns, columnWidthOverrides])
 
-	const [currentlyDraggedRow, setCurrentlyDraggedRow] = useState<TableHierarchy<T> | null>(null)
+	const [currentlyDraggedRows, setCurrentlyDraggedRows] = useState<TableRowSequenceDesignator | null>(null)
 
 	// this exists to check if a DOM node belongs to this table or to different one
 	// helps with drag-n-drop
@@ -220,8 +217,10 @@ export const Table = <T,>({
 		}
 	}
 
+	const [lastSelectionStart, setLastSelectionStart] = useState<readonly number[] | null>(null)
 	const cursorSelectionProps = useTableCursorSelectionHandlers({
-		rows, getChildren, rowCursor, setRowCursor, setSelectedRows
+		lastSelectionStart, setLastSelectionStart,
+		rows, getChildren, rowCursor, setRowCursor, selectedRows, setSelectedRows
 	})
 
 	return (
@@ -230,7 +229,7 @@ export const Table = <T,>({
 			tabIndex={0}
 			className={cn(css.table, {
 				[css.withHeaders!]: areHeadersVisible,
-				[css.noTextSelection!]: currentlyDraggedRow !== null
+				[css.noTextSelection!]: currentlyDraggedRows !== null
 			})}
 			style={tableStyle}
 			data-table-id={tableId}
@@ -238,7 +237,7 @@ export const Table = <T,>({
 			<TableRowSequence
 				hierarchy={emptyArray}
 				columns={settings.columns}
-				draggedRowHierarchy={currentlyDraggedRow}
+				draggedRows={currentlyDraggedRows}
 				isRowCurrentlyDragged={false}
 				segmentData={rows}
 				onBottomHit={onBottomHit}
@@ -262,10 +261,15 @@ export const Table = <T,>({
 				/>}
 			<TableRowDragndrop
 				tableId={tableId}
-				setCurrentlyDraggedRow={setCurrentlyDraggedRow}
+				setCurrentlyDraggedRows={setCurrentlyDraggedRows}
 				rows={rows}
 				canMoveRowTo={canMoveRowTo}
+				getChildren={getChildren}
 				onRowMoved={onRowMoved}
+				selectedRows={selectedRows}
+				setSelectedRows={setSelectedRows}
+				setRowCursor={setRowCursor}
+				setLastSelectionStart={setLastSelectionStart}
 			/>
 		</div>
 	)

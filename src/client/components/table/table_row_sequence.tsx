@@ -1,4 +1,4 @@
-import {TableBottomHitEvent, TableColumnDefinition, TableHierarchy, TableProps} from "client/components/table/table"
+import {TableBottomHitEvent, TableColumnDefinition, TableHierarchy, TableProps, TableRowSequenceDesignator} from "client/components/table/table"
 import {TableIntersectionTrigger} from "client/components/table/table_intersection_trigger"
 import {TableRow} from "client/components/table/table_row"
 import {reactMemo} from "common/react_memo"
@@ -11,7 +11,7 @@ import {TableEditedRow} from "client/components/table/table_edited_row"
 type Props<T> = {
 	segmentData: readonly T[]
 	hierarchy: TableHierarchy<T>
-	draggedRowHierarchy: TableHierarchy<T> | null
+	draggedRows: TableRowSequenceDesignator | null
 	isRowCurrentlyDragged: boolean
 	editedRow?: readonly number[] | null
 	completeEdit?: TableProps<T>["onEditCompleted"]
@@ -20,7 +20,7 @@ type Props<T> = {
 } & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey" | "selectedRows" | "setSelectedRows" | "rowCursor" | "setRowCursor">
 
 export const TableRowSequence = reactMemo(<T,>({
-	segmentData, hierarchy, columns, draggedRowHierarchy, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated, selectedRows, setSelectedRows, rowCursor, setRowCursor
+	segmentData, hierarchy, columns, draggedRows, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated, selectedRows, setSelectedRows, rowCursor, setRowCursor
 }: Props<T>) => {
 	// we need to compare current bottom row with row that was bottom when we started loading rows
 	// this way we are absolutely sure that we will start loading new rows strictly after old rows are loaded
@@ -100,7 +100,7 @@ export const TableRowSequence = reactMemo(<T,>({
 						isRowCurrentlyDragged={isRowCurrentlyDragged}
 						hierarchy={hierarchy}
 						columns={columns}
-						draggedRowHierarchy={draggedRowHierarchy}
+						draggedRows={draggedRows}
 						onBottomHit={onBottomHit}
 						editedRow={editedRow}
 						completeEdit={completeEdit}

@@ -1,41 +1,50 @@
-import {TableHierarchy, TableProps, TableRowMoveEvent} from "client/components/table/table"
+import {TableProps, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
 import {useEffect, useState} from "react"
 import * as css from "./table.module.css"
 import {SetState} from "client/ui_utils/react_types"
 import {makeTableDrag} from "client/components/table/table_generic_drag"
 import {TableUtils} from "client/components/table/table_utils"
 import {reactMemo} from "common/react_memo"
+import {useRefValue} from "common/ref_value"
 
 type RowDragDisposition = "above" | "below" | "inside"
 type XY = {x: number, y: number}
 
 type Props<T> = {
 	tableId: string
-	setCurrentlyDraggedRow: SetState<TableHierarchy<T> | null>
-} & Pick<TableProps<T>, "rows" | "canMoveRowTo" | "onRowMoved" | "getChildren">
+	setCurrentlyDraggedRows: SetState<TableRowSequenceDesignator | null>
+	setLastSelectionStart: SetState<readonly number[] | null>
+} & Pick<TableProps<T>, "rows" | "canMoveRowTo" | "onRowMoved" | "getChildren" | "selectedRows" | "setSelectedRows" | "setRowCursor">
 
 export const TableRowDragndrop = reactMemo(<T,>({
-	rows: data, setCurrentlyDraggedRow, tableId, canMoveRowTo, onRowMoved, getChildren
+	setLastSelectionStart, selectedRows, setSelectedRows, rows: data, setCurrentlyDraggedRows, tableId, canMoveRowTo, onRowMoved, getChildren, setRowCursor
 }: Props<T>) => {
 	const [cursorOffset, setCursorOffset] = useState<XY | null>(null)
 	const [dropLocatorY, setDropLocatorY] = useState<number | null>(null)
+	// we must not re-create drag handlers each time selected rows change
+	// because they could change mid-drag
+	const selectedRowsRef = useRefValue(selectedRows)
 
 	useEffect(() => {
 		if(!onRowMoved){
 			return undefined
 		}
 
-		let lastCheckedTargetLocation: number[] | null = null
-		let destinationLocation: number[] | null = null
-		let sourceLocation: TableHierarchy<T> | null = null
+		let lastCheckedTargetLocation: readonly number[] | null = null
+		let destinationLocation: readonly number[] | null = null
+		let sourceLocation: TableRowSequenceDesignator | null = null
 
-		const makeMoveEvent = (sourceLocation: TableHierarchy<T>, targetLocation: number[]): TableRowMoveEvent<T> => ({
-			oldLocation: sourceLocation.map(x => x.rowIndex),
-			newLocation: targetLocation,
-			oldParent: sourceLocation[sourceLocation.length - 2]?.row ?? null,
-			newParent: targetLocation.length < 2 ? null : TableUtils.findParentRowOrThrow(data, getChildren, targetLocation),
-			row: sourceLocation[sourceLocation.length - 1]!.row
-		})
+		const makeMoveEvent = (sourceLocation: TableRowSequenceDesignator, targetLocation: TableRowSequenceDesignator): TableRowMoveEvent<T> => {
+			const oldParent = sourceLocation.firstRow.length < 2 ? null : TableUtils.findParentRowOrThrow(data, getChildren, sourceLocation.firstRow)
+			const newParent = targetLocation.firstRow.length < 2 ? null : TableUtils.findParentRowOrThrow(data, getChildren, targetLocation.firstRow)
+			return {
+				oldLocation: sourceLocation,
+				newLocation: targetLocation,
+				oldParent,
+				newParent,
+				rows: TableUtils.designatorToRows(targetLocation, data, getChildren)
+			}
+		}
 
 		const tryUpdateTargetLocation = (coords: XY, target: HTMLElement) => {
 			if(!coords || !sourceLocation){
@@ -64,13 +73,14 @@ export const TableRowDragndrop = reactMemo(<T,>({
 				newTargetLocation.push(0)
 			}
 
-			if(lastCheckedTargetLocation && arePathsEqual(lastCheckedTargetLocation, newTargetLocation)){
+			if(lastCheckedTargetLocation && TableUtils.locationsAreEqual(lastCheckedTargetLocation, newTargetLocation)){
 				// we have already checked that location and either set it to target or refused to
 				return
 			}
 
 			lastCheckedTargetLocation = newTargetLocation
-			if(isRowMoveLegal(sourceLocation.map(x => x.rowIndex), newTargetLocation) && (canMoveRowTo?.(makeMoveEvent(sourceLocation, newTargetLocation)) ?? true)){
+			const targetDesignator: TableRowSequenceDesignator = {firstRow: newTargetLocation, count: sourceLocation.count}
+			if(isRowMoveLegal(sourceLocation.firstRow, newTargetLocation) && (canMoveRowTo?.(makeMoveEvent(sourceLocation, targetDesignator)) ?? true)){
 				destinationLocation = newTargetLocation
 				setDropLocatorY(targetToLocatorY(target, disposition))
 			}
@@ -87,14 +97,19 @@ export const TableRowDragndrop = reactMemo(<T,>({
 				setCursorOffset(null)
 				setDropLocatorY(null)
 				if(reason !== "end"){
-					setCurrentlyDraggedRow(null)
+					setCurrentlyDraggedRows(null)
 				}
 			},
 			onStart: coords => {
 				const rowElWithPath = findNearestCell(coords.target, tableId)!
-				sourceLocation = TableUtils.pathToHierarchy(data, getChildren, rowElWithPath.path)
-				destinationLocation = sourceLocation.map(x => x.rowIndex)
-				setCurrentlyDraggedRow(sourceLocation)
+				const selectedRows = selectedRowsRef.current
+				if(selectedRows && TableUtils.isLocationIncludedInDesignator(rowElWithPath.path, selectedRows)){
+					sourceLocation = selectedRows
+				} else {
+					sourceLocation = {firstRow: rowElWithPath.path, count: 1}
+				}
+				destinationLocation = sourceLocation.firstRow
+				setCurrentlyDraggedRows(sourceLocation)
 			},
 			onMove: ({start, current}) => {
 				setCursorOffset(getCursorOffset(start.target, current))
@@ -106,11 +121,21 @@ export const TableRowDragndrop = reactMemo(<T,>({
 				const src = sourceLocation
 				const dest = destinationLocation
 				try {
-					if(src && dest && !arePathsEqual(src.map(x => x.rowIndex), dest)){
-						await onRowMoved(makeMoveEvent(src, dest))
+					if(src && dest && !TableUtils.locationsAreEqual(src.firstRow, dest)){
+						const destDesignator: TableRowSequenceDesignator = {firstRow: dest, count: src.count}
+						const selectedRows = selectedRowsRef.current
+						if(selectedRows){
+							setSelectedRows?.(null)
+						}
+						setRowCursor?.(null)
+						setLastSelectionStart(null)
+						await onRowMoved(makeMoveEvent(src, destDesignator))
+						if(selectedRows){
+							setSelectedRows?.(TableUtils.updateMoveDesignator(src, destDesignator))
+						}
 					}
 				} finally {
-					setCurrentlyDraggedRow(null)
+					setCurrentlyDraggedRows(null)
 				}
 			}
 		})
@@ -127,7 +152,7 @@ export const TableRowDragndrop = reactMemo(<T,>({
 			window.removeEventListener("touchstart", onDown)
 			cleanup("shutdown")
 		}
-	}, [tableId, data, setCurrentlyDraggedRow, onRowMoved, canMoveRowTo, getChildren])
+	}, [tableId, data, selectedRowsRef, setLastSelectionStart, setCurrentlyDraggedRows, onRowMoved, canMoveRowTo, getChildren, setSelectedRows, setRowCursor])
 
 	return (
 		<>
@@ -147,18 +172,6 @@ export const TableRowDragndrop = reactMemo(<T,>({
 		</>
 	)
 })
-
-const arePathsEqual = (a: number[], b: number[]): boolean => {
-	if(a.length !== b.length){
-		return false
-	}
-	for(let i = 0; i < a.length; i++){
-		if(a[i] !== b[i]){
-			return false
-		}
-	}
-	return true
-}
 
 const findNearestCell = (el: HTMLElement, tableId: string): {el: HTMLElement, path: number[]} | null => {
 	while(el !== document.body){
@@ -204,7 +217,7 @@ const targetToLocatorY = (target: HTMLElement, disposition: RowDragDisposition) 
 	return result
 }
 
-const isRowMoveLegal = (from: number[], to: number[]): boolean => {
+const isRowMoveLegal = (from: readonly number[], to: readonly number[]): boolean => {
 	if(from.length === to.length){
 		// even if it's the same position - who cares
 		return true
@@ -215,7 +228,7 @@ const isRowMoveLegal = (from: number[], to: number[]): boolean => {
 	return true
 }
 
-const isStartsWith = <T,>(long: T[], short: T[]): boolean => {
+const isStartsWith = <T,>(long: readonly T[], short: readonly T[]): boolean => {
 	for(let i = 0; i < short.length; i++){
 		if(long[i] !== short[i]){
 			return false

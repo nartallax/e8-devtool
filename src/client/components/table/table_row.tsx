@@ -1,4 +1,4 @@
-import {TableColumnDefinition, TableHierarchy, TableProps} from "client/components/table/table"
+import {TableColumnDefinition, TableHierarchy, TableProps, TableRowSequenceDesignator} from "client/components/table/table"
 import {reactMemo} from "common/react_memo"
 import {TableCell} from "client/components/table/table_cell"
 import {useEffect, useState} from "react"
@@ -8,7 +8,7 @@ import {TableEditedRow} from "client/components/table/table_edited_row"
 
 type Props<T> = {
 	hierarchy: TableHierarchy<T>
-	draggedRowHierarchy: TableHierarchy<T> | null
+	draggedRows: TableRowSequenceDesignator | null
 	isRowCurrentlyDragged: boolean
 	editedRow?: readonly number[] | null
 	completeEdit?: TableProps<T>["onEditCompleted"]
@@ -17,14 +17,14 @@ type Props<T> = {
 } & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey" | "selectedRows" | "setSelectedRows" | "rowCursor" | "setRowCursor">
 
 export const TableRow = reactMemo(<T,>({
-	hierarchy, columns, draggedRowHierarchy, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated, getChildren, getRowKey, selectedRows, setSelectedRows, rowCursor, setRowCursor
+	hierarchy, columns, draggedRows, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, isRowCreated, getChildren, getRowKey, selectedRows, setSelectedRows, rowCursor, setRowCursor
 }: Props<T>) => {
 	const row = hierarchy[hierarchy.length - 1]!.row
 	const [isExpanded, setExpanded] = useState(false)
 	const children = getChildren?.(row)
 	const isExpandable = !!children
 	const _isRowCurrentlyDragged = isRowCurrentlyDragged
-		|| (!!draggedRowHierarchy && TableUtils.hierarchiesAreEqualByIndex(draggedRowHierarchy, hierarchy))
+		|| (!!draggedRows && TableUtils.isHierarchyIncludedInDesignator(hierarchy, draggedRows))
 	const isRowSelected = !!selectedRows && TableUtils.isHierarchyIncludedInDesignator(hierarchy, selectedRows)
 	const isRowOnCursor = !!rowCursor && TableUtils.locationMatchesHierarchy(rowCursor, hierarchy)
 
@@ -66,7 +66,7 @@ export const TableRow = reactMemo(<T,>({
 				onBottomHit={onBottomHit}
 				columns={columns}
 				segmentData={children}
-				draggedRowHierarchy={draggedRowHierarchy}
+				draggedRows={draggedRows}
 				isRowCurrentlyDragged={_isRowCurrentlyDragged}
 				editedRow={editedRow}
 				completeEdit={completeEdit}

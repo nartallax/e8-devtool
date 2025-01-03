@@ -33,10 +33,23 @@ export namespace TableUtils {
 		return node ?? null
 	}
 
+	export const designatorToRows = <T>(designator: TableRowSequenceDesignator, data: readonly T[], getChildren?: GetChildren<T>) => {
+		let parentRows: readonly T[]
+		if(designator.firstRow.length < 2){
+			parentRows = data
+		} else {
+			const parent = findParentRowOrThrow(data, getChildren, designator.firstRow)
+			parentRows = getChildren?.(parent) ?? []
+		}
+		const index = designator.firstRow[designator.firstRow.length - 1]!
+		return parentRows.slice(index, index + designator.count)
+	}
+
 	export const findRowOrThrow = <T>(data: readonly T[], getChildren: GetChildren<T>, path: readonly number[]): T => {
 		const node = findRow(data, getChildren, path)
 		if(!node){
-			throw new Error(`Cannot find cache node for path ${JSON.stringify(path)}`)
+			console.log({data, getChildren, path})
+			throw new Error(`Cannot find row for path ${JSON.stringify(path)}`)
 		}
 		return node
 	}
@@ -78,34 +91,28 @@ export namespace TableUtils {
 	}
 
 	export const hierarchiesAreEqualByIndex = <T>(a: TableHierarchy<T>, b: TableHierarchy<T>): boolean => {
-		if(a.length !== b.length){
-			return false
-		}
-
-		for(let i = a.length - 1; i >= 0; i--){
-			if(a[i]!.rowIndex !== b[i]!.rowIndex){
-				return false
-			}
-		}
-
-		return true
+		return locationsAreEqual(a.map(x => x.rowIndex), b.map(x => x.rowIndex))
 	}
 
-	export const isHierarchyIncludedInDesignator = <T>(hierarchy: TableHierarchy<T>, designator: TableRowSequenceDesignator) => {
-		if(designator.firstRow.length !== hierarchy.length || hierarchy.length < 1){
+	export const isLocationIncludedInDesignator = (location: readonly number[], designator: TableRowSequenceDesignator) => {
+		if(designator.firstRow.length !== location.length || location.length < 1){
 			return false
 		}
-		const lastHierarchyIndex = hierarchy[hierarchy.length - 1]!.rowIndex
+		const lastHierarchyIndex = location[location.length - 1]!
 		const lastDesignatorIndex = designator.firstRow[designator.firstRow.length - 1]!
 		if(lastHierarchyIndex < lastDesignatorIndex || lastHierarchyIndex >= lastDesignatorIndex + designator.count){
 			return false
 		}
-		for(let i = hierarchy.length - 2; i >= 0; i--){
-			if(hierarchy[i]!.rowIndex !== designator.firstRow[i]){
+		for(let i = location.length - 2; i >= 0; i--){
+			if(location[i] !== designator.firstRow[i]){
 				return false
 			}
 		}
 		return true
+	}
+
+	export const isHierarchyIncludedInDesignator = <T>(hierarchy: TableHierarchy<T>, designator: TableRowSequenceDesignator) => {
+		return isLocationIncludedInDesignator(hierarchy.map(x => x.rowIndex), designator)
 	}
 
 	export const hierarchyStartsWithLocation = <T>(location: readonly number[], hierarchy: TableHierarchy<T>): boolean => {
@@ -191,6 +198,22 @@ export namespace TableUtils {
 			result[i] = [el.getAttribute("data-column-id"), el]
 		}
 		return result
+	}
+
+	export const updateMovePath = (from: readonly number[], to: readonly number[], amount: number): number[] => {
+		const result = [...to]
+		for(let i = 0; i < Math.min(from.length, to.length); i++){
+			if(from[i]! < to[i]!){
+				result[i]! -= amount
+				break
+			}
+		}
+		return result
+	}
+
+	export const updateMoveDesignator = (from: TableRowSequenceDesignator, to: TableRowSequenceDesignator): TableRowSequenceDesignator => {
+		const path = updateMovePath(from.firstRow, to.firstRow, to.count)
+		return {firstRow: path, count: to.count}
 	}
 
 }
