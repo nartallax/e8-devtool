@@ -7,6 +7,7 @@ import {getTableTemplateColumns, MutableTableSettings, TableSettings} from "clie
 import {TableHeaders} from "client/components/table/table_headers"
 import {SetState} from "client/ui_utils/react_types"
 import {noop} from "client/ui_utils/noop"
+import {DefaultableSideSize} from "client/ui_utils/sizes"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -41,6 +42,7 @@ export type TableColumnDefinition<T> = {
 
 		When user resizes the column, width is overriden to px size of whatever user sets it to be. */
 	readonly width?: string
+	readonly padding?: DefaultableSideSize
 
 	/** If enabled, cells in this column will have elements to represent tree structure and interact with it */
 	readonly isTreeColumn?: boolean
@@ -131,6 +133,7 @@ export type TableProps<T> = {
 export type TableRowEditorProps<T> = {
 	readonly location: readonly number[]
 	readonly row: T | null
+	readonly isDisabled: boolean
 	readonly onDone: (newRow: T | null) => Promise<void>
 }
 

@@ -4,6 +4,7 @@ import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
 import {SetState} from "client/ui_utils/react_types"
 import {PropsWithChildren} from "react"
+import {resolveDefaultableSideSize} from "client/ui_utils/sizes"
 
 type TableCellBareProps<T> = {
 	column: TableColumnDefinition<T>
@@ -45,7 +46,10 @@ export const TableCellBare = reactMemo(<T,>({
 			className={cn(css.tableCell, {
 				[css.movedRowCell!]: isRowCurrentlyDragged
 			})}
-			style={{gridColumn: `var(--table-col-${column.id})`}}>
+			style={{
+				gridColumn: `var(--table-col-${column.id})`,
+				padding: !column.padding ? undefined : resolveDefaultableSideSize(column.padding)
+			}}>
 			{children}
 		</div>
 	)
