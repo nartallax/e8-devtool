@@ -29,6 +29,10 @@
 	it looks better when scrolling */
 	border: var(--border-width) solid var(--border-color);
 
+	&:focus {
+		outline: none;
+	}
+
 	&.withHeaders {
 		border-radius: var(--border-radius) var(--border-radius) 0 0;
 	}
@@ -152,6 +156,30 @@
 	.tableCell {
 		padding: var(--cell-padding);
 		background-color: var(--cell-background-color);
+		position: relative;
+
+		&.movedRowCell {
+			opacity: 0.5;
+		}
+
+		&::after {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			pointer-events: none;
+		}
+
+		&.selectedRowCell::after {
+			content: '';
+			background-color: rgba(128, 128, 255, 0.1);
+		}
+
+		&.cursoredRowCell::after {
+			content: '';
+			background-color: rgba(128, 128, 255, 0.2);
+		}
 	}
 
 }
@@ -292,10 +320,6 @@
     right: 0;
     border-width: 0 0 var(--branch-width) 0;
   }
-}
-
-.movedRowCell {
-	opacity: 0.5;
 }
 
 .moveDropLocator {

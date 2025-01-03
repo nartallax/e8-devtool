@@ -11,16 +11,16 @@ import {TableEditedRow} from "client/components/table/table_edited_row"
 type Props<T> = {
 	segmentData: readonly T[]
 	hierarchy: TableHierarchy<T>
-	draggedRowHierarchyTail: TableHierarchy<T> | null
+	draggedRowHierarchy: TableHierarchy<T> | null
 	isRowCurrentlyDragged: boolean
 	editedRow?: readonly number[] | null
 	completeEdit?: TableProps<T>["onEditCompleted"]
 	isRowCreated: boolean
 	columns: readonly TableColumnDefinition<T>[]
-} & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey">
+} & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey" | "selectedRows" | "setSelectedRows" | "rowCursor" | "setRowCursor">
 
 export const TableRowSequence = reactMemo(<T,>({
-	segmentData, hierarchy, columns, draggedRowHierarchyTail, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated
+	segmentData, hierarchy, columns, draggedRowHierarchy, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated, selectedRows, setSelectedRows, rowCursor, setRowCursor
 }: Props<T>) => {
 	// we need to compare current bottom row with row that was bottom when we started loading rows
 	// this way we are absolutely sure that we will start loading new rows strictly after old rows are loaded
@@ -100,7 +100,7 @@ export const TableRowSequence = reactMemo(<T,>({
 						isRowCurrentlyDragged={isRowCurrentlyDragged}
 						hierarchy={hierarchy}
 						columns={columns}
-						draggedRowHierarchyTail={draggedRowHierarchyTail?.[0]?.rowIndex !== index ? null : draggedRowHierarchyTail.slice(1)}
+						draggedRowHierarchy={draggedRowHierarchy}
 						onBottomHit={onBottomHit}
 						editedRow={editedRow}
 						completeEdit={completeEdit}
@@ -108,6 +108,10 @@ export const TableRowSequence = reactMemo(<T,>({
 						isRowCreated={isRowCreated}
 						getChildren={getChildren}
 						getRowKey={getRowKey}
+						selectedRows={selectedRows}
+						setSelectedRows={setSelectedRows}
+						rowCursor={rowCursor}
+						setRowCursor={setRowCursor}
 					/>}
 				</Fragment>
 			))}

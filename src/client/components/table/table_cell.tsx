@@ -10,11 +10,15 @@ type TableCellBareProps<T> = {
 	column: TableColumnDefinition<T>
 	treePath?: string
 	isRowCurrentlyDragged?: boolean
+	isSelected?: boolean
+	isOnCursor?: boolean
 }
 
 type TableCellProps<T> = TreeTableCellProps<T> & {
 	column: TableColumnDefinition<T>
 	isRowCurrentlyDragged: boolean
+	isSelected: boolean
+	isOnCursor: boolean
 }
 
 type TreeTableCellProps<T> = {
@@ -24,13 +28,15 @@ type TreeTableCellProps<T> = {
 }
 
 export const TableCell = reactMemo(<T,>({
-	hierarchy, column, isRowCurrentlyDragged, ...props
+	hierarchy, column, isRowCurrentlyDragged, isSelected, isOnCursor, ...props
 }: TableCellProps<T>) => {
 	return (
 		<TableCellBare
 			treePath={JSON.stringify(hierarchy.map(entry => entry.rowIndex))}
 			column={column}
-			isRowCurrentlyDragged={isRowCurrentlyDragged}>
+			isRowCurrentlyDragged={isRowCurrentlyDragged}
+			isSelected={isSelected}
+			isOnCursor={isOnCursor}>
 			{column.isTreeColumn && <TableCellTreeControls {...props} hierarchy={hierarchy}/>}
 			{column.render({row: hierarchy[hierarchy.length - 1]!.row, hierarchy})}
 		</TableCellBare>
@@ -38,13 +44,15 @@ export const TableCell = reactMemo(<T,>({
 })
 
 export const TableCellBare = reactMemo(<T,>({
-	column, children, treePath, isRowCurrentlyDragged
+	column, children, treePath, isRowCurrentlyDragged, isSelected, isOnCursor
 }: PropsWithChildren<TableCellBareProps<T>>) => {
 	return (
 		<div
 			data-tree-path={treePath}
 			className={cn(css.tableCell, {
-				[css.movedRowCell!]: isRowCurrentlyDragged
+				[css.movedRowCell!]: isRowCurrentlyDragged,
+				[css.selectedRowCell!]: isSelected,
+				[css.cursoredRowCell!]: isOnCursor
 			})}
 			style={{
 				gridColumn: `var(--table-col-${column.id})`,

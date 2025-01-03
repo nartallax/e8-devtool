@@ -1,7 +1,7 @@
 import {isTreeBranch, Tree} from "@nartallax/forest"
 import {Button} from "client/components/button/button"
 import {Col} from "client/components/row_col/row_col"
-import {Table, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowMoveEvent} from "client/components/table/table"
+import {Table, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
 import {useTreeTableDataLoader} from "client/components/table/table_data_loader"
 import {useTableSettings} from "client/components/table/table_settings"
 import {TextInput} from "client/components/text_input/text_input"
@@ -81,9 +81,17 @@ export const TableExample = () => {
 		setTableData(forest => forest.move(evt.oldLocation, evt.newLocation))
 	}, [setTableData])
 
+	const [cursor, setCursor] = useState<readonly number[] | null>(null)
+	const [selectedRows, setSelectedRows] = useState<TableRowSequenceDesignator | null>(null)
+
 	return (
 		<Col margin grow gap>
 			<Table<Row>
+				rowCursor={cursor}
+				setRowCursor={setCursor}
+				selectedRows={selectedRows}
+				setSelectedRows={setSelectedRows}
+				isAutofocused
 				settings={settings}
 				setSettings={setSettings}
 				getRowKey={useCallback((row: Row) => row.value, [])}

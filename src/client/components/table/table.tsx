@@ -8,6 +8,7 @@ import {TableHeaders} from "client/components/table/table_headers"
 import {SetState} from "client/ui_utils/react_types"
 import {noop} from "client/ui_utils/noop"
 import {DefaultableSideSize} from "client/ui_utils/sizes"
+import {useTableCursorSelectionHandlers} from "client/components/table/table_cursor_selection"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -128,6 +129,19 @@ export type TableProps<T> = {
 	New row is always edited; if editedRow is passed, its value is ignored. */
 	createdRow?: readonly number[] | null
 	onCreateCompleted?: (evt: TableEditCompletedEvent<T>) => void | Promise<void>
+
+	selectedRows?: TableRowSequenceDesignator | null
+	setSelectedRows?: SetState<TableRowSequenceDesignator | null>
+
+	rowCursor?: readonly number[] | null
+	setRowCursor?: SetState<readonly number[] | null>
+	isAutofocused?: boolean
+}
+
+/** A sequence of rows. All of those rows are on a same level. */
+export type TableRowSequenceDesignator = {
+	readonly firstRow: readonly number[]
+	readonly count: number
 }
 
 export type TableRowEditorProps<T> = {
@@ -173,7 +187,7 @@ export type TableOrder<T> = {
 }
 
 export const Table = <T,>({
-	settings, setSettings = noop, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren
+	settings, setSettings = noop, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren, selectedRows, setSelectedRows, rowCursor, setRowCursor, isAutofocused
 }: TableProps<T>) => {
 
 	const {orderedColumns, columnWidthOverrides} = settings
@@ -200,18 +214,31 @@ export const Table = <T,>({
 	const editedRowLocation = createdRow ?? editedRow
 	const completeEdit = editedRowLocation === createdRow ? onCreateCompleted : onEditCompleted
 
+	const rootRef = (el: HTMLDivElement | null) => {
+		if(el && isAutofocused){
+			el.focus()
+		}
+	}
+
+	const cursorSelectionProps = useTableCursorSelectionHandlers({
+		rows, getChildren, rowCursor, setRowCursor, setSelectedRows
+	})
+
 	return (
 		<div
+			ref={rootRef}
+			tabIndex={0}
 			className={cn(css.table, {
 				[css.withHeaders!]: areHeadersVisible,
 				[css.noTextSelection!]: currentlyDraggedRow !== null
 			})}
 			style={tableStyle}
-			data-table-id={tableId}>
+			data-table-id={tableId}
+			{...cursorSelectionProps}>
 			<TableRowSequence
 				hierarchy={emptyArray}
 				columns={settings.columns}
-				draggedRowHierarchyTail={currentlyDraggedRow}
+				draggedRowHierarchy={currentlyDraggedRow}
 				isRowCurrentlyDragged={false}
 				segmentData={rows}
 				onBottomHit={onBottomHit}
@@ -221,6 +248,10 @@ export const Table = <T,>({
 				getRowEditor={getRowEditor}
 				getRowKey={getRowKey}
 				getChildren={getChildren}
+				selectedRows={selectedRows}
+				setSelectedRows={setSelectedRows}
+				rowCursor={rowCursor}
+				setRowCursor={setRowCursor}
 			/>
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
