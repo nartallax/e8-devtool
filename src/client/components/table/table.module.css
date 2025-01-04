@@ -173,12 +173,12 @@
 
 		&.selectedRowCell::after {
 			content: '';
-			background-color: rgba(128, 128, 255, 0.1);
+			background-color: rgba(128, 128, 255, 0.05);
 		}
 
 		&.cursoredRowCell::after {
 			content: '';
-			background-color: rgba(128, 128, 255, 0.2);
+			background-color: rgba(128, 128, 255, 0.1);
 		}
 	}
 

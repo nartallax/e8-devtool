@@ -7,7 +7,6 @@ import {TableUtils} from "client/components/table/table_utils"
 import {reactMemo} from "common/react_memo"
 import {useRefValue} from "common/ref_value"
 import {TableExpansionTree} from "client/components/table/table_expansion_tree"
-import {sleepFrame} from "client/ui_utils/sleep_frame"
 import {setStateAndReturn} from "client/ui_utils/set_state_and_return"
 
 type RowDragDisposition = "above" | "below" | "inside"
