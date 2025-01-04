@@ -7,6 +7,8 @@ import {TableUtils} from "client/components/table/table_utils"
 import {reactMemo} from "common/react_memo"
 import {useRefValue} from "common/ref_value"
 import {TableExpansionTree} from "client/components/table/table_expansion_tree"
+import {sleepFrame} from "client/ui_utils/sleep_frame"
+import {setStateAndReturn} from "client/ui_utils/set_state_and_return"
 
 type RowDragDisposition = "above" | "below" | "inside"
 type XY = {x: number, y: number}
@@ -105,9 +107,11 @@ export const TableRowDragndrop = reactMemo(<T,>({
 			onStart: coords => {
 				const rowElWithPath = findNearestCell(coords.target, tableId)!
 				const selectedRows = selectedRowsRef.current
+				setRowCursor?.(null)
 				if(selectedRows && TableUtils.isLocationIncludedInDesignator(rowElWithPath.path, selectedRows)){
 					sourceLocation = selectedRows
 				} else {
+					setSelectedRows?.(null)
 					sourceLocation = {firstRow: rowElWithPath.path, count: 1}
 				}
 				destinationLocation = sourceLocation.firstRow
@@ -133,24 +137,24 @@ export const TableRowDragndrop = reactMemo(<T,>({
 						}
 						setRowCursor?.(null)
 						setLastSelectionStart(null)
-						let expandedOffsets: number[] = []
-						setExpTree(expTree => {
+						const expandedOffsets = await setStateAndReturn(setExpTree, expTree => {
 							// if we don't do anything to expansion tree - indices will be all wrong
 							// so here we are doing two things
 							// 1. saving expanded rows (in form of offsets),
 							// removing them from tree,
 							// and adding them back (adjusted for new location) after move
 							// 2. notifying tree that its offsets have been shifted
-							expandedOffsets = expTree.getPresentDesignatorPathOffsets(src)
-							return expTree.removeDesignator(src)
+							const expandedOffsets = expTree.getPresentDesignatorPathOffsets(src)
+							const updatedTree = expTree.removeDesignator(src)
+							return [updatedTree, expandedOffsets]
 						})
 
 						// the move
 						await onRowMoved(makeMoveEvent(src, destDesignator))
 
-						const updatedDestDesignator = TableUtils.updateMoveDesignator(src, destDesignator)
 						// restoring proper values after the move
-						setExpTree(expTree => {
+						const updatedDestDesignator = TableUtils.updateMoveDesignator(src, destDesignator)
+						const areDestRowsVisible = await setStateAndReturn(setExpTree, expTree => {
 							expTree = expTree.shiftIndicesByDesignator(src, -1)
 							expTree = expTree.shiftIndicesByDesignator(destDesignator, 1)
 							for(const offset of expandedOffsets){
@@ -159,12 +163,13 @@ export const TableRowDragndrop = reactMemo(<T,>({
 								expTree = expTree.add(newExpandedPath)
 							}
 
-							if(selectedRows && expTree.hasParent(updatedDestDesignator.firstRow)){
-								setSelectedRows?.(updatedDestDesignator)
-							}
-
-							return expTree
+							const areDestRowsVisible = selectedRows && expTree.hasParent(updatedDestDesignator.firstRow)
+							return [expTree, areDestRowsVisible]
 						})
+
+						if(selectedRows && areDestRowsVisible){
+							setSelectedRows?.(updatedDestDesignator)
+						}
 					}
 				} finally {
 					setCurrentlyDraggedRows(null)

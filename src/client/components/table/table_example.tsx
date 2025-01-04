@@ -79,7 +79,6 @@ export const TableExample = () => {
 	})
 
 	const onRowMoved = useCallback((evt: TableRowMoveEvent<Row>) => {
-		console.log(evt)
 		setTableData(forest => forest.moveSeveral(evt.oldLocation.firstRow, evt.newLocation.firstRow, evt.newLocation.count))
 	}, [setTableData])
 
