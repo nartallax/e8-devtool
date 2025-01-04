@@ -224,6 +224,8 @@ const result = tseslint.config(
 			"@typescript-eslint/unbound-method": "error",
 			"@typescript-eslint/unified-signatures": "warn",
 			"@typescript-eslint/use-unknown-in-catch-callback-variable": "warn",
+			// breaks code sometimes
+			"@typescript-eslint/prefer-return-this-type": "off",
 
 
 

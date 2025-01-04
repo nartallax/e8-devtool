@@ -1,6 +1,6 @@
 import * as css from "./table.module.css"
 import {TableRowSequence} from "client/components/table/table_row_sequence"
-import {ReactNode, useMemo, useState} from "react"
+import {ReactNode, useCallback, useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
 import {getTableTemplateColumns, MutableTableSettings, TableSettings} from "client/components/table/table_settings"
@@ -9,6 +9,8 @@ import {SetState} from "client/ui_utils/react_types"
 import {noop} from "client/ui_utils/noop"
 import {DefaultableSideSize} from "client/ui_utils/sizes"
 import {useTableCursorSelectionHandlers} from "client/components/table/table_cursor_selection"
+import {TableExpansionTree} from "client/components/table/table_expansion_tree"
+import {TableUtils} from "client/components/table/table_utils"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -223,6 +225,37 @@ export const Table = <T,>({
 		rows, getChildren, rowCursor, setRowCursor, selectedRows, setSelectedRows
 	})
 
+	const [expTree, setExpTree] = useState(new TableExpansionTree())
+	const toggleExpanded = useCallback((hierarchy: TableHierarchy<T>) => {
+		setExpTree(tree => {
+			if(!tree.hasHierarchy(hierarchy)){
+				return tree.addHierarchy(hierarchy)
+			}
+
+			let shouldClearSelection = false
+			setSelectedRows?.(rows => {
+				shouldClearSelection = !!rows && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), rows.firstRow)
+				if(shouldClearSelection){
+					// if the selection is inside the tree when tree is collapsed - clear the selection
+					// because invisible selection is confusing for user
+					// same goes for cursor
+					return null
+				}
+				return rows
+			})
+			if(shouldClearSelection){
+				setLastSelectionStart(null)
+			}
+			setRowCursor?.(cursor => {
+				if(cursor && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), cursor)){
+					return null
+				}
+				return cursor
+			})
+			return tree.removeHierarchy(hierarchy)
+		})
+	}, [setSelectedRows, setRowCursor])
+
 	return (
 		<div
 			ref={rootRef}
@@ -248,9 +281,9 @@ export const Table = <T,>({
 				getRowKey={getRowKey}
 				getChildren={getChildren}
 				selectedRows={selectedRows}
-				setSelectedRows={setSelectedRows}
 				rowCursor={rowCursor}
-				setRowCursor={setRowCursor}
+				expTree={expTree}
+				toggleExpanded={toggleExpanded}
 			/>
 			{/* Headers should appear after actual cells; that way they are drawn over absolutely positioned elements within cells
 			(yes, I could just use z-index, but it has potential to cause more problems down the line than it solves, so I'd rather not) */}
@@ -270,6 +303,7 @@ export const Table = <T,>({
 				setSelectedRows={setSelectedRows}
 				setRowCursor={setRowCursor}
 				setLastSelectionStart={setLastSelectionStart}
+				setExpTree={setExpTree}
 			/>
 		</div>
 	)

@@ -2,7 +2,6 @@ import {TableColumnDefinition, TableHierarchy} from "client/components/table/tab
 import {reactMemo} from "common/react_memo"
 import * as css from "./table.module.css"
 import {cn} from "client/ui_utils/classname"
-import {SetState} from "client/ui_utils/react_types"
 import {PropsWithChildren} from "react"
 import {resolveDefaultableSideSize} from "client/ui_utils/sizes"
 
@@ -24,7 +23,7 @@ type TableCellProps<T> = TreeTableCellProps<T> & {
 type TreeTableCellProps<T> = {
 	hierarchy: TableHierarchy<T>
 	isExpanded: boolean
-	setExpanded: SetState<boolean> | null
+	toggleExpanded: ((hierarchy: TableHierarchy<T>) => void) | null
 }
 
 export const TableCell = reactMemo(<T,>({
@@ -63,7 +62,7 @@ export const TableCellBare = reactMemo(<T,>({
 	)
 })
 
-const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy}: TreeTableCellProps<T>) => {
+const TableCellTreeControls = reactMemo(<T,>({isExpanded, toggleExpanded, hierarchy}: TreeTableCellProps<T>) => {
 	const lastHierarchyEntry = hierarchy[hierarchy.length - 1]!
 	const isRowLastInSequence = lastHierarchyEntry.rowIndex === lastHierarchyEntry.parentLoadedRowsCount - 1
 	return (
@@ -76,7 +75,7 @@ const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy
 					const nextEntry = hierarchy[index + 1]
 					const isNextEntryLastInSequence = !!nextEntry && nextEntry.rowIndex === nextEntry.parentLoadedRowsCount - 1
 					const isRoot = hierarchy.length === 1
-					const canHaveChildren = !!setExpanded
+					const canHaveChildren = !!toggleExpanded
 					const isExpander = isCurrentLevel && canHaveChildren
 					if(isExpander){
 						return (
@@ -84,8 +83,8 @@ const TableCellTreeControls = reactMemo(<T,>({isExpanded, setExpanded, hierarchy
 								key={index}
 								type="button"
 								className={css.expander}
-								onClick={() => {
-									setExpanded(expanded => !expanded)
+								onClick={!toggleExpanded ? undefined : () => {
+									toggleExpanded(hierarchy)
 								}}
 							/>
 						)

@@ -7,6 +7,7 @@ import * as css from "./table.module.css"
 import {sleepFrame} from "client/ui_utils/sleep_frame"
 import {TableUtils} from "client/components/table/table_utils"
 import {TableEditedRow} from "client/components/table/table_edited_row"
+import {TableExpansionTree} from "client/components/table/table_expansion_tree"
 
 type Props<T> = {
 	segmentData: readonly T[]
@@ -17,10 +18,12 @@ type Props<T> = {
 	completeEdit?: TableProps<T>["onEditCompleted"]
 	isRowCreated: boolean
 	columns: readonly TableColumnDefinition<T>[]
-} & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey" | "selectedRows" | "setSelectedRows" | "rowCursor" | "setRowCursor">
+	expTree: TableExpansionTree
+	toggleExpanded: (hierarchy: TableHierarchy<T>) => void
+} & Pick<TableProps<T>, "onBottomHit" | "getRowEditor" | "getChildren" | "getRowKey" | "selectedRows" | "rowCursor">
 
 export const TableRowSequence = reactMemo(<T,>({
-	segmentData, hierarchy, columns, draggedRows, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated, selectedRows, setSelectedRows, rowCursor, setRowCursor
+	segmentData, hierarchy, columns, draggedRows, isRowCurrentlyDragged, onBottomHit, editedRow, completeEdit, getRowEditor, getChildren, getRowKey, isRowCreated, selectedRows, rowCursor, expTree, toggleExpanded
 }: Props<T>) => {
 	// we need to compare current bottom row with row that was bottom when we started loading rows
 	// this way we are absolutely sure that we will start loading new rows strictly after old rows are loaded
@@ -109,9 +112,9 @@ export const TableRowSequence = reactMemo(<T,>({
 						getChildren={getChildren}
 						getRowKey={getRowKey}
 						selectedRows={selectedRows}
-						setSelectedRows={setSelectedRows}
 						rowCursor={rowCursor}
-						setRowCursor={setRowCursor}
+						expTree={expTree}
+						toggleExpanded={toggleExpanded}
 					/>}
 				</Fragment>
 			))}

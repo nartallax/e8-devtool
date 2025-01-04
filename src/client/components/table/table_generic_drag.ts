@@ -53,7 +53,6 @@ export const makeTableDrag = (opts: Options) => {
 		lastKnownCoords = dragStartCoords = coords
 		window.addEventListener("mousemove", onMove, {passive: true})
 		window.addEventListener("touchmove", onMove, {passive: true})
-		console.log("add event")
 		window.addEventListener("mouseup", onUp)
 		window.addEventListener("touchend", onUp)
 		// I don't remember why it was there. probably to prevent something.

@@ -35,7 +35,7 @@ const getColumns = (onAdd: (path: number[]) => void, onEdit: (path: number[]) =>
 type Row = Tree<string, string>
 
 export const TableExample = () => {
-	const pagesTotal = 4
+	const pagesTotal = 1
 
 	const [newRowPath, setNewRowPath] = useState<number[] | null>(null)
 	const [editedRowPath, setEditedRowPath] = useState<number[] | null>(null)
@@ -54,13 +54,14 @@ export const TableExample = () => {
 	const {onBottomHit, setTableData, rows} = useTreeTableDataLoader({
 		settings,
 		loadPage: async evt => {
-			const nums = ["one", "two", "three", "four", "five", "six"]
+			// const nums = ["one", "two", "three", "four", "five", "six"]
+			const nums = ["one", "two", "three"]
 			const nextPageIndex = evt.knownRows.length / nums.length
 			if(nextPageIndex >= pagesTotal){
 				return
 			}
 			await new Promise(ok => setTimeout(ok, 100))
-			if(evt.parentRow?.value.includes("one")){
+			if(evt.parentRow?.value.includes("three")){
 				return
 			}
 			return nums.map(x => {
@@ -78,6 +79,7 @@ export const TableExample = () => {
 	})
 
 	const onRowMoved = useCallback((evt: TableRowMoveEvent<Row>) => {
+		console.log(evt)
 		setTableData(forest => forest.moveSeveral(evt.oldLocation.firstRow, evt.newLocation.firstRow, evt.newLocation.count))
 	}, [setTableData])
 

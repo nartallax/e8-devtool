@@ -115,18 +115,22 @@ export namespace TableUtils {
 		return isLocationIncludedInDesignator(hierarchy.map(x => x.rowIndex), designator)
 	}
 
-	export const hierarchyStartsWithLocation = <T>(location: readonly number[], hierarchy: TableHierarchy<T>): boolean => {
-		if(location.length < hierarchy.length){
+	export const locationStartsWithLocation = (prefix: readonly number[], biggerLocation: readonly number[]): boolean => {
+		if(biggerLocation.length < prefix.length){
 			return false
 		}
 
-		for(let i = 0; i < hierarchy.length; i++){
-			if(location[i] !== hierarchy[i]!.rowIndex){
+		for(let i = prefix.length - 1; i >= 0; i--){
+			if(biggerLocation[i] !== prefix[i]){
 				return false
 			}
 		}
 
 		return true
+	}
+
+	export const hierarchyStartsWithLocation = <T>(location: readonly number[], hierarchy: TableHierarchy<T>): boolean => {
+		return locationStartsWithLocation(location, hierarchy.map(x => x.rowIndex))
 	}
 
 	export const findParentTable = (child: Node): HTMLElement => {
@@ -202,7 +206,10 @@ export namespace TableUtils {
 
 	export const updateMovePath = (from: readonly number[], to: readonly number[], amount: number): number[] => {
 		const result = [...to]
-		for(let i = 0; i < Math.min(from.length, to.length); i++){
+		if(from.length > to.length){
+			return result
+		}
+		for(let i = 0; i < from.length; i++){
 			if(from[i]! < to[i]!){
 				result[i]! -= amount
 				break
