@@ -12,6 +12,10 @@ export class TableExpansionTree {
 		return this.remove(path.map(x => x.rowIndex))
 	}
 
+	hasHierarchy<T>(path: TableHierarchy<T>): boolean {
+		return this.has(path.map(x => x.rowIndex))
+	}
+
 	add(path: readonly number[], offset = 0): TableExpansionTree {
 		if(path.length <= offset){
 			return this
@@ -88,22 +92,9 @@ export class TableExpansionTree {
 		return result
 	}
 
-	// this method is hierarchy-only for performance reasons
-	// not like it'll noticeably lag if implemented like addHierarchy,
-	// it just doesn't feel right for me to make a copy of each row's hierarchy each rerender
-	hasHierarchy<T>(path: TableHierarchy<T>, offset = 0): boolean {
-		if(path.length <= offset){
-			throw new Error("Path is too short")
-		}
-		const index = path[offset]!.rowIndex
-		if(path.length - 1 === offset){
-			return this.children.has(index)
-		}
-		const child = this.children.get(index)
-		if(!child){
-			return false
-		}
-		return child.hasHierarchy(path, offset + 1)
+	has(path: readonly number[]): boolean {
+		const parent = this.getParent(path)
+		return parent?.children.has(path[path.length - 1]!) ?? false
 	}
 
 	hasParent(path: readonly number[]): boolean {

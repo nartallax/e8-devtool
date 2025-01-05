@@ -220,10 +220,6 @@ export const Table = <T,>({
 	}
 
 	const [lastSelectionStart, setLastSelectionStart] = useState<readonly number[] | null>(null)
-	const cursorSelectionProps = useTableCursorSelectionHandlers({
-		lastSelectionStart, setLastSelectionStart,
-		rows, getChildren, rowCursor, setRowCursor, selectedRows, setSelectedRows
-	})
 
 	const [expTree, setExpTree] = useState(new TableExpansionTree())
 	const toggleExpanded = useCallback((hierarchy: TableHierarchy<T>) => {
@@ -255,6 +251,11 @@ export const Table = <T,>({
 			return tree.removeHierarchy(hierarchy)
 		})
 	}, [setSelectedRows, setRowCursor])
+
+	const cursorSelectionProps = useTableCursorSelectionHandlers({
+		lastSelectionStart, setLastSelectionStart,
+		rows, getChildren, rowCursor, setRowCursor, selectedRows, setSelectedRows, expTree, setExpTree
+	})
 
 	return (
 		<div

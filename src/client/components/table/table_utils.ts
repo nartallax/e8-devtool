@@ -56,9 +56,23 @@ export namespace TableUtils {
 
 	export const findParentRowOrThrow = <T>(data: readonly T[], getChildren: GetChildren<T>, path: readonly number[]): T => {
 		if(path.length === 0){
-			throw new Error("Cannot get parent of root cache node.")
+			throw new Error("Cannot get parent of root.")
 		}
 		return findRowOrThrow(data, getChildren, path.slice(0, path.length - 1))
+	}
+
+	export const getSiblings = <T>(data: readonly T[], getChildren: GetChildren<T>, path: readonly number[]): readonly T[] => {
+		if(path.length === 0){
+			throw new Error("Cannot get siblings of root.")
+		}
+		if(path.length === 1){
+			return data
+		}
+		const result = getChildren?.(findRowOrThrow(data, getChildren, path.slice(0, path.length - 1)))
+		if(!result){
+			throw new Error("No children for path " + path.join(","))
+		}
+		return result
 	}
 
 	export const locationMatchesHierarchy = <T>(location: readonly number[], hierarchy: TableHierarchy<T>): boolean => {
