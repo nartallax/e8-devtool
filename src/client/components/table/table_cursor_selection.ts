@@ -19,25 +19,31 @@ export const useTableCursorSelectionHandlers = <T>({
 		return {}
 	}
 
-	const moveSelectionTo = (target: Node, src: readonly number[] | null, dest: readonly number[], withShift: boolean) => {
+	const makeRowVisible = (cell: HTMLElement) => {
+		const cellRect = cell.getBoundingClientRect()
+		const table = TableUtils.findParentTable(cell)
+		const tableRect = table.getBoundingClientRect()
+		const headers = TableUtils.getHeadersRow(cell)
+		const headersHeight = !headers ? 0 : headers.getBoundingClientRect().height
+		const visibleTop = tableRect.top + headersHeight
+		if(cellRect.top < visibleTop){
+			table.scrollTop -= visibleTop - cellRect.top
+		} else if(cellRect.bottom > tableRect.bottom){
+			table.scrollTop += cellRect.bottom - tableRect.bottom
+		}
+	}
+
+	const moveCursorTo = (target: Node, src: readonly number[] | null, dest: readonly number[], withShift: boolean) => {
 		if(setRowCursor){
 			setRowCursor(dest)
 			const cell = TableUtils.getAnyRowCellByLocation(target, dest)
-			const cellRect = cell.getBoundingClientRect()
-			const table = TableUtils.findParentTable(target)
-			const tableRect = table.getBoundingClientRect()
-			const headers = TableUtils.getHeadersRow(target)
-			const headersHeight = !headers ? 0 : headers.getBoundingClientRect().height
-			const visibleTop = tableRect.top + headersHeight
-			if(cellRect.top < visibleTop){
-				table.scrollTop -= visibleTop - cellRect.top
-			} else if(cellRect.bottom > tableRect.bottom){
-				table.scrollTop += cellRect.bottom - tableRect.bottom
+			if(cell){
+				makeRowVisible(cell)
 			}
 		}
 
 		if(setSelectedRows){
-			if(!withShift || (src && src?.length !== dest.length)){
+			if(!withShift || (src && src.length !== dest.length)){
 				setLastSelectionStart(dest)
 				setSelectedRows({firstRow: dest, count: 1})
 				return
@@ -127,7 +133,7 @@ export const useTableCursorSelectionHandlers = <T>({
 			if(rows.length === 0){
 				return
 			}
-			moveSelectionTo(target, null, [0], withShift)
+			moveCursorTo(target, null, [0], withShift)
 			return
 		}
 
@@ -140,7 +146,7 @@ export const useTableCursorSelectionHandlers = <T>({
 			newCursor = tryMoveCursorUpLevel(newCursor) ?? newCursor
 		}
 
-		moveSelectionTo(target, effRowCursor, newCursor, withShift)
+		moveCursorTo(target, effRowCursor, newCursor, withShift)
 	}
 
 	const onPointerEvent = (e: MouseEvent | TouchEvent) => {
@@ -155,12 +161,42 @@ export const useTableCursorSelectionHandlers = <T>({
 		if(!rowPath){
 			return
 		}
-		moveSelectionTo(target, null, rowPath, e.shiftKey)
+		moveCursorTo(target, null, rowPath, e.shiftKey)
 	}
 
 	const cancelSelectionIfShift = (e: MouseEvent | TouchEvent) => {
 		if(e.shiftKey){
 			e.preventDefault()
+		}
+	}
+
+	const collapseRowOrGoUp = (target: Node) => {
+		if(!rowCursor || rowCursor.length === 0){
+			return
+		}
+
+		if(expTree.has(rowCursor)){
+			setExpTree(expTree => expTree.remove(rowCursor))
+		} else {
+			moveCursorTo(target, null, rowCursor.slice(0, rowCursor.length - 1), false)
+		}
+	}
+
+	const uncollapseRowOrGoDown = (target: Node) => {
+		if(!rowCursor || rowCursor.length === 0){
+			return
+		}
+
+		const row = TableUtils.findRowOrThrow(rows, getChildren, rowCursor)
+		const rowHasChildren = !!getChildren?.(row)
+		if(!rowHasChildren){
+			return
+		}
+
+		if(expTree.has(rowCursor)){
+			moveCursorTo(target, null, [...rowCursor, 0], false)
+		} else {
+			setExpTree(tree => tree.add(rowCursor))
 		}
 	}
 
@@ -176,13 +212,16 @@ export const useTableCursorSelectionHandlers = <T>({
 				return
 			}
 
-			if(e.key === "ArrowDown"){
-				moveDirection = 1
-			} else if(e.key === "ArrowUp"){
-				moveDirection = -1
-			} else if(e.key === "Escape"){
-				setSelectedRows?.(null)
-				setRowCursor?.(null)
+			switch(e.key){
+				case "ArrowDown": moveDirection = 1; break
+				case "ArrowUp": moveDirection = -1; break
+				case "ArrowLeft": collapseRowOrGoUp(target); return
+				case "ArrowRight": uncollapseRowOrGoDown(target); return
+				case "Escape": {
+					setSelectedRows?.(null)
+					setRowCursor?.(null)
+				} return
+				default: break // just for linting. we are not intend to check every single key here
 			}
 
 			if(moveDirection !== 0){

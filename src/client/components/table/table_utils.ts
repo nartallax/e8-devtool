@@ -199,11 +199,11 @@ export namespace TableUtils {
 		return table.querySelector("." + css.tableHeaders!) ?? null
 	}
 
-	export const getAnyRowCellByLocation = (el: Node, loc: readonly number[]): HTMLElement => {
+	export const getAnyRowCellByLocation = (el: Node, loc: readonly number[]): HTMLElement | null => {
 		const table = findParentTable(el)
 		const cell = table.querySelector(`[data-tree-path="${JSON.stringify(loc)}"]`)
 		if(!(cell instanceof HTMLElement)){
-			throw new Error("No cell found by location " + loc.join(","))
+			return null
 		}
 		return cell
 	}
