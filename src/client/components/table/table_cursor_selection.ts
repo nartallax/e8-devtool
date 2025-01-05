@@ -37,7 +37,7 @@ export const useTableCursorSelectionHandlers = <T>({
 		}
 
 		if(setSelectedRows){
-			if(!withShift || src?.length !== dest.length){
+			if(!withShift || (src && src?.length !== dest.length)){
 				setLastSelectionStart(dest)
 				setSelectedRows({firstRow: dest, count: 1})
 				return
