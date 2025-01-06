@@ -1,6 +1,6 @@
 import * as css from "./table.module.css"
 import {TableRowSequence} from "client/components/table/table_row_sequence"
-import {ReactNode, useCallback, useMemo, useState} from "react"
+import {MouseEvent, ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import {cn} from "client/ui_utils/classname"
 import {TableRowDragndrop} from "client/components/table/table_row_dragndrop"
 import {getTableTemplateColumns, MutableTableSettings, TableSettings} from "client/components/table/table_settings"
@@ -11,6 +11,8 @@ import {DefaultableSideSize} from "client/ui_utils/sizes"
 import {useTableCursorSelectionHandlers} from "client/components/table/table_cursor_selection"
 import {TableExpansionTree} from "client/components/table/table_expansion_tree"
 import {TableUtils} from "client/components/table/table_utils"
+import {setStateAndReturn} from "client/ui_utils/set_state_and_return"
+import {useRefValue} from "common/ref_value"
 
 /** A description of a single row in a tree structure */
 export type TableHierarchyEntry<T> = {
@@ -139,6 +141,14 @@ export type TableProps<T> = {
 	rowCursor?: readonly number[] | null
 	setRowCursor?: SetState<readonly number[] | null>
 	isAutofocused?: boolean
+
+	onRowClick?: (evt: TableRowEvent<T>) => void
+	onRowDoubleClick?: (evt: TableRowEvent<T>) => void
+}
+
+export type TableRowEvent<T> = {
+	readonly row: T
+	readonly hierarchy: TableHierarchy<T>
 }
 
 /** A sequence of rows. All of those rows are on a same level. */
@@ -187,7 +197,7 @@ export type TableOrder<T> = {
 }
 
 export const Table = <T,>({
-	settings, setSettings = noop, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren, selectedRows, setSelectedRows, rowCursor, setRowCursor, isAutofocused
+	settings, setSettings = noop, areHeadersVisible = true, rows, canMoveRowTo, onRowMoved, onBottomHit, editedRow, createdRow, onCreateCompleted, onEditCompleted, getRowEditor, getRowKey, getChildren, selectedRows, setSelectedRows, rowCursor, setRowCursor, isAutofocused, onRowClick, onRowDoubleClick
 }: TableProps<T>) => {
 
 	const {orderedColumns, columnWidthOverrides} = settings
@@ -223,32 +233,32 @@ export const Table = <T,>({
 	const [lastSelectionStart, setLastSelectionStart] = useState<readonly number[] | null>(null)
 
 	const [expTree, setExpTree] = useState(new TableExpansionTree())
-	const toggleExpanded = useCallback((hierarchy: TableHierarchy<T>) => {
+	const toggleExpanded = useCallback(async(hierarchy: TableHierarchy<T>) => {
+		const shouldClearSelection = !setSelectedRows ? false : await setStateAndReturn(setSelectedRows, rows => {
+			const shouldClearSelection = !!rows && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), rows.firstRow)
+			if(shouldClearSelection){
+				// if the selection is inside the tree when tree is collapsed - clear the selection
+				// because invisible selection is confusing for user
+				// same goes for cursor
+				return [null, true]
+			}
+			return [rows, false]
+		})
+		if(shouldClearSelection){
+			setLastSelectionStart(null)
+		}
+
+		setRowCursor?.(cursor => {
+			if(cursor && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), cursor)){
+				return null
+			}
+			return cursor
+		})
+
 		setExpTree(tree => {
 			if(!tree.hasHierarchy(hierarchy)){
 				return tree.addHierarchy(hierarchy)
 			}
-
-			let shouldClearSelection = false
-			setSelectedRows?.(rows => {
-				shouldClearSelection = !!rows && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), rows.firstRow)
-				if(shouldClearSelection){
-					// if the selection is inside the tree when tree is collapsed - clear the selection
-					// because invisible selection is confusing for user
-					// same goes for cursor
-					return null
-				}
-				return rows
-			})
-			if(shouldClearSelection){
-				setLastSelectionStart(null)
-			}
-			setRowCursor?.(cursor => {
-				if(cursor && TableUtils.locationStartsWithLocation(hierarchy.map(x => x.rowIndex), cursor)){
-					return null
-				}
-				return cursor
-			})
 			return tree.removeHierarchy(hierarchy)
 		})
 	}, [setSelectedRows, setRowCursor])
@@ -257,6 +267,26 @@ export const Table = <T,>({
 		lastSelectionStart, setLastSelectionStart,
 		rows, getChildren, rowCursor, setRowCursor, selectedRows, setSelectedRows, expTree, setExpTree
 	})
+
+	const rowsRef = useRefValue(rows)
+	const onClick = useMemo(() => !onRowClick ? undefined : (evt: MouseEvent) => {
+		const rowEvt = TableUtils.eventToRowEvent(rowsRef.current, getChildren, evt)
+		if(rowEvt){
+			onRowClick(rowEvt)
+		}
+	}, [rowsRef, onRowClick, getChildren])
+	const onDoubleClick = useMemo(() => !onRowDoubleClick ? undefined : (evt: MouseEvent) => {
+		const rowEvt = TableUtils.eventToRowEvent(rowsRef.current, getChildren, evt)
+		if(rowEvt){
+			onRowDoubleClick(rowEvt)
+		}
+	}, [rowsRef, onRowDoubleClick, getChildren])
+
+	useEffect(() => {
+		if(editedRowLocation){
+			setExpTree(tree => tree.add(editedRowLocation))
+		}
+	}, [editedRowLocation])
 
 	return (
 		<div
@@ -268,7 +298,9 @@ export const Table = <T,>({
 			})}
 			style={tableStyle}
 			data-table-id={tableId}
-			{...cursorSelectionProps}>
+			{...cursorSelectionProps}
+			onClick={onClick}
+			onDoubleClick={onDoubleClick}>
 			<TableRowSequence
 				hierarchy={emptyArray}
 				columns={settings.columns}

@@ -1,7 +1,6 @@
 import {TableColumnDefinition, TableHierarchy, TableProps, TableRowSequenceDesignator} from "client/components/table/table"
 import {reactMemo} from "common/react_memo"
 import {TableCell} from "client/components/table/table_cell"
-import {useEffect} from "react"
 import {TableRowSequence} from "client/components/table/table_row_sequence"
 import {TableUtils} from "client/components/table/table_utils"
 import {TableEditedRow} from "client/components/table/table_edited_row"
@@ -32,15 +31,6 @@ export const TableRow = reactMemo(<T,>({
 
 	const isThisRowEdited = !!editedRow && !isRowCreated && TableUtils.locationMatchesHierarchy(editedRow, hierarchy)
 	const isExpanded = isExpandable && expTree.hasHierarchy(hierarchy)
-
-	useEffect(() => {
-		if(!isExpandable || isExpanded || !editedRow){
-			return
-		}
-		if(editedRow.length >= hierarchy.length + 1 && TableUtils.hierarchyStartsWithLocation(editedRow, hierarchy)){
-			toggleExpanded(hierarchy)
-		}
-	}, [isExpandable, toggleExpanded, isExpanded, hierarchy, editedRow])
 
 	return (
 		<>

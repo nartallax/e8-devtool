@@ -137,7 +137,7 @@ export const useTableCursorSelectionHandlers = <T>({
 		if(!(target instanceof Node)){
 			return
 		}
-		if(nodeOrParentThatMatches(target, isInteractiveElement)){
+		if(nodeOrParentThatMatches(target, TableUtils.isInteractiveElement)){
 			return
 		}
 		const rowPath = TableUtils.findNearestRowPath(target)
@@ -215,5 +215,3 @@ export const useTableCursorSelectionHandlers = <T>({
 	}
 
 }
-
-const isInteractiveElement = (x: Node): boolean => x.nodeName === "INPUT" || x.nodeName === "TEXTAREA" || x.nodeName === "BUTTON"

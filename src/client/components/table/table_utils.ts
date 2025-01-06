@@ -1,5 +1,7 @@
-import {TableHierarchy, TableHierarchyEntry, TableProps, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
+import {TableHierarchy, TableHierarchyEntry, TableProps, TableRowEvent, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
 import * as css from "./table.module.css"
+import {nodeOrParentThatMatches} from "client/ui_utils/dom_queries"
+import {MouseEvent} from "react"
 
 export namespace TableUtils {
 
@@ -281,6 +283,47 @@ export namespace TableUtils {
 		if(targetCell){
 			scrollIntoView(targetCell)
 		}
+	}
+
+	export const isInteractiveElement = (x: Node): boolean => x.nodeName === "INPUT" || x.nodeName === "TEXTAREA" || x.nodeName === "BUTTON"
+
+	export const isInteractiveElementWithinCell = (node: Node) => {
+		while(node){
+			if(isInteractiveElement(node)){
+				return true
+			}
+			if(node instanceof HTMLElement && node.classList.contains(css.tableCell!)){
+				return false
+			}
+			if(!node.parentNode || node.parentNode === document.body){
+				return false
+			}
+			node = node.parentNode
+		}
+		return false
+	}
+
+	export const getNearestCell = (node: Node): HTMLElement | null => {
+		return nodeOrParentThatMatches(node, (x): x is HTMLElement => x instanceof HTMLElement && x.classList.contains(css.tableCell!))
+	}
+
+	export const eventToRowEvent = <T>(rows: readonly T[], getChildren: GetChildren<T>, event: MouseEvent): TableRowEvent<T> | null => {
+		const target = event.target
+		if(!(target instanceof Node)){
+			return null
+		}
+		const cell = getNearestCell(target)
+		if(!cell || isInteractiveElementWithinCell(target)){
+			return null
+		}
+		const pathJson = cell.getAttribute("data-tree-path")
+		if(!pathJson){
+			return null
+		}
+		const path: number[] = JSON.parse(pathJson)
+		const hierarchy = pathToHierarchy(rows, getChildren, path)
+		const row = hierarchy[hierarchy.length - 1]!.row
+		return {hierarchy, row}
 	}
 
 }

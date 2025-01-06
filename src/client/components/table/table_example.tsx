@@ -1,7 +1,7 @@
 import {isTreeBranch, Tree} from "@nartallax/forest"
 import {Button} from "client/components/button/button"
 import {Col} from "client/components/row_col/row_col"
-import {Table, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
+import {Table, TableColumnDefinition, TableEditCompletedEvent, TableRowEditorProps, TableRowEvent, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
 import {useTreeTableDataLoader} from "client/components/table/table_data_loader"
 import {useTableSettings} from "client/components/table/table_settings"
 import {TextInput} from "client/components/text_input/text_input"
@@ -60,7 +60,7 @@ export const TableExample = () => {
 			if(nextPageIndex >= pagesTotal){
 				return
 			}
-			await new Promise(ok => setTimeout(ok, 1000))
+			await new Promise(ok => setTimeout(ok, 100))
 			if(evt.parentRow?.value.includes("three")){
 				return
 			}
@@ -123,6 +123,12 @@ export const TableExample = () => {
 
 					setTableData(tableData => tableData.insertLeafAt(e.location, row.value))
 				}, [setTableData])}
+				onRowClick={useCallback((evt: TableRowEvent<Row>) => {
+					console.log("click!", evt.row.value)
+				}, [])}
+				onRowDoubleClick={useCallback((evt: TableRowEvent<Row>) => {
+					console.log("dblclick!", evt.row.value)
+				}, [])}
 			/>
 		</Col>
 	)
