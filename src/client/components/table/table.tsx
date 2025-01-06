@@ -40,8 +40,9 @@ export type TableColumnDefinition<T> = {
 
 	readonly header?: React.ReactNode
 
-	/** CSS expression of this column's width. Can use `fr` units and also `auto` keyword. See grid sizing.
-		If not specified, will default to `auto`.
+	/** CSS expression of this column's width. Can use `fr` units. See grid sizing guide.
+		If not specified, will default to `1fr`.
+		Using `auto` is not recommended if you have more than one column.
 
 		When user resizes the column, width is overriden to px size of whatever user sets it to be. */
 	readonly width?: string

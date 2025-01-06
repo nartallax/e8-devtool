@@ -48,7 +48,6 @@ export namespace TableUtils {
 	export const findRowOrThrow = <T>(data: readonly T[], getChildren: GetChildren<T>, path: readonly number[]): T => {
 		const node = findRow(data, getChildren, path)
 		if(!node){
-			console.log({data, getChildren, path})
 			throw new Error(`Cannot find row for path ${JSON.stringify(path)}`)
 		}
 		return node
@@ -279,7 +278,6 @@ export namespace TableUtils {
 		const cell = getAnyRowCellByLocation(anyEl, path)
 		const editorCell = getAnyEditorRowCellByLocation(anyEl, path)
 		const targetCell = editorCell ?? cell
-		console.log({targetCell})
 		if(targetCell){
 			scrollIntoView(targetCell)
 		}

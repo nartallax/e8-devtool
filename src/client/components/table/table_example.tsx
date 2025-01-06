@@ -60,7 +60,7 @@ export const TableExample = () => {
 			if(nextPageIndex >= pagesTotal){
 				return
 			}
-			await new Promise(ok => setTimeout(ok, 100))
+			await new Promise(ok => setTimeout(ok, 1000))
 			if(evt.parentRow?.value.includes("three")){
 				return
 			}

@@ -1,6 +1,7 @@
 import {TableColumnDefinition, TableOrder, TableOrderDirection} from "client/components/table/table"
 import {SetState} from "client/ui_utils/react_types"
 import {useSyntheticSetState} from "client/ui_utils/use_wrapped_setstate"
+import {areDtosDeepEqual} from "common/deep_equal"
 import {useMemo, useState} from "react"
 
 type Props<T> = {
@@ -41,7 +42,8 @@ export const getTableTemplateColumns = <T>(orderedColumns: readonly TableColumnD
 		if(override !== undefined){
 			return override + "px"
 		} else {
-			return column.width ?? "auto"
+			// 1fr and not auto because auto can yield different column headers vs column body cells widths
+			return column.width ?? "1fr"
 		}
 	}).join(" ")
 }
@@ -152,28 +154,46 @@ export const useTableSettings = <T>({
 
 	const [localStorageState, setLocalStorageState] = useState(() => loadStateFromLocalStorage(localStorageId ?? null, columns))
 
-	const mutableSettings = useMemo<MutableTableSettings<T>>(() => {
+	const orderedColumns = useMemo(() => {
 		const map = new Map(columns.map(col => [col.id, col]))
-		return ({
-			columnWidthOverrides: new Map(localStorageState.columnWidthOverrides.map(x => [x.columnId, x.width])),
-			order: storageOrderToTableOrder(localStorageState.order, columns),
-			orderedColumns: localStorageState.columnOrder.map(({columnId}) => map.get(columnId)!)
-		})
-	}, [columns, localStorageState])
+		return localStorageState.columnOrder.map(({columnId}) => map.get(columnId)!)
+	}, [localStorageState.columnOrder, columns])
 
-	const setMutableSettings = useSyntheticSetState(mutableSettings, settings => {
-		const lsState: LocalStorageState = {
+	const order = useMemo(() =>
+		storageOrderToTableOrder(localStorageState.order, columns),
+	[localStorageState.order, columns])
+
+	const columnWidthOverrides = useMemo(() =>
+		new Map(localStorageState.columnWidthOverrides.map(x => [x.columnId, x.width])),
+	[localStorageState.columnWidthOverrides])
+
+	const setMutableSettings = useSyntheticSetState<MutableTableSettings<T>>({order, orderedColumns, columnWidthOverrides}, settings => {
+		let lsState: LocalStorageState = {
 			columnOrder: settings.orderedColumns.map(col => ({columnId: col.id})),
 			columnWidthOverrides: [...settings.columnWidthOverrides.entries()].map(([columnId, width]) => ({columnId, width})),
 			order: tableOrderToStorageOrder(settings.order)
 		}
+
+		// for memoisation
+		lsState = {
+			columnOrder: areDtosDeepEqual(lsState.columnOrder, localStorageState.columnOrder)
+				? localStorageState.columnOrder
+				: lsState.columnOrder,
+			columnWidthOverrides: areDtosDeepEqual(lsState.columnWidthOverrides, localStorageState.columnWidthOverrides)
+				? localStorageState.columnWidthOverrides
+				: lsState.columnWidthOverrides,
+			order: areDtosDeepEqual(lsState.order, localStorageState.order)
+				? localStorageState.order
+				: lsState.order
+		}
+
 		setLocalStorageState(lsState)
 		saveStateToLocalStorage(localStorageId ?? null, lsState)
 	})
 
 	const settings = useMemo<TableSettings<T>>(() => ({
-		...mutableSettings, userActionConfig, columns
-	}), [mutableSettings, userActionConfig, columns])
+		orderedColumns, order, columnWidthOverrides, userActionConfig, columns
+	}), [orderedColumns, order, columnWidthOverrides, userActionConfig, columns])
 
 	return [settings, setMutableSettings]
 }

@@ -2,6 +2,7 @@ import {Forest, Tree} from "@nartallax/forest"
 import {TableBottomHitEvent} from "client/components/table/table"
 import {TableSettings} from "client/components/table/table_settings"
 import {SetState} from "client/ui_utils/react_types"
+import {setStateAndReturn} from "client/ui_utils/set_state_and_return"
 import {useRefValue} from "common/ref_value"
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 
@@ -46,23 +47,43 @@ export const useTableDataLoader = <S, P, T>({
 	const [state, setState] = useState(getBlank())
 
 	const revision = useRef(1)
+	const loadingPagesCount = useRef(0)
+	const acceptedPagesCount = useRef(0)
 
 	const onBottomHit = useCallback(async(evt: TableBottomHitEvent<T>) => {
 		const loadingStartRevision = revision.current
-		const page = await Promise.resolve(loadPageRef.current(evt))
-		setState(state => {
+		let page
+		try {
+			loadingPagesCount.current++
+			page = await Promise.resolve(loadPageRef.current(evt))
+		} finally {
+			loadingPagesCount.current--
+		}
+		const didThrewAwayPage = await setStateAndReturn(setState, state => {
 			if(loadingStartRevision !== revision.current){
-				return state // throwing away page that is obsolete at this point
+				// throwing away page that is obsolete at this point
+				return [state, true]
 			}
+			acceptedPagesCount.current++
 			if(page === null || page === undefined){
-				return state
+				return [state, false]
 			}
-			return appendPageRef.current(evt, page, state)
+			return [appendPageRef.current(evt, page, state), false]
 		})
+
+		if(didThrewAwayPage && acceptedPagesCount.current === 0 && loadingPagesCount.current === 0){
+			// this means we threw away the only page this table loaded since last refresh, and there are no more on the way
+			// the table won't call load callback again until the data is changed
+			// because of that, if we threw away the only page we loaded - we are risking to be stuck in 0-row state,
+			// even if there are rows to load
+			// to resolve that - we are trying to call page load function again
+			await onBottomHit(evt)
+		}
 	}, [loadPageRef, appendPageRef])
 
 	const refresh = useCallback(() => {
 		revision.current++
+		acceptedPagesCount.current = 0
 		setState(getBlankRef.current())
 	}, [getBlankRef])
 
