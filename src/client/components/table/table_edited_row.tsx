@@ -3,6 +3,7 @@ import {reactMemo} from "common/react_memo"
 import {useCallback, useState} from "react"
 import * as css from "./table.module.css"
 import {TableCellBare} from "client/components/table/table_cell"
+import {TableUtils} from "client/components/table/table_utils"
 
 type Props<T> = {
 	row: T | null
@@ -32,17 +33,27 @@ export const TableEditedRow = reactMemo(<T,>({
 		location, row, onDone, isDisabled: isLoading
 	})
 
+	const ref = useCallback((el: HTMLDivElement | null) => {
+		if(el){
+			TableUtils.scrollRowIntoView(el, location)
+		}
+	}, [location])
+
 	if(Array.isArray(rawEditor)){
 		return (
 			<>
 				{columns.map((column, i) => (
-					<TableCellBare column={column} key={column.id}>
+					<TableCellBare
+						column={column}
+						key={column.id}
+						editorTreePath={JSON.stringify(location)}
+						ref={i === 0 ? ref : undefined}>
 						{rawEditor[i] ?? null}
 					</TableCellBare>
 				))}
 			</>
 		)
 	} else {
-		return <div className={css.fullWidthEditorRow}>{rawEditor}</div>
+		return <div className={css.fullWidthEditorRow} data-editor-tree-path={JSON.stringify(location)} ref={ref}>{rawEditor}</div>
 	}
 })

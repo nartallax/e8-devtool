@@ -8,9 +8,11 @@ import {resolveDefaultableSideSize} from "client/ui_utils/sizes"
 type TableCellBareProps<T> = {
 	column: TableColumnDefinition<T>
 	treePath?: string
+	editorTreePath?: string
 	isRowCurrentlyDragged?: boolean
 	isSelected?: boolean
 	isOnCursor?: boolean
+	ref?: (value: HTMLDivElement | null) => void
 }
 
 type TableCellProps<T> = TreeTableCellProps<T> & {
@@ -43,11 +45,13 @@ export const TableCell = reactMemo(<T,>({
 })
 
 export const TableCellBare = reactMemo(<T,>({
-	column, children, treePath, isRowCurrentlyDragged, isSelected, isOnCursor
+	column, children, treePath, editorTreePath, isRowCurrentlyDragged, isSelected, isOnCursor, ref
 }: PropsWithChildren<TableCellBareProps<T>>) => {
 	return (
 		<div
 			data-tree-path={treePath}
+			data-editor-tree-path={editorTreePath}
+			ref={ref}
 			className={cn(css.tableCell, {
 				[css.movedRowCell!]: isRowCurrentlyDragged,
 				[css.selectedRowCell!]: isSelected,
@@ -55,7 +59,7 @@ export const TableCellBare = reactMemo(<T,>({
 			})}
 			style={{
 				gridColumn: `var(--table-col-${column.id})`,
-				padding: !column.padding ? undefined : resolveDefaultableSideSize(column.padding)
+				padding: column.padding === undefined ? undefined : resolveDefaultableSideSize(column.padding)
 			}}>
 			{children}
 		</div>

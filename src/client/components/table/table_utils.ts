@@ -1,4 +1,4 @@
-import {TableHierarchy, TableHierarchyEntry, TableProps, TableRowSequenceDesignator} from "client/components/table/table"
+import {TableHierarchy, TableHierarchyEntry, TableProps, TableRowMoveEvent, TableRowSequenceDesignator} from "client/components/table/table"
 import * as css from "./table.module.css"
 
 export namespace TableUtils {
@@ -199,13 +199,21 @@ export namespace TableUtils {
 		return table.querySelector("." + css.tableHeaders!) ?? null
 	}
 
-	export const getAnyRowCellByLocation = (el: Node, loc: readonly number[]): HTMLElement | null => {
-		const table = findParentTable(el)
-		const cell = table.querySelector(`[data-tree-path="${JSON.stringify(loc)}"]`)
-		if(!(cell instanceof HTMLElement)){
+	const getElByLocationAttribute = (node: Node, attrName: string, loc: readonly number[]): HTMLElement | null => {
+		const table = findParentTable(node)
+		const el = table.querySelector(`[${attrName}="${JSON.stringify(loc)}"]`)
+		if(!(el instanceof HTMLElement)){
 			return null
 		}
-		return cell
+		return el
+	}
+
+	export const getAnyRowCellByLocation = (el: Node, loc: readonly number[]): HTMLElement | null => {
+		return getElByLocationAttribute(el, "data-tree-path", loc)
+	}
+
+	export const getAnyEditorRowCellByLocation = (el: Node, loc: readonly number[]): HTMLElement | null => {
+		return getElByLocationAttribute(el, "data-editor-tree-path", loc)
 	}
 
 	export const getColumnHeadersByEventTarget = (target: HTMLElement): [id: string, el: HTMLElement][] => {
@@ -235,6 +243,46 @@ export namespace TableUtils {
 	export const updateMoveDesignator = (from: TableRowSequenceDesignator, to: TableRowSequenceDesignator): TableRowSequenceDesignator => {
 		const path = updateMovePath(from.firstRow, to.firstRow, to.count)
 		return {firstRow: path, count: to.count}
+	}
+
+	export const applyMoveEventToPlainArray = <T>(values: readonly T[], event: TableRowMoveEvent<T>): T[] => {
+		if(event.oldLocation.firstRow.length !== 1 || event.newLocation.firstRow.length !== 1){
+			throw new Error("This function can only move values in plain arrays, not in trees.")
+		}
+		const oldStart = event.oldLocation.firstRow[0]!
+		const oldEnd = oldStart + event.oldLocation.count
+		let newStart = event.newLocation.firstRow[0]!
+		if(newStart > oldStart){
+			newStart -= event.newLocation.count
+		}
+		const movedRows = values.slice(oldStart, oldEnd)
+		let newValues = [...values.slice(0, oldStart), ...values.slice(oldEnd)]
+		newValues = [...newValues.slice(0, newStart), ...movedRows, ...newValues.slice(newStart)]
+		return newValues
+	}
+
+	const scrollIntoView = (cell: HTMLElement) => {
+		const cellRect = cell.getBoundingClientRect()
+		const table = findParentTable(cell)
+		const tableRect = table.getBoundingClientRect()
+		const headers = getHeadersRow(cell)
+		const headersHeight = !headers ? 0 : headers.getBoundingClientRect().height
+		const visibleTop = tableRect.top + headersHeight
+		if(cellRect.top < visibleTop){
+			table.scrollTop -= visibleTop - cellRect.top
+		} else if(cellRect.bottom > tableRect.bottom){
+			table.scrollTop += cellRect.bottom - tableRect.bottom
+		}
+	}
+
+	export const scrollRowIntoView = (anyEl: Node, path: readonly number[]) => {
+		const cell = getAnyRowCellByLocation(anyEl, path)
+		const editorCell = getAnyEditorRowCellByLocation(anyEl, path)
+		const targetCell = editorCell ?? cell
+		console.log({targetCell})
+		if(targetCell){
+			scrollIntoView(targetCell)
+		}
 	}
 
 }

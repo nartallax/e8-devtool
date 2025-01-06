@@ -19,27 +19,10 @@ export const useTableCursorSelectionHandlers = <T>({
 		return {}
 	}
 
-	const makeRowVisible = (cell: HTMLElement) => {
-		const cellRect = cell.getBoundingClientRect()
-		const table = TableUtils.findParentTable(cell)
-		const tableRect = table.getBoundingClientRect()
-		const headers = TableUtils.getHeadersRow(cell)
-		const headersHeight = !headers ? 0 : headers.getBoundingClientRect().height
-		const visibleTop = tableRect.top + headersHeight
-		if(cellRect.top < visibleTop){
-			table.scrollTop -= visibleTop - cellRect.top
-		} else if(cellRect.bottom > tableRect.bottom){
-			table.scrollTop += cellRect.bottom - tableRect.bottom
-		}
-	}
-
 	const moveCursorTo = (target: Node, src: readonly number[] | null, dest: readonly number[], withShift: boolean) => {
 		if(setRowCursor){
 			setRowCursor(dest)
-			const cell = TableUtils.getAnyRowCellByLocation(target, dest)
-			if(cell){
-				makeRowVisible(cell)
-			}
+			TableUtils.scrollRowIntoView(target, dest)
 		}
 
 		if(setSelectedRows){
