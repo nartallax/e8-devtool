@@ -21,7 +21,7 @@ export class TableHeaderResizeHelper {
 		const [colId] = TableUtils.findNearestColumnHeader(target)
 		const allHeaders = TableUtils.getColumnHeadersByEventTarget(target)
 		this.descriptions = allHeaders.map(([id, header]) => {
-			const width = Math.round(header.getBoundingClientRect().width)
+			const width = header.getBoundingClientRect().width
 			return {
 				width,
 				initialWidth: width,

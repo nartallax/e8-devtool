@@ -218,7 +218,7 @@ export const Table = <T,>({
 
 	// this exists to check if a DOM node belongs to this table or to different one
 	// helps with drag-n-drop
-	const tableId = useMemo(() => (Math.random() * 0xffffffff).toString(16), [])
+	const tableId = useMemo(() => Math.floor(Math.random() * 0xffffffff).toString(16), [])
 
 	const isRowCreated = !!createdRow
 	const editedRowLocation = createdRow ?? editedRow
